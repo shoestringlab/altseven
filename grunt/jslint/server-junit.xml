@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+  <testsuite>
+<testcase classname="dist.a7" name="a7:48:59">
+  <failure message="'secure' was used before it was defined." />
+</testcase>
+<testcase classname="dist.a7" name="a7:112:22">
+  <failure message="'WebSocket' was used before it was defined." />
+</testcase>
+<testcase classname="dist.a7" name="a7:95:6">
+  <failure message="Unused 'fp'." />
+</testcase>
+<testcase classname="dist.a7" name="a7:75:3">
+  <failure message="Unused 'active'." />
+</testcase>
+<testcase classname="dist.a7" name="a7:220:12">
+  <failure message="'model' was used before it was defined." />
+</testcase>
+<testcase classname="dist.a7" name="a7:222:5">
+  <failure message="'Mustache' was used before it was defined." />
+</testcase>
+<testcase classname="dist.a7" name="a7:256:2">
+  <failure message="Missing 'use strict' statement." />
+</testcase>
+<testcase classname="dist.a7" name="a7:366:2">
+  <failure message="Missing 'use strict' statement." />
+</testcase>
+<testcase classname="dist.a7" name="a7:367:3">
+  <failure message="Unused 'hOP'." />
+</testcase>
+<testcase classname="dist.a7" name="a7:414:15">
+  <failure message="Unused 'keys'." />
+</testcase>
+  </testsuite>
+</testsuites>

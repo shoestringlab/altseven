@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<jslint>
+<file name="dist/a7.js">
+<issue line="48" char="59" reason="'secure' was used before it was defined." evidence="				a7.log.info( &quot;Application running. Authenticated: &quot; + secure );"/>
+<issue line="112" char="22" reason="'WebSocket' was used before it was defined." evidence="				connection = new WebSocket( options.wsServer );"/>
+<issue line="95" char="6" reason="Unused 'fp'." evidence="					fp = new gadgetui.display.FloatingPane( debugDiv, {"/>
+<issue line="75" char="3" reason="Unused 'active'." evidence="		active = false,"/>
+<issue line="220" char="12" reason="'model' was used before it was defined." evidence="			switch( model.get( &quot;renderer&quot; ) ){"/>
+<issue line="222" char="5" reason="'Mustache' was used before it was defined." evidence="				Mustache.load( templates + '?' + ot ).done( function( ) {"/>
+<issue line="256" char="2" reason="Missing 'use strict' statement." evidence="	var logLevel,"/>
+<issue line="366" char="2" reason="Missing 'use strict' statement." evidence="	var modules = {},"/>
+<issue line="367" char="3" reason="Unused 'hOP'." evidence="		hOP = modules.hasOwnProperty;"/>
+<issue line="414" char="15" reason="Unused 'keys'." evidence="			var suser, keys, user = a7.objects.Constructor( a7.objects.User, [], true );"/>
+</file>
+</jslint>

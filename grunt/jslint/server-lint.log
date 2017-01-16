@@ -1,0 +1,13 @@
+FAIL	dist/a7.js (10)
+dist/a7.js:48:59	'secure' was used before it was defined.
+dist/a7.js:112:22	'WebSocket' was used before it was defined.
+dist/a7.js:95:6	Unused 'fp'.
+dist/a7.js:75:3	Unused 'active'.
+dist/a7.js:220:12	'model' was used before it was defined.
+dist/a7.js:222:5	'Mustache' was used before it was defined.
+dist/a7.js:256:2	Missing 'use strict' statement.
+dist/a7.js:366:2	Missing 'use strict' statement.
+dist/a7.js:367:3	Unused 'hOP'.
+dist/a7.js:414:15	Unused 'keys'.
+
+# JSLint failed, 10 violations in 1.  1 files scanned.

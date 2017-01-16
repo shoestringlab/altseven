@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<checkstyle>
+<file name="dist/a7.js">
+<error line="48" column="59" severity="warning" message="'secure' was used before it was defined." source="com.jslint"/>
+<error line="112" column="22" severity="warning" message="'WebSocket' was used before it was defined." source="com.jslint"/>
+<error line="95" column="6" severity="warning" message="Unused 'fp'." source="com.jslint"/>
+<error line="75" column="3" severity="warning" message="Unused 'active'." source="com.jslint"/>
+<error line="220" column="12" severity="warning" message="'model' was used before it was defined." source="com.jslint"/>
+<error line="222" column="5" severity="warning" message="'Mustache' was used before it was defined." source="com.jslint"/>
+<error line="256" column="2" severity="warning" message="Missing 'use strict' statement." source="com.jslint"/>
+<error line="366" column="2" severity="warning" message="Missing 'use strict' statement." source="com.jslint"/>
+<error line="367" column="3" severity="warning" message="Unused 'hOP'." source="com.jslint"/>
+<error line="414" column="15" severity="warning" message="Unused 'keys'." source="com.jslint"/>
+</file>
+</checkstyle>
