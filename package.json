@@ -1,0 +1,32 @@
+{
+  "name": "altseven",
+  "version": "1.0.0",
+  "description": "JavaScript framework",
+  "main": "a7.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {
+    "grunt-cli": "^1.2.0"
+  },
+  "devDependencies": {
+    "grunt": "^0.4.5",
+    "grunt-closure-tools": "^0.9.8",
+    "grunt-contrib-concat": "^0.5.0",
+    "grunt-contrib-uglify": "^0.7.0",
+    "grunt-contrib-watch": "^0.6.1",
+    "grunt-jslint": "^1.1.12",
+    "grunt-newer": "^1.1.0",
+    "load-grunt-config": "*",
+    "load-grunt-tasks": "^3.1.0"
+  },
+  "scripts": {
+    "test": "/test/index.html"
+  },
+  "keywords": [
+    "JavaScript",
+    "framework"
+  ],
+  "author": "Robert Munn <robert.d.munn@gmail.com>",
+  "license": "ISC"
+}
