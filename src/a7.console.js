@@ -1,38 +1,39 @@
-a7.Debug = ( function() {
+a7.Console = ( function() {
 	"use strict";
 
-	var title = "Debug Window", 
+	var title = "Console Window", 
 		// width of window relative to it's container ( i.e. browser window )
 		width = "50%",
-		// the div we'll create to host the debug content
-		debugDiv,
-		// flag whether debug is running
+		// the div we'll create to host the console content
+		consoleDiv,
+		// flag whether console is running
 		active = false,
 		_addMessage = function( message, dt, source, level ) {
 			var div = document.createElement( "div" );
-			div.setAttribute( "class", "a7-debug-row-" + source );
+			div.setAttribute( "class", "a7-console-row-" + source );
 			if( level !== undefined ){
 				div.innerHTML = level + ": ";
-				div.setAttribute( "class", div.getAttribute( "class" ) +  " a7-debug-row-" + level );
+				div.setAttribute( "class", div.getAttribute( "class" ) +  " a7-console-row-" + level );
 			}
 			div.innerHTML += +( dt.getHours() < 10 ? '0' + dt.getHours() : dt.getHours() ) + ':' + ( dt.getMinutes() < 10 ? '0' + dt.getMinutes() : dt.getMinutes() ) + ': ' + message;
-			debugDiv.appendChild( div );
+			consoleDiv.appendChild( div );
 		};
 
 	return {
 		init : function( resolve, reject ) {
-			var debug = a7.Model.get( "debug" ),
-				top = ( debug.top === undefined ? 0 : debug.top ), 
-				right = ( debug.right === undefined ? 0 : debug.right );
-			// check for debug state
-			if ( debug.enabled ) {
+			var console = a7.Model.get( "console" ),
+				top = ( console.top === undefined ? 0 : console.top ), 
+				right = ( console.right === undefined ? 0 : console.right );
+
+			// check for console state
+			if ( console.enabled ) {
 				active = true;
-				debugDiv = document.createElement( "div" );
-				debugDiv.setAttribute( "id", "debugDiv" );
-				debugDiv.setAttribute( "class", "a7-debug" );
-				document.body.append( debugDiv );
+				consoleDiv = document.createElement( "div" );
+				consoleDiv.setAttribute( "id", "consoleDiv" );
+				consoleDiv.setAttribute( "class", "a7-console" );
+				document.body.append( consoleDiv );
 				var connection,
-					fp = new gadgetui.display.FloatingPane( debugDiv, {
+					fp = new gadgetui.display.FloatingPane( consoleDiv, {
 						width : width,
 						title : title,
 						opacity : 0.7,
@@ -48,20 +49,20 @@ a7.Debug = ( function() {
 				// if browser doesn't support WebSocket, just show some
 				// notification and exit
 				if ( !window.WebSocket ) {
-					debugDiv.innerHTML( "Your browser doesn't support WebSockets." );
+					consoleDiv.innerHTML( "Your browser doesn't support WebSockets." );
 					return;
 				}
 
 				// open connection
-				connection = new WebSocket( debug.wsServer );
+				connection = new WebSocket( console.wsServer );
 
 				connection.onopen = function() {
-					//a7.Log.info( "Debug initializing..." );
+					//a7.Log.info( "Console initializing..." );
 				};
 
 				connection.onerror = function( error ) {
-					var message =  "Can't connect to the debug socket server.";
-					if ( debug.enabled ) {
+					var message =  "Can't connect to the console socket server.";
+					if ( console.enabled ) {
 						// just in there were some problems with conenction...
 						_addMessage( message, new Date(), "local" );
 					}else{
@@ -103,12 +104,12 @@ a7.Debug = ( function() {
 					connection.close();
 				} );
 
-				a7.Debug.addMessage = _addMessage;
-				a7.Log.info( "Debug initializing..." );
+				a7.Console.addMessage = _addMessage;
+				a7.Log.info( "Console initializing..." );
 				resolve();
 			}else{
-				// debugging init should not run if debug is set to false
-				reject( "Debug init should not be called when debug option is set to false." );
+				// console init should not run if console is set to false
+				reject( "Console init should not be called when console option is set to false." );
 			}
 
 		}
