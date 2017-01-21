@@ -2,11 +2,23 @@
 	background: #000;
 }
 
-.a7-debug-websocket{
+.a7-debug-row-websocket{
 	color: #fff;
 }
 
-.a7-debug-local{
-	color: #ffff77;
+div[class*='a7-debug-row-']{
+	padding: .2em;
+}
+
+.a7-debug-row-local{
+	color: #fff;
+}
+
+.a7-debug-row-INFO{
+	color: #18a0ff;
+}
+
+.a7-debug-row-ERROR{
+	color: #ff4f5b;
 }
 /*# sourceMappingURL=a7.css.map */
