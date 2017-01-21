@@ -43,7 +43,7 @@ a7.Layout = ( function() {
 		_render = function( template, params ){
 			switch( a7.Model.get( "renderer" ) ){
 			case "mustache":
-				Mustache.render( _templateMap[ template ], params );
+				return Mustache.to_html( _templateMap[ template ], params, _templateMap );
 				break;
 			}
 		};
