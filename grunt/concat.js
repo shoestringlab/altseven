@@ -24,7 +24,7 @@ module.exports = {
 		      sourceMap: true
 		    },	
 		src: [	'src/a7.js',
-				'src/a7.debug.js',
+				'src/a7.console.js',
 				'src/a7.events.js',
 				'src/a7.layout.js',
 				'src/a7.log.js',
