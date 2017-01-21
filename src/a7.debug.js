@@ -4,23 +4,28 @@ a7.Debug = ( function() {
 	var title = "Debug Window", 
 		// width of window relative to it's container ( i.e. browser window )
 		width = "50%",
-		// location of the debug window
-		position = { my: "right top", at: "right top", of: "window" },
 		// the div we'll create to host the debug content
 		debugDiv,
 		// flag whether debug is running
 		active = false,
-		_addMessage = function( message, dt, source ) {
+		_addMessage = function( message, dt, source, level ) {
 			var div = document.createElement( "div" );
-			div.setAttribute( "class", "a7-debug-" + source );
-			div.innerHTML = +( dt.getHours() < 10 ? '0' + dt.getHours() : dt.getHours() ) + ':' + ( dt.getMinutes() < 10 ? '0' + dt.getMinutes() : dt.getMinutes() ) + ': ' + message;
+			div.setAttribute( "class", "a7-debug-row-" + source );
+			if( level !== undefined ){
+				div.innerHTML = level + ": ";
+				div.setAttribute( "class", div.getAttribute( "class" ) +  " a7-debug-row-" + level );
+			}
+			div.innerHTML += +( dt.getHours() < 10 ? '0' + dt.getHours() : dt.getHours() ) + ':' + ( dt.getMinutes() < 10 ? '0' + dt.getMinutes() : dt.getMinutes() ) + ': ' + message;
 			debugDiv.appendChild( div );
 		};
 
 	return {
-		init : function( options, resolve, reject ) {
+		init : function( resolve, reject ) {
+			var debug = a7.Model.get( "debug" ),
+				top = ( debug.top === undefined ? 0 : debug.top ), 
+				right = ( debug.right === undefined ? 0 : debug.right );
 			// check for debug state
-			if ( a7.Model.get( "debug" ) ) {
+			if ( debug.enabled ) {
 				active = true;
 				debugDiv = document.createElement( "div" );
 				debugDiv.setAttribute( "id", "debugDiv" );
@@ -31,28 +36,38 @@ a7.Debug = ( function() {
 						width : width,
 						title : title,
 						opacity : 0.7,
-						position : position
+						position : "absolute",
+						right : right,
+						top : top
 					} );
+				
+				fp.selector.setAttribute( "right", 0 );
 
 				window.WebSocket = window.WebSocket || window.MozWebSocket;
 
 				// if browser doesn't support WebSocket, just show some
 				// notification and exit
 				if ( !window.WebSocket ) {
-					debugDiv.innerHTML( "Sorry, but your browser doesn't support WebSockets." );
+					debugDiv.innerHTML( "Your browser doesn't support WebSockets." );
 					return;
 				}
 
 				// open connection
-				connection = new WebSocket( options.wsServer );
+				connection = new WebSocket( debug.wsServer );
 
 				connection.onopen = function() {
 					//a7.Log.info( "Debug initializing..." );
 				};
 
 				connection.onerror = function( error ) {
-					// just in there were some problems with conenction...
-					debugDiv.innerHTML( "Sorry, but there's some problem with your connection or the server is down." );
+					var message =  "Can't connect to the debug socket server.";
+					if ( debug.enabled ) {
+						// just in there were some problems with conenction...
+						_addMessage( message, new Date(), "local" );
+					}else{
+						a7.Log.error( message );
+					}
+					
 				};
 
 				// most important part - incoming messages
@@ -80,19 +95,13 @@ a7.Debug = ( function() {
 															// message
 						_addMessage( json.data.text, new Date( json.data.time ), "websocket" );
 					} else {
-						a7.Log.error( "Hmm..., I've never seen JSON like this: ", json );
+						a7.Log.error( "This doesn't look like valid JSON: ", json );
 					}
 				};
 
 				window.addEventListener( "close", function( event ) {
 					connection.close();
 				} );
-
-				/*	var addMessage = function( message, dt ) {
-					var div = document.createElement( "div" );
-					div.innerHTML = +( dt.getHours() < 10 ? '0' + dt.getHours() : dt.getHours() ) + ':' + ( dt.getMinutes() < 10 ? '0' + dt.getMinutes() : dt.getMinutes() ) + ': ' + message;
-					debugDiv.insertBefore( div, debugDiv.firstChild );
-				};	*/
 
 				a7.Debug.addMessage = _addMessage;
 				a7.Log.info( "Debug initializing..." );

@@ -8,27 +8,31 @@
 				"/dist/a7.css", "/bower_components/gadget-ui/gadget-ui.css", "/bower_components/open-iconic/font/css/open-iconic.css" ], function(){
 
 			var options = {
-				debug: true,
+				debug: { 	enabled: true,
+							wsServer: 'ws://www.altseven.home:8000',
+							top: 10,
+							right: 10
+						},
 				logLevel: "INFO,ERROR,FATAL",
-				wsServer: 'ws://www.altseven.home:8000',
 				templates: "/test/templates.html"
 				// , renderer: "mustache" // default template renderer
 			};
-			
+
 			a7.init( options );
 		});
 
 	</script>
 	</head>
 	<body>
-	
-	
 	<div>
 	
 	<h1>
 	alt-7 Test Page
 	</h1>
 	</div>
-	<div class="debug"></div>
+	
+	
+	
+	
 	</body>
 </html>

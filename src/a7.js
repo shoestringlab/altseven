@@ -10,14 +10,14 @@ var a7 = ( function() {
 			init : function( options ){
 				var p0, p1, p2;
 
-				a7.Model.set( "debug", options.debug || false );
+				a7.Model.set( "debug", options.debug || { enabled: false } );
 				a7.Model.set( "useTokens", options.useTokens || true );
 				a7.Model.set( "renderer", options.renderer || "mustache" );
 				a7.Model.set( "running", false );
 
 				p0 = new Promise( function( resolve, reject ){
-					if( a7.Model.get( "debug" ) ){
-						a7.Debug.init( options, resolve, reject );
+					if( a7.Model.get( "debug.enabled" ) ){
+						a7.Debug.init( resolve, reject );
 					}else{
 						resolve();
 					}
@@ -48,8 +48,8 @@ var a7 = ( function() {
 						});
 						
 						p2.then( function( secure ){
-							a7.Log.trace( "a7 - run" );
-							a7.run( secure );
+							a7.Log.info( "Init complete. Authenticated: " + secure );
+							//a7.run( secure );
 						});
 						
 						p2['catch']( function( message ){
@@ -61,10 +61,6 @@ var a7 = ( function() {
 				p0['catch']( function( message ){
 					a7.Log.error( message );
 				});	
-			},
-
-			run: function( secure ){
-				a7.Log.info( "Application running. Authenticated: " + secure );
 			},
 
 			deinit: function(){
