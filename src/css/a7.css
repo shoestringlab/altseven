@@ -1,23 +1,23 @@
-.a7-debug{
+.a7-console{
 	background: #000;
 }
 
-.a7-debug-row-websocket{
+.a7-console-row-websocket{
 	color: #fff;
 }
 
-div[class*='a7-debug-row-']{
+div[class*='a7-console-row-']{
 	padding: .2em;
 }
 
-.a7-debug-row-local{
+.a7-console-row-local{
 	color: #fff;
 }
 
-.a7-debug-row-INFO{
+.a7-console-row-INFO{
 	color: #18a0ff;
 }
 
-.a7-debug-row-ERROR{
+.a7-console-row-ERROR{
 	color: #ff4f5b;
 }

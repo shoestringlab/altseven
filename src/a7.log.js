@@ -4,8 +4,8 @@ a7.Log = ( function(){
 		_log = function( message, level ){
 			if( logLevel.indexOf( level ) >=0 || logLevel.indexOf( "ALL" ) >=0 ){
 				console.log( message );
-				if( a7.Model.get( "debug.enabled" ) ){
-					a7.Debug.addMessage( message, new Date(), "local", level );
+				if( a7.Model.get( "console.enabled" ) ){
+					a7.Console.addMessage( message, new Date(), "local", level );
 				}
 			}
 		};

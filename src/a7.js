@@ -3,21 +3,21 @@ var a7 = ( function() {
 
 		return {
 			// initialization 
-			// 1. sets debug and templating options
+			// 1. sets console and templating options
 			// 2. initializes user object
 			// 3. checks user auth state
 			// 4. renders initial layout
-			init : function( options ){
+			init : function( options, initResolve, initReject ){
 				var p0, p1, p2;
 
-				a7.Model.set( "debug", options.debug || { enabled: false } );
+				a7.Model.set( "console", options.console || { enabled: false } );
 				a7.Model.set( "useTokens", options.useTokens || true );
 				a7.Model.set( "renderer", options.renderer || "mustache" );
 				a7.Model.set( "running", false );
 
 				p0 = new Promise( function( resolve, reject ){
-					if( a7.Model.get( "debug.enabled" ) ){
-						a7.Debug.init( resolve, reject );
+					if( a7.Model.get( "console.enabled" ) ){
+						a7.Console.init( resolve, reject );
 					}else{
 						resolve();
 					}
@@ -50,10 +50,12 @@ var a7 = ( function() {
 						p2.then( function( secure ){
 							a7.Log.info( "Init complete. Authenticated: " + secure );
 							//a7.run( secure );
+							initResolve();
 						});
 						
 						p2['catch']( function( message ){
 							a7.Log.error( message );
+							initReject();
 						});					
 					});					
 				});
