@@ -21,9 +21,7 @@ a7.Console = ( function() {
 
 	return {
 		init : function( resolve, reject ) {
-			var console = a7.Model.get( "console" ),
-				top = ( console.top === undefined ? 0 : console.top ), 
-				right = ( console.right === undefined ? 0 : console.right );
+			var console = a7.Model.get( "a7.console" );
 
 			// check for console state
 			if ( console.enabled ) {
@@ -38,10 +36,10 @@ a7.Console = ( function() {
 						title : title,
 						opacity : 0.7,
 						position : "absolute",
-						right : right,
-						top : top
+						right : console.right,
+						top : console.top
 					} );
-				
+
 				fp.selector.setAttribute( "right", 0 );
 
 				window.WebSocket = window.WebSocket || window.MozWebSocket;
