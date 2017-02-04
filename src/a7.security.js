@@ -1,22 +1,24 @@
 a7.Security = ( function() {
 	"use strict";
 
-	var _isSecure = function( resolve, reject ){
-		a7.Log.info( "Checking secured state.. " );
-		if( a7.Model.get( "useTokens" ) ){
-			var token = a7.Model.get( "token" );
-			if( token !== undefined &&  token !== null && token.length > 0 ){
-				// if there is a valid token, check authentication state with the server
-				a7.Events.publish( "user.refresh", { resolve: resolve, reject: reject });
-			}else{
-				//a7.Events.publish( "a7.deinit" );
-				resolve( false );
+	var _options = {},
+		_isAuthenticated = function( resolve, reject ){
+			a7.Log.info( "Checking authenticated state.. " );
+			if( a7.Model.get( "a7.remote.useTokens" ) ){
+				var token = a7.Remote.getToken();
+				if( token !== undefined &&  token !== null && token.length > 0 ){
+					a7.Log.info( "Refreshing user..." );
+					// if there is a valid token, check authentication state with the server
+					a7.Events.publish( "auth.refresh", { resolve: resolve, reject : reject } );
+				}else{
+					a7.Events.publish( "a7.auth.invalidateSession" );
+					resolve( false );
+				}
 			}
-		}
-	};
+		};
 
 	return {
-		isSecure : _isSecure,
+		isAuthenticated : _isAuthenticated,
 		// initialization 
 		// 1. creates a new a7.User object
 		// 2. checks sessionStorage for user string
@@ -24,7 +26,7 @@ a7.Security = ( function() {
 		// 	  browser refresh
 		// 4. sets User object into a7.Model
 
-		init : function( options ) {
+		init : function() {
 			a7.Log.info( "Security initializing..." );
 			var suser, keys, user = a7.Objects.Constructor( a7.Objects.User, [], true );
 			if ( sessionStorage.user && sessionStorage.user !== '' ) {
@@ -33,12 +35,7 @@ a7.Security = ( function() {
 					user[ key ] = suser[ key ];
 				});
 			}
-			a7.Model.set( "user", user );
-
-			// set token if valid
-			if ( a7.Model.get( "useTokens" ) && sessionStorage.token && sessionStorage.token !== '' ) {
-				a7.Model.set( "token", sessionStorage.token );
-			}
+			a7.Model.set( "a7.user", user );
 		}
 	};
 }());
