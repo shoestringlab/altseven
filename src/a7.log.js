@@ -1,18 +1,29 @@
 a7.Log = ( function(){
 	// logging levels ALL < TRACE < INFO < WARN < ERROR < FATAL < OFF
-	var logLevel = "ERROR,FATAL,INFO",
+	var _ready = false,
+		_deferred = [],
+		_logLevel = "ERROR,FATAL,INFO",
 		_log = function( message, level ){
-			if( logLevel.indexOf( level ) >=0 || logLevel.indexOf( "ALL" ) >=0 ){
+			if( _ready && _logLevel.indexOf( level ) >=0 || _logLevel.indexOf( "ALL" ) >=0 ){
 				console.log( message );
-				if( a7.Model.get( "console.enabled" ) ){
+				if( a7.Model.get( "a7.console.enabled" ) ){
 					a7.Console.addMessage( message, new Date(), "local", level );
 				}
+			} else if( ! _ready ){
+				// store log messages before init so they can be logged after init
+				_deferred.push( { message: message, level: level } );
 			}
 		};
 
 	return{
-		init: function( options ){
-			logLevel = ( options.logLevel !== undefined ? options.logLevel : "ERROR,FATAL,INFO" );
+		init: function(){
+			
+			_logLevel = a7.Model.get( "a7.logging" ).logLevel;
+			_ready = true;
+			_deferred.forEach( function( item ){
+				_log( item.message, item.level );
+			});
+			_deffered = [];
 			a7.Log.info( "Log initializing..." );
 		},
 		error: function( message ){
