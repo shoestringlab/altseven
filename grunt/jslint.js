@@ -4,11 +4,12 @@ module.exports = {
 			src : [ 'src/a7.js',
 					'src/a7.console.js',
 					'src/a7.events.js',
-					'src/a7.layout.js',
 					'src/a7.log.js',
 					'src/a7.model.js',
 					'src/a7.objects.js',
-					'src/a7.remote.js'
+					'src/a7.remote.js',
+					'src/a7.ui.js',
+					'src/a7.util.js'
 					
 					],
 			/*	exclude : [ 'includes/javascript/app.min.js',
