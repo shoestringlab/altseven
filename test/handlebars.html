@@ -1,0 +1,53 @@
+<!doctype html>
+<html>
+	<head>
+	<title>alt-7</title>
+	<script src="/bower_components/Lazy/dist/lazy.1.0.0.js"></script>
+	<script>
+		lazy.load( [ "/test/events.js < /dist/a7.js < /bower_components/gadget-ui/dist/gadget-ui.min.js < /bower_components/velocity/velocity.js", "/bower_components/handlebars/handlebars.js",
+				"/dist/a7.css", "/bower_components/gadget-ui/gadget-ui.css", "/bower_components/open-iconic/font/css/open-iconic.css" ], function(){
+
+			var options = {
+				console: { 	enabled: true,
+							wsServer: 'ws://www.altseven.home:8000',
+							top: 10,
+							right: 10
+						},
+				logLevel: "INFO,ERROR,FATAL",
+				templates: "/test/templates.html"
+			};
+
+			var p = new Promise( function( resolve, reject ){
+				a7.init( options, resolve, reject );
+			});
+			
+			p.then( function(){
+				a7.Events.publish( "helloworld" );
+				var mainDiv = document.querySelector( "div[name='main']" );
+				mainDiv.innerHTML = a7.Layout.render( "button", { name:'hello', val:"Hello World!"} );
+				mainDiv.innerHTML += a7.Layout.render( "button", { name:'goodbye', val:"So long!"} );
+			});
+
+			p['catch']( function( message ){
+				console.log( "Something went wrong." );
+			});
+
+		});
+
+	</script>
+	</head>
+	<body>
+	<div>
+	
+	<h1>
+	alt-7 Test Page
+	</h1>
+	</div>
+	
+	<div name="main">
+	
+	</div>
+	
+	
+	</body>
+</html>

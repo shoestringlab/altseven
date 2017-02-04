@@ -1,0 +1,49 @@
+<!doctype html>
+<html>
+	<head>
+	<title>mustache</title>
+	<script src="/bower_components/Lazy/dist/lazy.1.0.0.js"></script>
+	<script>
+		lazy.load( [ "/bower_components/mustache.js/mustache.js" ], function(){
+			var _templateMap=[],
+				ot = Math.ceil( Math.random( ) * 500 );
+
+			_addTemplate = function( key, html ){
+				_templateMap[ key ] = html.trim();
+			};
+
+			fetch( '/test/templates.html' + '?' + ot )
+			.then( function( response ) {
+				return response.text();
+			})
+			.then( function( text ){
+				var parser = new DOMParser(),
+					doc = parser.parseFromString( text, "text/html" ),
+					scripts = doc.querySelectorAll( "script" );
+				scripts.forEach( function( script ){
+					_addTemplate( script.getAttribute( "id" ), script.innerHTML );
+				});
+				
+				var button = Mustache.to_html( _templateMap['button'], { name:"foo", val:"Hello!"}, _templateMap );
+				var mainDiv = document.querySelector( "div[name='main']" );
+				mainDiv.innerHTML = button;
+			});
+	});
+
+	</script>
+	</head>
+	<body>
+	<div>
+	
+	<h1>
+	Mustache tests
+	</h1>
+	</div>
+	
+	<div name="main">
+	
+	</div>
+	
+	
+	</body>
+</html>
