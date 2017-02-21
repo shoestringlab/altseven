@@ -8,7 +8,7 @@ a7.UI = ( function() {
 			_setSelector = function( name, selector ){
 				_selectors[ name ] = selector;
 			},
-	
+
 			_addTemplate = function( key, html ){
 				switch( _options.renderer ){
 					case "Mustache":
@@ -19,10 +19,10 @@ a7.UI = ( function() {
 						break;
 				}
 			},
-	
+
 			_loadTemplates = function( resolve, reject ){
 				var ot = Math.ceil( Math.random( ) * 500 );
-	
+
 				switch( _options.renderer ){
 					case "Mustache":
 					case "Handlebars":
@@ -40,15 +40,16 @@ a7.UI = ( function() {
 								});
 								resolve();
 							});
-	
+
 						break;
 				}
 			},
-			
-			_render = function( template, params ){
+
+			_render = function( template, params, partials ){
 				switch( _options.renderer ){
 				case "Mustache":
-					return Mustache.to_html( _templateMap[ template ], params, _templateMap );
+					//return Mustache.to_html( _templateMap[ template ], params, _templateMap );
+					return Mustache.render( _templateMap[ template ], params, partials );
 					break;
 				case "Handlebars":
 					return _templateMap[ template ]( params );
@@ -60,10 +61,15 @@ a7.UI = ( function() {
 			render : _render,
 			selectors: _selectors,
 			setSelector: _setSelector,
+
+			getTemplate : function( template ){
+				return _templateMap[ template ];
+			},
+
 			init : function( resolve, reject ){
 				var renderers = "Handlebars,Mustache";
 				_options = a7.Model.get( "a7.UI" );
-				
+
 				a7.Log.info( "Layout initializing..." );
 				if( renderers.indexOf( _options.renderer ) >=0 ){
 					a7.Model.set( "a7.UI.templatesLoaded", false );

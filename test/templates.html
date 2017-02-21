@@ -1,8 +1,65 @@
 
-<script id="div" type="text/html">
-	<div id="#{{id}}" name="{{name}}"></div>
+<script id="loginForm" type="text/html">
+	<div name="loginDiv" class="pane" style="width:370px;">
+
+		<div class="right-align">
+			<div class="col md right-align"><label for="username">Username</label></div>
+			<div class="col md"><input name="username" type="text"/></div>
+		</div>
+		<div class="right-align">
+			<div class="col md right-align"><label for="password">Password</label></div>
+			<div class="col md"><input name="password" type="password" /></div>
+		</div>
+		<div class="right-align">
+			<div class="col md"></div>
+			<div class="col md"><input name="login" type="button" value="Login" /></div>
+		</div>
+
+	</div>
+
 </script>
 
-<script id="input" type="text/html">
-	&nbsp;<input class="{{class}}" type="{{type}}" name="{{name}}" value="{{value}}"/>
+<script id="instructions" type="text/html">
+	<div name="instructions">
+		<p>
+			<h3>Instructions</h3>
+		</p>
+		<p>
+			Login using the credentials:
+		</p>
+		<p>
+			&nbsp;&nbsp;username : user
+		</p>
+		<p>
+			&nbsp;&nbsp;password: password
+		</p>
+		<p>
+
+		</p>
+	</div>
+</script>
+
+<script id="header" type="text/html">
+	Welcome, {{firstName}} <a name="signout">[ Sign out ]</a>
+</script>
+
+<script id="todoForm" type="text/html">
+	<div name="todoForm">
+		<h3>TODO</h3>
+		{{> todoList}}
+		<form>
+		  <input name="todoInput" value="{{text}}" />
+		  <button name="todoSubmit">Add #{{next}}</button>
+		</form>
+		</div>
+</script>
+
+<script id="todoList" type="text/html">
+	<ul>
+		{{#items}}
+		<li>
+		{{text}}
+		</li>
+		{{/items}}
+	</ul>
 </script>

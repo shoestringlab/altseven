@@ -1,4 +1,4 @@
-a7.Objects = ( function() {"use strict";function Constructor( constructor, args, addBindings ) {
+a7.Components = ( function() {"use strict";function Constructor( constructor, args, addBindings ) {
 	var ix, 
 		returnedObj, 
 		obj;
@@ -79,9 +79,11 @@ User.prototype.getMemento = function(){
 	});
 	return user;
 };
+
 return {
 	Constructor : Constructor,
 	EventBindings : EventBindings,
 	User: User
-};}());
-//# sourceMappingURL=a7.Objects.js.map
+};
+}());
+//# sourceMappingURL=a7.components.js.map

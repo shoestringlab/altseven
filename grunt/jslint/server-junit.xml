@@ -1,35 +1,119 @@
 <?xml version="1.0" encoding="utf-8"?>
 <testsuites>
   <testsuite>
-<testcase classname="dist.a7" name="a7:48:59">
-  <failure message="'secure' was used before it was defined." />
-</testcase>
-<testcase classname="dist.a7" name="a7:112:22">
-  <failure message="'WebSocket' was used before it was defined." />
-</testcase>
-<testcase classname="dist.a7" name="a7:95:6">
-  <failure message="Unused 'fp'." />
-</testcase>
-<testcase classname="dist.a7" name="a7:75:3">
-  <failure message="Unused 'active'." />
-</testcase>
-<testcase classname="dist.a7" name="a7:220:12">
-  <failure message="'model' was used before it was defined." />
-</testcase>
-<testcase classname="dist.a7" name="a7:222:5">
+<testcase classname="dist.a7" name="a7:47:27">
   <failure message="'Mustache' was used before it was defined." />
 </testcase>
-<testcase classname="dist.a7" name="a7:256:2">
+<testcase classname="dist.a7" name="a7:47:73">
+  <failure message="'Handlebars' was used before it was defined." />
+</testcase>
+<testcase classname="dist.a7" name="a7:166:9">
+  <failure message="Combine this with the previous 'var' statement." />
+</testcase>
+<testcase classname="dist.a7" name="a7:188:22">
+  <failure message="'WebSocket' was used before it was defined." />
+</testcase>
+<testcase classname="dist.a7" name="a7:190:36">
+  <failure message="Empty block." />
+</testcase>
+<testcase classname="dist.a7" name="a7:143:3">
+  <failure message="Unused 'active'." />
+</testcase>
+<testcase classname="dist.a7" name="a7:284:66">
+  <failure message="Empty block." />
+</testcase>
+<testcase classname="dist.a7" name="a7:287:69">
+  <failure message="Empty block." />
+</testcase>
+<testcase classname="dist.a7" name="a7:309:2">
   <failure message="Missing 'use strict' statement." />
 </testcase>
-<testcase classname="dist.a7" name="a7:366:2">
+<testcase classname="dist.a7" name="a7:313:15">
+  <failure message="The '&amp;&amp;' subexpression should be wrapped in parens." />
+</testcase>
+<testcase classname="dist.a7" name="a7:332:4">
+  <failure message="'_deffered' was used before it was defined." />
+</testcase>
+<testcase classname="dist.a7" name="a7:359:21">
+  <failure message="['create'] is better written in dot notation." />
+</testcase>
+<testcase classname="dist.a7" name="a7:362:21">
+  <failure message="['destroy'] is better written in dot notation." />
+</testcase>
+<testcase classname="dist.a7" name="a7:365:21">
+  <failure message="['get'] is better written in dot notation." />
+</testcase>
+<testcase classname="dist.a7" name="a7:368:21">
+  <failure message="['set'] is better written in dot notation." />
+</testcase>
+<testcase classname="dist.a7" name="a7:371:21">
+  <failure message="['exists'] is better written in dot notation." />
+</testcase>
+<testcase classname="dist.a7" name="a7:374:21">
+  <failure message="['bind'] is better written in dot notation." />
+</testcase>
+<testcase classname="dist.a7" name="a7:398:7">
+  <failure message="Unused 'ix'." />
+</testcase>
+<testcase classname="dist.a7" name="a7:480:2">
   <failure message="Missing 'use strict' statement." />
 </testcase>
-<testcase classname="dist.a7" name="a7:367:3">
+<testcase classname="dist.a7" name="a7:517:21">
+  <failure message="'Request' was used before it was defined." />
+</testcase>
+<testcase classname="dist.a7" name="a7:519:11">
+  <failure message="Combine this with the previous 'var' statement." />
+</testcase>
+<testcase classname="dist.a7" name="a7:519:21">
+  <failure message="'fetch' was used before it was defined." />
+</testcase>
+<testcase classname="dist.a7" name="a7:570:9">
+  <failure message="Combine this with the previous 'var' statement." />
+</testcase>
+<testcase classname="dist.a7" name="a7:578:6">
+  <failure message="Unnecessary 'else' after disruption." />
+</testcase>
+<testcase classname="dist.a7" name="a7:590:18">
+  <failure message="'Request' was used before it was defined." />
+</testcase>
+<testcase classname="dist.a7" name="a7:591:14">
+  <failure message="'fetch' was used before it was defined." />
+</testcase>
+<testcase classname="dist.a7" name="a7:485:3">
   <failure message="Unused 'hOP'." />
 </testcase>
-<testcase classname="dist.a7" name="a7:414:15">
+<testcase classname="dist.a7" name="a7:638:11">
+  <failure message="Combine this with the previous 'var' statement." />
+</testcase>
+<testcase classname="dist.a7" name="a7:665:15">
   <failure message="Unused 'keys'." />
+</testcase>
+<testcase classname="dist.a7" name="a7:632:6">
+  <failure message="Unused '_options'." />
+</testcase>
+<testcase classname="dist.a7" name="a7:694:29">
+  <failure message="'Handlebars' was used before it was defined." />
+</testcase>
+<testcase classname="dist.a7" name="a7:705:7">
+  <failure message="'fetch' was used before it was defined." />
+</testcase>
+<testcase classname="dist.a7" name="a7:711:26">
+  <failure message="'DOMParser' was used before it was defined." />
+</testcase>
+<testcase classname="dist.a7" name="a7:727:13">
+  <failure message="'Mustache' was used before it was defined." />
+</testcase>
+<testcase classname="dist.a7" name="a7:728:6">
+  <failure message="Unreachable 'break' after 'return'." />
+</testcase>
+<testcase classname="dist.a7" name="a7:731:6">
+  <failure message="Unreachable 'break' after 'return'." />
+</testcase>
+<testcase classname="dist.a7" name="a7:759:2">
+  <failure message="Missing 'use strict' statement." />
+</testcase>
+<testcase classname="dist.a7" name="a7:812:30">
+  <failure message="Insecure '^'." />
 </testcase>
   </testsuite>
 </testsuites>

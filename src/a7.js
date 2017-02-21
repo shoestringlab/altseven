@@ -2,7 +2,7 @@ var a7 = ( function() {
 	"use strict";
 
 	return {
-		// initialization 
+		// initialization
 		// 1. sets console and templating options
 		// 2. initializes user object
 		// 3. checks user auth state
@@ -15,7 +15,7 @@ var a7 = ( function() {
 				// model required
 				initReject( "No model specified." );
 			}
-			
+
 			pr = new Promise( function( resolve, reject ){
 				a7.Log.trace( "a7 - model init" );
 				a7.Model.init( options, resolve, reject );
@@ -26,8 +26,8 @@ var a7 = ( function() {
 				a7.Model.set( "a7", {
 					auth: {
 						sessionTimeout : ( options.auth.sessionTimeout || ( 60 * 15 * 1000 ) )
-					},					
-					console : { 
+					},
+					console : {
 						enabled : ( options.console.enabled || false ),
 						wsServer : ( options.console.wsServer || "" ),
 						top : ( options.console.top || 0 ),
@@ -37,7 +37,7 @@ var a7 = ( function() {
 						logLevel: ( options.logging.logLevel || "ERROR,FATAL,INFO" )
 					},
 					model : options.model,
-					remote: {	
+					remote: {
 						// modules: ( options.remote.modules | undefined ) // don't set into Model since they are being registered in Remote
 						loginURL : ( options.remote.loginURL || "" ),
 						refreshURL : ( options.remote.refreshURL || "" ),
@@ -51,7 +51,7 @@ var a7 = ( function() {
 					user : ""
 				});
 			})
-			
+
 			.then( function(){
 				p0 = new Promise( function( resolve, reject ){
 					if( a7.Model.get( "a7.console.enabled" ) ){
@@ -70,21 +70,21 @@ var a7 = ( function() {
 				.then( function(){
 					a7.Log.trace( "a7 - security init" );
 					// init user state
-					a7.Security.init();					
+					a7.Security.init();
 				})
 				.then( function(){
 					a7.Log.trace( "a7 - remote init" );
-					a7.Remote.init( options.remote.modules );					
+					a7.Remote.init( options.remote.modules );
 				})
 				.then( function(){
 					a7.Log.trace( "a7 - events init" );
-					a7.Events.init();					
+					a7.Events.init();
 				})
 				.then( function(){
 					p1 = new Promise( function( resolve, reject ){
 						a7.Log.trace( "a7 - layout init" );
 						// initialize templating engine
-						a7.UI.init( resolve, reject );					
+						a7.UI.init( resolve, reject );
 					});
 
 					p1.then( function(){
@@ -97,15 +97,14 @@ var a7 = ( function() {
 						p2.then( function( secure ){
 							a7.Log.info( "Authenticated: " + secure + "..." );
 							a7.Log.info( "Init complete..." );
-							//a7.run( secure );
-							initResolve();
+							initResolve( { secure : secure } );
 						});
 
 						p2['catch']( function( message ){
 							a7.Log.error( message );
 							initReject();
-						});					
-					});					
+						});
+					});
 				});
 
 				p0['catch']( function( message ){

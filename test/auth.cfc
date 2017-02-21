@@ -5,7 +5,7 @@
  * @date 1/21/17
  **/
 component {
-	variables.sessionTTL = 30;
+	variables.sessionTTL = 16;
 	variables.secretKey = "KJHiuY(U)@%(kj)Fjh-)i!@3ed";
 
 	remote any function login() returnformat="json"{
@@ -24,24 +24,27 @@ component {
 	remote any function refresh() returnformat="json"{
 		if( len( getHTTPHeader("X-Token","") ) ){
 			var user = checkAuthToken();
-
+			writelog( file="a7-auth", text = "Checking token: " & serializeJSON( user ) );
+			writelog( file="a7-auth", text = "user exp: " & user.expires & ", now: " & now() & ", valid: " & user.expires gt now() );
 			//var user = { userId: 1, userName: 'user', firstName: 'User', lastName: 'Name', disabled: false };
-			if( local.auth.userId eq user.userId and local.auth.expires gt now() and NOT user.disabled ){
+			if( user.expires gt now() and NOT user.disabled ){
 				local.token = generateAuthToken( user = user );
 				setHTTPHeader( name="X-Token", value="#local.token.token# #local.token.hash#" );
-				return true;
+				return { "success" : true };
 			}else{
-				return false;
+				return { "success" : false };
 			}
 		}else{
-			return false;
+			return { "success" : false };
 		}
 	}
 
 	private any function generateAuthToken( required struct user ){
 		local.authtoken = duplicate( arguments.user );
 		local.authtoken.expires = dateAdd( 'n', variables.sessionTTL, now() );
-		local.base64Token = toBase64( serializeJSON( local.authtoken ) );
+		local.jsonToken = serializeJSON( local.authtoken );
+		writelog( file="a7-auth", text = "Writing new token: " & local.jsonToken );
+		local.base64Token = toBase64( jsonToken );
 		local.hash = hmac( local.base64Token, variables.secretKey, "HMACSHA256"  );
 		local.token = { token: local.base64Token, hash: local.hash };
 		return local.token;

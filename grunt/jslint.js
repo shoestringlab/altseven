@@ -1,16 +1,16 @@
 module.exports = {
-	
+
 		src : {
 			src : [ 'src/a7.js',
 					'src/a7.console.js',
 					'src/a7.events.js',
 					'src/a7.log.js',
 					'src/a7.model.js',
-					'src/a7.objects.js',
+					'src/a7.components.js',
 					'src/a7.remote.js',
 					'src/a7.ui.js',
 					'src/a7.util.js'
-					
+
 					],
 			/*	exclude : [ 'includes/javascript/app.min.js',
 					'server/config.js', './Gruntfile.js' ],	*/
@@ -37,15 +37,13 @@ module.exports = {
 				jslintXml : 'grunt/jslint/server-jslint.xml',
 				errorsOnly : true, // only display errors
 				failOnError : false, // defaults to true
-				checkstyle : 'grunt/jslint/server-checkstyle.xml' 
+				checkstyle : 'grunt/jslint/server-checkstyle.xml'
 			}
 	},
-		
+
 	dist : {
 		src : [ // some example files
 				'dist/a7.js'],
-		/*	exclude : [ 'includes/javascript/app.min.js',
-				'server/config.js', './Gruntfile.js' ],	*/
 		directives : { // example directives
 			node : true,
 			todo : true,
@@ -69,7 +67,7 @@ module.exports = {
 			jslintXml : 'grunt/jslint/server-jslint.xml',
 			errorsOnly : true, // only display errors
 			failOnError : false, // defaults to true
-			checkstyle : 'grunt/jslint/server-checkstyle.xml' 
+			checkstyle : 'grunt/jslint/server-checkstyle.xml'
 		}
 	}
 };

@@ -1,0 +1,26 @@
+html, body{
+ margin:0;
+ padding:1em;
+ font-family: Geneva, Arial, Helevtica, sans;
+ position:relative;
+
+}
+
+div.col{
+  display:inline-block;
+  padding: .5em;
+}
+
+div.md{
+  width: 10em;
+}
+
+div.pane{
+  border: 1px solid silver;
+  border-radius: 5px;
+  padding: 1em;
+}
+
+.right-align{
+  text-align: right;
+}

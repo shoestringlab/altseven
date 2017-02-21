@@ -2,7 +2,7 @@ var a7 = ( function() {
 	"use strict";
 
 	return {
-		// initialization 
+		// initialization
 		// 1. sets console and templating options
 		// 2. initializes user object
 		// 3. checks user auth state
@@ -15,7 +15,7 @@ var a7 = ( function() {
 				// model required
 				initReject( "No model specified." );
 			}
-			
+
 			pr = new Promise( function( resolve, reject ){
 				a7.Log.trace( "a7 - model init" );
 				a7.Model.init( options, resolve, reject );
@@ -26,8 +26,8 @@ var a7 = ( function() {
 				a7.Model.set( "a7", {
 					auth: {
 						sessionTimeout : ( options.auth.sessionTimeout || ( 60 * 15 * 1000 ) )
-					},					
-					console : { 
+					},
+					console : {
 						enabled : ( options.console.enabled || false ),
 						wsServer : ( options.console.wsServer || "" ),
 						top : ( options.console.top || 0 ),
@@ -37,7 +37,7 @@ var a7 = ( function() {
 						logLevel: ( options.logging.logLevel || "ERROR,FATAL,INFO" )
 					},
 					model : options.model,
-					remote: {	
+					remote: {
 						// modules: ( options.remote.modules | undefined ) // don't set into Model since they are being registered in Remote
 						loginURL : ( options.remote.loginURL || "" ),
 						refreshURL : ( options.remote.refreshURL || "" ),
@@ -51,7 +51,7 @@ var a7 = ( function() {
 					user : ""
 				});
 			})
-			
+
 			.then( function(){
 				p0 = new Promise( function( resolve, reject ){
 					if( a7.Model.get( "a7.console.enabled" ) ){
@@ -70,21 +70,21 @@ var a7 = ( function() {
 				.then( function(){
 					a7.Log.trace( "a7 - security init" );
 					// init user state
-					a7.Security.init();					
+					a7.Security.init();
 				})
 				.then( function(){
 					a7.Log.trace( "a7 - remote init" );
-					a7.Remote.init( options.remote.modules );					
+					a7.Remote.init( options.remote.modules );
 				})
 				.then( function(){
 					a7.Log.trace( "a7 - events init" );
-					a7.Events.init();					
+					a7.Events.init();
 				})
 				.then( function(){
 					p1 = new Promise( function( resolve, reject ){
 						a7.Log.trace( "a7 - layout init" );
 						// initialize templating engine
-						a7.UI.init( resolve, reject );					
+						a7.UI.init( resolve, reject );
 					});
 
 					p1.then( function(){
@@ -97,15 +97,14 @@ var a7 = ( function() {
 						p2.then( function( secure ){
 							a7.Log.info( "Authenticated: " + secure + "..." );
 							a7.Log.info( "Init complete..." );
-							//a7.run( secure );
-							initResolve();
+							initResolve( { secure : secure } );
 						});
 
 						p2['catch']( function( message ){
 							a7.Log.error( message );
 							initReject();
-						});					
-					});					
+						});
+					});
 				});
 
 				p0['catch']( function( message ){
@@ -257,7 +256,7 @@ a7.Events = ( function() {
 		hOP = topics.hasOwnProperty;
 
 	return {
-		
+
 		subscribe : function( topic, listener ) {
 			// Create the topic's object if not yet created
 			if ( !hOP.call( topics, topic ) ){
@@ -276,7 +275,7 @@ a7.Events = ( function() {
 		},
 		init: function(){
 			a7.Events.subscribe( "auth.login", function( params ){
-				a7.Remote.invoke( "auth.login", { username : params.username, password : params.password } );
+				a7.Remote.invoke( "auth.login", params );
 			});
 			a7.Events.subscribe( "auth.refresh", function( params ){
 				a7.Remote.invoke( "auth.refresh", params );
@@ -303,6 +302,7 @@ a7.Events = ( function() {
 		}
 	};
 }());
+
 a7.Log = ( function(){
 	// logging levels ALL < TRACE < INFO < WARN < ERROR < FATAL < OFF
 	var _ready = false,
@@ -390,7 +390,7 @@ a7.Model = ( function() {
 	};
 
 }() );
-a7.Objects = ( function() {"use strict";function Constructor( constructor, args, addBindings ) {
+a7.Components = ( function() {"use strict";function Constructor( constructor, args, addBindings ) {
 	var ix, 
 		returnedObj, 
 		obj;
@@ -471,11 +471,13 @@ User.prototype.getMemento = function(){
 	});
 	return user;
 };
+
 return {
 	Constructor : Constructor,
 	EventBindings : EventBindings,
 	User: User
-};}());
+};
+}());
 a7.Remote = ( function(){
 	var _options = {},
 		_time = new Date(),
@@ -492,28 +494,32 @@ a7.Remote = ( function(){
 		getToken : function(){
 			return _token;
 		},
+
+		getSessionTimer : function(){
+				return _sessionTimer;
+		},
+
 		init: function( _modules ){
 			_options = a7.Model.get( "a7.remote" );
-			_options.sessionTimeout = a7.Model.get( "a7.auth.sessionTimeout" );
+			_options.sessionTimeout = a7.Model.get( "a7.auth" ).sessionTimeout;
 			// set token if valid
-			if ( _options.useTokens && sessionStorage.token && sessionStorage.token !== '' ) {
+			if( _options.useTokens && sessionStorage.token && sessionStorage.token !== '' ) {
 				_token = sessionStorage.token;
 			}
 
 			var authModule = {
 					login: function( username, password, callback ){
-						var headers = new Headers(),
-							request,
-							params = { 	method: 'POST', 
+						var request,
+								params = { 	method: 'POST',
 										headers: {
 											"Authorization": "Basic " + a7.Util.base64.encode64( username + ":" + password )
-										} 
-									};
-	
+										}
+								};
+
 						request = new Request( _options.loginURL , params );
-	
-						var promise = fetch( request )
-	
+
+						var promise = fetch( request );
+
 						promise
 							.then( function( response ) {
 								var token = response.headers.get("X-Token");
@@ -521,18 +527,31 @@ a7.Remote = ( function(){
 									_token = token;
 									sessionStorage.token = token;
 								}
+								return response.json();
+							})
+							.then( function( json ){
+								var user = a7.Model.get( "a7.user" );
+								Object.keys( json.user ).map( function( key ) {
+									user[ key ] = json.user[ key ];
+								});
+								sessionStorage.user = JSON.stringify( user );
+								a7.Model.set( "a7.user", user );
+								if( callback !== undefined ){
+									callback( json );
+								}
 							});
-						if( callback !== undefined ){
-							callback( promise );
-						}
+
+
 					},
-					refresh: function( params ){
-						a7.Remote.fetch( _options.refreshURL, params, true )
-						.then( function( response ) {
+					refresh: function( resolve, reject ){
+						a7.Remote.fetch( _options.refreshURL, {}, true )
+						.then( function( response ){
 							return response.json();
 						})
 						.then( function( json ){
-							a7.Log.info( JSON.stringify( json ) );
+							if( resolve !== undefined ){
+								resolve( json.success );
+							}
 						});
 					}
 				};
@@ -547,129 +566,54 @@ a7.Remote = ( function(){
 
 		fetch: function( uri, params, secure ){
 			a7.Log.info( "fetch: " + uri );
-			if( secure ){
-				var headers = ( params.headers || new Headers() ),
-					currentTime = new Date( ),
-					request,
-					promise,
-					diff = Math.abs( currentTime - _time ), 
-					minutes = Math.floor( ( diff / 1000 ) / 60 );
-	
+			var request,
+					promise;
+			if( secure && _options.useTokens ){
+				var currentTime = new Date( ),
+						diff = Math.abs( currentTime - _time ),
+						minutes = Math.floor( ( diff / 1000 ) / 60 );
+
 				if( minutes > _options.sessionTimeout ){
 					// timeout
-					
+					a7.Events.publish( "auth.sessionTimeout" );
+					return;
 				}else if( _token !== undefined && _token !== null ){
-					headers.set( "X-Token", _token );
+					if( params.headers === undefined ){
+						params.headers = {
+							"X-Token": _token
+						};
+					}else{
+						params.headers["X-Token"] = _token;
+					}
 				}
 
-				if ( _sessionTimer !== undefined ) {
-					clearTimeout( _sessionTimer );
-					_sessionTimer = undefined;
-				}
-	
 				_time = currentTime;
-				
-				request = new Request( uri, params );
-				promise = fetch( request );
-				
-				promise
-					.then( function( response ){
+			}
+			request = new Request( uri, params );
+			promise = fetch( request );
+
+			promise
+				.then( function( response ){
+					if( secure && _options.useTokens ){
 						var token = response.headers.get( "X-Token" );
 						if( token !== undefined && token !== null ){
 							_token = token;
 							sessionStorage.token = token;
-							
-							if ( _sessionTimer === undefined ) {
-								_sessionTimer = setTimeout( function( ) {
-								a7.Events.publish( "auth.refresh" );
-								}, _options.sessionTimeout );
+
+							if( _sessionTimer !== undefined ){
+								clearTimeout( _sessionTimer );
 							}
-							
-							if( params.resolve !== undefined ){
-								params.resolve( true );
-							}
+							_sessionTimer =	setTimeout( function(){ a7.Remote.invoke( "auth.refresh" ); }, _options.sessionTimeout );
+
 						} else{
-							if( params.resolve !== undefined ){
-								params.resolve( false );
-							}
 							a7.Events.publish( "auth.sessionTimeout" );
 						}
-						//console.log( JSON.stringify( response, null, 4) );
-					});
-				/*	
-				if( json.status === "Not authorized" && json.code === 401 ){
-					//abort existing calls and empty the queue
-					for( ix = 0; ix < queue.length; ix++ ){
-						//don't abort the current request, it is complete.
-						if( queue[ ix ] !== jqXHR ){
-							queue[ ix ].abort();
-						}
 					}
-					if( this.url === "/index.cfm/api/auth/login" ){
-						if( opts.options.loginUI !== undefined ){
-							opts.options.loginUI.clearOverlay();
-							opts.options.loginUI.selector.effect( "shake" );
-						}
-						//app.ui.alert( "Authentication", "Login failed. Please check your credentials and try again." );
-					}
-					$.publish( "app.deinit" );
-					queue = [];
+				});
 
-				}else{
-					console.log( "checking token for url: " + this.url );
-					token = jqXHR.getResponseHeader( "X-Token" );
-					if( token !== undefined && token !== null ){
-						app.model.set( "token", token );
-						sessionStorage.token = token;
-					}
-
-					if ( app.model.get( "user.userid" ) > 0 ) {
-						if ( app.getToken === undefined ) {
-							app.getToken = setTimeout( function( ) {
-							$.publish( "user.refresh" );
-							}, 100000 );
-						}
-					}				
-					deferred.resolve.apply( this, arguments );
-				}
-			});
-			jqXHR.fail( function() {
-			    deferred.reject.apply( this, arguments );
-			});
-
-			jqXHR.always( function(){
-				var ix, data, status, xhr, response, token; 
-				if( arguments[1] === 'success' ){
-					data = arguments[ 0 ];
-					status = arguments[1];
-					xhr = arguments[ 2 ];
-				}else{
-					xhr = arguments[ 0 ];
-					status = arguments[1];
-					error = arguments[ 2 ];       		
-				}
-				try{
-					response = JSON.parse( xhr.responseText );
-				}catch( e ){
-					response = { error : false, messages: "" };
-				}
-				// remove request from the queue
-				for( ix = 0; ix < queue.length; ix++ ){
-					if( queue[ ix ] === jqXHR ){
-						queue.splice( ix, 1 );
-					}
-				}
-			});	*/
-			
 			return promise;
-				
-			}else{
-				return fetch( uri, params );
-			}
-				
 		},
 
-		// a7.Remote.invoke( 'user.refresh', params );
 		invoke: function( moduleAction, params ){
 			var mA = moduleAction.split( "." );
 			// if no action specified, return the list of actions
@@ -678,42 +622,53 @@ a7.Remote = ( function(){
 				return;
 			}
 			if( typeof _modules[ mA[ 0 ] ][ mA[ 1 ] ] === "function" ){
-				_modules[ mA[ 0 ] ][ mA[ 1 ] ]( params );
+				_modules[ mA[ 0 ] ][ mA[ 1 ] ].apply( _modules[ mA[ 0 ] ][ mA[ 1 ] ], params );
 			}
 		}
 	};
 }());
+
 a7.Security = ( function() {
 	"use strict";
 
 	var _options = {},
 		_isAuthenticated = function( resolve, reject ){
 			a7.Log.info( "Checking authenticated state.. " );
-			if( a7.Model.get( "a7.remote.useTokens" ) ){
-				var token = a7.Remote.getToken();
-				if( token !== undefined &&  token !== null && token.length > 0 ){
-					a7.Log.info( "Refreshing user..." );
-					// if there is a valid token, check authentication state with the server
-					a7.Events.publish( "auth.refresh", { resolve: resolve, reject : reject } );
-				}else{
-					a7.Events.publish( "a7.auth.invalidateSession" );
-					resolve( false );
+			if( a7.Model.get( "a7.user").userId !== undefined ){
+				resolve( true );
+			}else{
+				if( a7.Model.get( "a7.remote.useTokens" ) ){
+					var token = a7.Remote.getToken();
+					if( token !== undefined &&  token !== null && token.length > 0 ){
+							var timer = a7.Remote.getSessionTimer();
+							// if the timer isn't defined, that means the app just reloaded, so we need to refresh against the server
+							if( timer === undefined ){
+								a7.Log.info( "Refreshing user..." );
+								// if there is a valid token, check authentication state with the server
+								a7.Events.publish( "auth.refresh", [ resolve, reject ] );
+							}else{
+								resolve( true );
+							}
+					}else{
+						//a7.Events.publish( "a7.auth.invalidateSession" );
+						resolve( false );
+					}
 				}
 			}
 		};
 
 	return {
 		isAuthenticated : _isAuthenticated,
-		// initialization 
+		// initialization
 		// 1. creates a new a7.User object
 		// 2. checks sessionStorage for user string
-		// 3. populates User object with stored user information in case of 
+		// 3. populates User object with stored user information in case of
 		// 	  browser refresh
 		// 4. sets User object into a7.Model
 
 		init : function() {
 			a7.Log.info( "Security initializing..." );
-			var suser, keys, user = a7.Objects.Constructor( a7.Objects.User, [], true );
+			var suser, keys, user = a7.Components.Constructor( a7.Components.User, [], true );
 			if ( sessionStorage.user && sessionStorage.user !== '' ) {
 				suser = JSON.parse( sessionStorage.user );
 				Object.keys( suser ).map( function( key ) {
@@ -735,7 +690,7 @@ a7.UI = ( function() {
 			_setSelector = function( name, selector ){
 				_selectors[ name ] = selector;
 			},
-	
+
 			_addTemplate = function( key, html ){
 				switch( _options.renderer ){
 					case "Mustache":
@@ -746,10 +701,10 @@ a7.UI = ( function() {
 						break;
 				}
 			},
-	
+
 			_loadTemplates = function( resolve, reject ){
 				var ot = Math.ceil( Math.random( ) * 500 );
-	
+
 				switch( _options.renderer ){
 					case "Mustache":
 					case "Handlebars":
@@ -767,15 +722,16 @@ a7.UI = ( function() {
 								});
 								resolve();
 							});
-	
+
 						break;
 				}
 			},
-			
-			_render = function( template, params ){
+
+			_render = function( template, params, partials ){
 				switch( _options.renderer ){
 				case "Mustache":
-					return Mustache.to_html( _templateMap[ template ], params, _templateMap );
+					//return Mustache.to_html( _templateMap[ template ], params, _templateMap );
+					return Mustache.render( _templateMap[ template ], params, partials );
 					break;
 				case "Handlebars":
 					return _templateMap[ template ]( params );
@@ -787,10 +743,15 @@ a7.UI = ( function() {
 			render : _render,
 			selectors: _selectors,
 			setSelector: _setSelector,
+
+			getTemplate : function( template ){
+				return _templateMap[ template ];
+			},
+
 			init : function( resolve, reject ){
 				var renderers = "Handlebars,Mustache";
 				_options = a7.Model.get( "a7.UI" );
-				
+
 				a7.Log.info( "Layout initializing..." );
 				if( renderers.indexOf( _options.renderer ) >=0 ){
 					a7.Model.set( "a7.UI.templatesLoaded", false );
@@ -804,6 +765,7 @@ a7.UI = ( function() {
 		};
 
 }( ) );
+
 a7.Util = ( function(){
 
 

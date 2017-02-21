@@ -10,18 +10,18 @@ module.exports = {
 		files : ['Gruntfile.js','grunt/*.js'],
 		options : {
 			reload : true
-		}		
+		}
 	},
 	objects:{
-		files:'src/objects/**/*.js', 
-		tasks: ['newer:concat:objects', 'concat:a7', 'uglify'],
+		files:'src/components/**/*.js',
+		tasks: ['newer:concat:components', 'concat:a7', 'uglify'],
 		options : {
 			spawn : false
 		}
 	},
 
 	a7:{
-		files:'src/*.js', 
+		files:'src/*.js',
 		tasks: [ 'newer:concat:a7', 'newer:uglify' ],
 		options : {
 			spawn : false
