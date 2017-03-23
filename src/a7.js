@@ -17,13 +17,13 @@ var a7 = ( function() {
 			}
 
 			pr = new Promise( function( resolve, reject ){
-				a7.Log.trace( "a7 - model init" );
-				a7.Model.init( options, resolve, reject );
+				a7.log.trace( "a7 - model init" );
+				a7.model.init( options, resolve, reject );
 			});
 
 			pr
 			.then( function(){
-				a7.Model.set( "a7", {
+				a7.model.set( "a7", {
 					auth: {
 						sessionTimeout : ( options.auth.sessionTimeout || ( 60 * 15 * 1000 ) )
 					},
@@ -43,9 +43,9 @@ var a7 = ( function() {
 						refreshURL : ( options.remote.refreshURL || "" ),
 						useTokens : ( options.auth.useTokens || true )
 					},
-					UI: {
+					ui: {
 						renderer : ( typeof Mustache === 'object' ? "Mustache" : ( typeof Handlebars === 'object' ? "Handlebars" : "" ) ),
-						templates : ( options.UI.templates || undefined )
+						templates : ( options.ui.templates || undefined )
 					},
 					ready : false,
 					user : ""
@@ -54,9 +54,9 @@ var a7 = ( function() {
 
 			.then( function(){
 				p0 = new Promise( function( resolve, reject ){
-					if( a7.Model.get( "a7.console.enabled" ) ){
-						a7.Log.trace( "a7 - console init" );
-						a7.Console.init( resolve, reject );
+					if( a7.model.get( "a7.console.enabled" ) ){
+						a7.log.trace( "a7 - console init" );
+						a7.console.init( resolve, reject );
 					}else{
 						resolve();
 					}
@@ -64,57 +64,57 @@ var a7 = ( function() {
 
 				p0
 				.then( function(){
-					a7.Log.trace( "a7 - log init" );
-					a7.Log.init();
+					a7.log.trace( "a7 - log init" );
+					a7.log.init();
 				})
 				.then( function(){
-					a7.Log.trace( "a7 - security init" );
+					a7.log.trace( "a7 - security init" );
 					// init user state
-					a7.Security.init();
+					a7.security.init();
 				})
 				.then( function(){
-					a7.Log.trace( "a7 - remote init" );
-					a7.Remote.init( options.remote.modules );
+					a7.log.trace( "a7 - remote init" );
+					a7.remote.init( options.remote.modules );
 				})
 				.then( function(){
-					a7.Log.trace( "a7 - events init" );
-					a7.Events.init();
+					a7.log.trace( "a7 - events init" );
+					a7.events.init();
 				})
 				.then( function(){
 					p1 = new Promise( function( resolve, reject ){
-						a7.Log.trace( "a7 - layout init" );
+						a7.log.trace( "a7 - layout init" );
 						// initialize templating engine
-						a7.UI.init( resolve, reject );
+						a7.ui.init( resolve, reject );
 					});
 
 					p1.then( function(){
 						p2 = new Promise( function( resolve, reject ){
-							a7.Log.trace( "a7 - isSecured" );
+							a7.log.trace( "a7 - isSecured" );
 							// check whether user is authenticated
-							a7.Security.isAuthenticated( resolve, reject );
+							a7.security.isAuthenticated( resolve, reject );
 						});
 
 						p2.then( function( secure ){
-							a7.Log.info( "Authenticated: " + secure + "..." );
-							a7.Log.info( "Init complete..." );
+							a7.log.info( "Authenticated: " + secure + "..." );
+							a7.log.info( "Init complete..." );
 							initResolve( { secure : secure } );
 						});
 
 						p2['catch']( function( message ){
-							a7.Log.error( message );
+							a7.log.error( message );
 							initReject();
 						});
 					});
 				});
 
 				p0['catch']( function( message ){
-					a7.Log.error( message );
+					a7.log.error( message );
 					initReject();
 				});
 			});
 
 			pr['catch']( function( message ){
-				a7.Log.error( message );
+				a7.log.error( message );
 				initReject();
 			});
 		}
@@ -122,8 +122,8 @@ var a7 = ( function() {
 
 		deinit: function(){
 			// return state to default
-			a7.Model.set( "a7.user", "" );
-			//a7.Model.set( "a7.token", "" );
+			a7.model.set( "a7.user", "" );
+			//a7.model.set( "a7.token", "" );
 			sessionStorage.removeItem( "user" );
 			sessionStorage.removeItem( "token" );
 		}	*/

@@ -1,6 +1,6 @@
-a7.Components = ( function() {"use strict";function Constructor( constructor, args, addBindings ) {
-	var ix, 
-		returnedObj, 
+a7.components = ( function() {"use strict";function Constructor( constructor, args, addBindings ) {
+	var ix,
+		returnedObj,
 		obj;
 
 	if( addBindings === true ){
@@ -30,13 +30,13 @@ a7.Components = ( function() {"use strict";function Constructor( constructor, ar
 	}
 
 	return returnedObj;
-	
+
 }
 
 /*
  * EventBindings
  * author: Robert Munn <robert.d.munn@gmail.com>
- * 
+ *
  */
 
 var EventBindings = {
@@ -47,22 +47,22 @@ var EventBindings = {
 		this.events[ event ].push( func );
 		return this;
 	},
-	
+
 	off : function( event ){
 		// clear listeners
 		this.events[ event ] = [];
 		return this;
 	},
-	
+
 	fireEvent : function( key, args ){
 		var _this = this;
 		this.events[ key ].forEach( function( func ){
 			func( _this, args );
 		});
 	},
-	
+
 	getAll : function(){
-		return [ { name : "on", func : this.on }, 
+		return [ { name : "on", func : this.on },
 		         { name : "off", func : this.off },
 				 { name : "fireEvent", func : this.fireEvent } ];
 	}

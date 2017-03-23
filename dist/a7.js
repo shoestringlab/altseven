@@ -17,13 +17,13 @@ var a7 = ( function() {
 			}
 
 			pr = new Promise( function( resolve, reject ){
-				a7.Log.trace( "a7 - model init" );
-				a7.Model.init( options, resolve, reject );
+				a7.log.trace( "a7 - model init" );
+				a7.model.init( options, resolve, reject );
 			});
 
 			pr
 			.then( function(){
-				a7.Model.set( "a7", {
+				a7.model.set( "a7", {
 					auth: {
 						sessionTimeout : ( options.auth.sessionTimeout || ( 60 * 15 * 1000 ) )
 					},
@@ -43,9 +43,9 @@ var a7 = ( function() {
 						refreshURL : ( options.remote.refreshURL || "" ),
 						useTokens : ( options.auth.useTokens || true )
 					},
-					UI: {
+					ui: {
 						renderer : ( typeof Mustache === 'object' ? "Mustache" : ( typeof Handlebars === 'object' ? "Handlebars" : "" ) ),
-						templates : ( options.UI.templates || undefined )
+						templates : ( options.ui.templates || undefined )
 					},
 					ready : false,
 					user : ""
@@ -54,9 +54,9 @@ var a7 = ( function() {
 
 			.then( function(){
 				p0 = new Promise( function( resolve, reject ){
-					if( a7.Model.get( "a7.console.enabled" ) ){
-						a7.Log.trace( "a7 - console init" );
-						a7.Console.init( resolve, reject );
+					if( a7.model.get( "a7.console.enabled" ) ){
+						a7.log.trace( "a7 - console init" );
+						a7.console.init( resolve, reject );
 					}else{
 						resolve();
 					}
@@ -64,57 +64,57 @@ var a7 = ( function() {
 
 				p0
 				.then( function(){
-					a7.Log.trace( "a7 - log init" );
-					a7.Log.init();
+					a7.log.trace( "a7 - log init" );
+					a7.log.init();
 				})
 				.then( function(){
-					a7.Log.trace( "a7 - security init" );
+					a7.log.trace( "a7 - security init" );
 					// init user state
-					a7.Security.init();
+					a7.security.init();
 				})
 				.then( function(){
-					a7.Log.trace( "a7 - remote init" );
-					a7.Remote.init( options.remote.modules );
+					a7.log.trace( "a7 - remote init" );
+					a7.remote.init( options.remote.modules );
 				})
 				.then( function(){
-					a7.Log.trace( "a7 - events init" );
-					a7.Events.init();
+					a7.log.trace( "a7 - events init" );
+					a7.events.init();
 				})
 				.then( function(){
 					p1 = new Promise( function( resolve, reject ){
-						a7.Log.trace( "a7 - layout init" );
+						a7.log.trace( "a7 - layout init" );
 						// initialize templating engine
-						a7.UI.init( resolve, reject );
+						a7.ui.init( resolve, reject );
 					});
 
 					p1.then( function(){
 						p2 = new Promise( function( resolve, reject ){
-							a7.Log.trace( "a7 - isSecured" );
+							a7.log.trace( "a7 - isSecured" );
 							// check whether user is authenticated
-							a7.Security.isAuthenticated( resolve, reject );
+							a7.security.isAuthenticated( resolve, reject );
 						});
 
 						p2.then( function( secure ){
-							a7.Log.info( "Authenticated: " + secure + "..." );
-							a7.Log.info( "Init complete..." );
+							a7.log.info( "Authenticated: " + secure + "..." );
+							a7.log.info( "Init complete..." );
 							initResolve( { secure : secure } );
 						});
 
 						p2['catch']( function( message ){
-							a7.Log.error( message );
+							a7.log.error( message );
 							initReject();
 						});
 					});
 				});
 
 				p0['catch']( function( message ){
-					a7.Log.error( message );
+					a7.log.error( message );
 					initReject();
 				});
 			});
 
 			pr['catch']( function( message ){
-				a7.Log.error( message );
+				a7.log.error( message );
 				initReject();
 			});
 		}
@@ -122,18 +122,18 @@ var a7 = ( function() {
 
 		deinit: function(){
 			// return state to default
-			a7.Model.set( "a7.user", "" );
-			//a7.Model.set( "a7.token", "" );
+			a7.model.set( "a7.user", "" );
+			//a7.model.set( "a7.token", "" );
 			sessionStorage.removeItem( "user" );
 			sessionStorage.removeItem( "token" );
 		}	*/
 	};
 }());
 
-a7.Console = ( function() {
+a7.console = ( function() {
 	"use strict";
 
-	var title = "Console Window", 
+	var title = "Console Window",
 		// width of window relative to it's container ( i.e. browser window )
 		width = "50%",
 		// the div we'll create to host the console content
@@ -153,7 +153,7 @@ a7.Console = ( function() {
 
 	return {
 		init : function( resolve, reject ) {
-			var console = a7.Model.get( "a7.console" );
+			var console = a7.model.get( "a7.console" );
 
 			// check for console state
 			if ( console.enabled ) {
@@ -163,14 +163,14 @@ a7.Console = ( function() {
 				consoleDiv.setAttribute( "class", "a7-console" );
 				document.body.append( consoleDiv );
 				var connection,
-					fp = new gadgetui.display.FloatingPane( consoleDiv, {
+					fp = a7.components.Constructor( gadgetui.display.FloatingPane, [ consoleDiv, {
 						width : width,
 						title : title,
 						opacity : 0.7,
 						position : "absolute",
 						right : console.right,
 						top : console.top
-					} );
+					} ], false );
 
 				fp.selector.setAttribute( "right", 0 );
 
@@ -187,7 +187,7 @@ a7.Console = ( function() {
 				connection = new WebSocket( console.wsServer );
 
 				connection.onopen = function() {
-					//a7.Log.info( "Console initializing..." );
+					//a7.log.info( "Console initializing..." );
 				};
 
 				connection.onerror = function( error ) {
@@ -196,9 +196,9 @@ a7.Console = ( function() {
 						// just in there were some problems with conenction...
 						_addMessage( message, new Date(), "local" );
 					}else{
-						a7.Log.error( message );
+						a7.log.error( message );
 					}
-					
+
 				};
 
 				// most important part - incoming messages
@@ -212,7 +212,7 @@ a7.Console = ( function() {
 					try {
 						json = JSON.parse( message.data );
 					} catch ( er ) {
-						a7.Log.error( "This doesn't look like valid JSON: ", message.data );
+						a7.log.error( "This doesn't look like valid JSON: ", message.data );
 						return;
 					}
 
@@ -226,7 +226,7 @@ a7.Console = ( function() {
 															// message
 						_addMessage( json.data.text, new Date( json.data.time ), "websocket" );
 					} else {
-						a7.Log.error( "This doesn't look like valid JSON: ", json );
+						a7.log.error( "This doesn't look like valid JSON: ", json );
 					}
 				};
 
@@ -234,8 +234,8 @@ a7.Console = ( function() {
 					connection.close();
 				} );
 
-				a7.Console.addMessage = _addMessage;
-				a7.Log.info( "Console initializing..." );
+				a7.console.addMessage = _addMessage;
+				a7.log.info( "Console initializing..." );
 				resolve();
 			}else{
 				// console init should not run if console is set to false
@@ -246,11 +246,47 @@ a7.Console = ( function() {
 	};
 
 }() );
+
+a7.error = ( function(){
+  "use strict";
+
+  var _captureError = function( msg, url, lineNo, columnNo, error ){
+    var string = msg.toLowerCase();
+    var substring = "script error";
+    if (string.indexOf(substring) > -1){
+        a7.log.error('Script Error: See Browser Console for Detail');
+    } else {
+        var message = [
+            'Message: ' + msg,
+            'URL: ' + url,
+            'Line: ' + lineNo,
+            'Column: ' + columnNo,
+            'Error object: ' + JSON.stringify(error)
+        ].join(' - ');
+
+        a7.log.error( message );
+    }
+  };
+
+  window.onerror = function (msg, url, lineNo, columnNo, error) {
+    a7.error.captureError( msg, url, lineNo, columnNo, error );
+    return false;
+  };
+
+  return {
+    capture: function( error ){
+
+
+    },
+    captureError : _captureError
+  }
+}());
+
 // derived from work by David Walsh
 // https://davidwalsh.name/pubsub-javascript
 // MIT License http://opensource.org/licenses/MIT
 
-a7.Events = ( function() {
+a7.events = ( function() {
 	"use strict";
 	var topics = {},
 		hOP = topics.hasOwnProperty;
@@ -274,21 +310,21 @@ a7.Events = ( function() {
 			};
 		},
 		init: function(){
-			a7.Events.subscribe( "auth.login", function( params ){
-				a7.Remote.invoke( "auth.login", params );
+			a7.events.subscribe( "auth.login", function( params ){
+				a7.remote.invoke( "auth.login", params );
 			});
-			a7.Events.subscribe( "auth.refresh", function( params ){
-				a7.Remote.invoke( "auth.refresh", params );
+			a7.events.subscribe( "auth.refresh", function( params ){
+				a7.remote.invoke( "auth.refresh", params );
 			});
-			a7.Events.subscribe( "auth.sessionTimeout", function( params ){
-			//	a7.Remote.invoke( "auth.sessionTimeout" );
+			a7.events.subscribe( "auth.sessionTimeout", function( params ){
+			//	a7.remote.invoke( "auth.sessionTimeout" );
 			});
-			a7.Events.subscribe( "auth.invalidateSession", function( params ){
-				//	a7.Remote.invoke( "auth.sessionTimeout" );
+			a7.events.subscribe( "auth.invalidateSession", function( params ){
+				//	a7.remote.invoke( "auth.sessionTimeout" );
 			});
 		},
 		publish : function( topic, info ) {
-			a7.Log.trace( "event: " + topic );
+			a7.log.trace( "event: " + topic );
 			// If the topic doesn't exist, or there's no listeners in queue,
 			// just leave
 			if ( !hOP.call( topics, topic ) ){
@@ -303,7 +339,7 @@ a7.Events = ( function() {
 	};
 }());
 
-a7.Log = ( function(){
+a7.log = ( function(){
 	// logging levels ALL < TRACE < INFO < WARN < ERROR < FATAL < OFF
 	var _ready = false,
 		_deferred = [],
@@ -311,8 +347,8 @@ a7.Log = ( function(){
 		_log = function( message, level ){
 			if( _ready && _logLevel.indexOf( level ) >=0 || _logLevel.indexOf( "ALL" ) >=0 ){
 				console.log( message );
-				if( a7.Model.get( "a7.console.enabled" ) ){
-					a7.Console.addMessage( message, new Date(), "local", level );
+				if( a7.model.get( "a7.console.enabled" ) ){
+					a7.console.addMessage( message, new Date(), "local", level );
 				}
 			} else if( ! _ready ){
 				// store log messages before init so they can be logged after init
@@ -322,14 +358,14 @@ a7.Log = ( function(){
 
 	return{
 		init: function(){
-			
-			_logLevel = a7.Model.get( "a7.logging" ).logLevel;
+
+			_logLevel = a7.model.get( "a7.logging" ).logLevel;
 			_ready = true;
 			_deferred.forEach( function( item ){
 				_log( item.message, item.level );
 			});
 			_deffered = [];
-			a7.Log.info( "Log initializing..." );
+			a7.log.info( "Log initializing..." );
 		},
 		error: function( message ){
 			_log( message, "ERROR" );
@@ -348,7 +384,8 @@ a7.Log = ( function(){
 		}
 	};
 }());
-a7.Model = ( function() {
+
+a7.model = ( function() {
 	"use strict";
 	var _model,
 		_methods = {};
@@ -373,7 +410,7 @@ a7.Model = ( function() {
 			return _methods[ "bind" ].apply( _model, arguments );
 		},
 		init: function( options, resolve, reject ){
-			a7.Log.info( "Model initializing... " );
+			a7.log.info( "Model initializing... " );
 			switch( options.model ){
 				case "gadgetui":
 					_model = gadgetui.model;
@@ -390,9 +427,9 @@ a7.Model = ( function() {
 	};
 
 }() );
-a7.Components = ( function() {"use strict";function Constructor( constructor, args, addBindings ) {
-	var ix, 
-		returnedObj, 
+a7.components = ( function() {"use strict";function Constructor( constructor, args, addBindings ) {
+	var ix,
+		returnedObj,
 		obj;
 
 	if( addBindings === true ){
@@ -422,13 +459,13 @@ a7.Components = ( function() {"use strict";function Constructor( constructor, ar
 	}
 
 	return returnedObj;
-	
+
 }
 
 /*
  * EventBindings
  * author: Robert Munn <robert.d.munn@gmail.com>
- * 
+ *
  */
 
 var EventBindings = {
@@ -439,22 +476,22 @@ var EventBindings = {
 		this.events[ event ].push( func );
 		return this;
 	},
-	
+
 	off : function( event ){
 		// clear listeners
 		this.events[ event ] = [];
 		return this;
 	},
-	
+
 	fireEvent : function( key, args ){
 		var _this = this;
 		this.events[ key ].forEach( function( func ){
 			func( _this, args );
 		});
 	},
-	
+
 	getAll : function(){
-		return [ { name : "on", func : this.on }, 
+		return [ { name : "on", func : this.on },
 		         { name : "off", func : this.off },
 				 { name : "fireEvent", func : this.fireEvent } ];
 	}
@@ -478,7 +515,8 @@ return {
 	User: User
 };
 }());
-a7.Remote = ( function(){
+
+a7.remote = ( function(){
 	var _options = {},
 		_time = new Date(),
 		_token,
@@ -500,8 +538,8 @@ a7.Remote = ( function(){
 		},
 
 		init: function( _modules ){
-			_options = a7.Model.get( "a7.remote" );
-			_options.sessionTimeout = a7.Model.get( "a7.auth" ).sessionTimeout;
+			_options = a7.model.get( "a7.remote" );
+			_options.sessionTimeout = a7.model.get( "a7.auth" ).sessionTimeout;
 			// set token if valid
 			if( _options.useTokens && sessionStorage.token && sessionStorage.token !== '' ) {
 				_token = sessionStorage.token;
@@ -512,7 +550,7 @@ a7.Remote = ( function(){
 						var request,
 								params = { 	method: 'POST',
 										headers: {
-											"Authorization": "Basic " + a7.Util.base64.encode64( username + ":" + password )
+											"Authorization": "Basic " + a7.util.base64.encode64( username + ":" + password )
 										}
 								};
 
@@ -530,12 +568,12 @@ a7.Remote = ( function(){
 								return response.json();
 							})
 							.then( function( json ){
-								var user = a7.Model.get( "a7.user" );
+								var user = a7.model.get( "a7.user" );
 								Object.keys( json.user ).map( function( key ) {
 									user[ key ] = json.user[ key ];
 								});
 								sessionStorage.user = JSON.stringify( user );
-								a7.Model.set( "a7.user", user );
+								a7.model.set( "a7.user", user );
 								if( callback !== undefined ){
 									callback( json );
 								}
@@ -544,7 +582,7 @@ a7.Remote = ( function(){
 
 					},
 					refresh: function( resolve, reject ){
-						a7.Remote.fetch( _options.refreshURL, {}, true )
+						a7.remote.fetch( _options.refreshURL, {}, true )
 						.then( function( response ){
 							return response.json();
 						})
@@ -565,7 +603,7 @@ a7.Remote = ( function(){
 		},
 
 		fetch: function( uri, params, secure ){
-			a7.Log.info( "fetch: " + uri );
+			a7.log.info( "fetch: " + uri );
 			var request,
 					promise;
 			if( secure && _options.useTokens ){
@@ -575,7 +613,7 @@ a7.Remote = ( function(){
 
 				if( minutes > _options.sessionTimeout ){
 					// timeout
-					a7.Events.publish( "auth.sessionTimeout" );
+					a7.events.publish( "auth.sessionTimeout" );
 					return;
 				}else if( _token !== undefined && _token !== null ){
 					if( params.headers === undefined ){
@@ -603,10 +641,10 @@ a7.Remote = ( function(){
 							if( _sessionTimer !== undefined ){
 								clearTimeout( _sessionTimer );
 							}
-							_sessionTimer =	setTimeout( function(){ a7.Remote.invoke( "auth.refresh" ); }, _options.sessionTimeout );
+							_sessionTimer =	setTimeout( function(){ a7.remote.invoke( "auth.refresh" ); }, _options.sessionTimeout );
 
 						} else{
-							a7.Events.publish( "auth.sessionTimeout" );
+							a7.events.publish( "auth.sessionTimeout" );
 						}
 					}
 				});
@@ -618,7 +656,7 @@ a7.Remote = ( function(){
 			var mA = moduleAction.split( "." );
 			// if no action specified, return the list of actions
 			if( mA.length < 2 ){
-				a7.Log.error( "No action specified. Valid actions are: " + Object.keys( _modules[ mA[ 0 ] ] ).toString() );
+				a7.log.error( "No action specified. Valid actions are: " + Object.keys( _modules[ mA[ 0 ] ] ).toString() );
 				return;
 			}
 			if( typeof _modules[ mA[ 0 ] ][ mA[ 1 ] ] === "function" ){
@@ -628,31 +666,26 @@ a7.Remote = ( function(){
 	};
 }());
 
-a7.Security = ( function() {
+a7.security = ( function() {
 	"use strict";
 
 	var _options = {},
 		_isAuthenticated = function( resolve, reject ){
-			a7.Log.info( "Checking authenticated state.. " );
-			if( a7.Model.get( "a7.user").userId !== undefined ){
-				resolve( true );
-			}else{
-				if( a7.Model.get( "a7.remote.useTokens" ) ){
-					var token = a7.Remote.getToken();
-					if( token !== undefined &&  token !== null && token.length > 0 ){
-							var timer = a7.Remote.getSessionTimer();
-							// if the timer isn't defined, that means the app just reloaded, so we need to refresh against the server
-							if( timer === undefined ){
-								a7.Log.info( "Refreshing user..." );
-								// if there is a valid token, check authentication state with the server
-								a7.Events.publish( "auth.refresh", [ resolve, reject ] );
-							}else{
-								resolve( true );
-							}
-					}else{
-						//a7.Events.publish( "a7.auth.invalidateSession" );
-						resolve( false );
-					}
+			a7.log.info( "Checking authenticated state.. " );
+			if( a7.model.get( "a7.remote.useTokens" ) ){
+				var token = a7.remote.getToken();
+				if( token !== undefined &&  token !== null && token.length > 0 ){
+						var timer = a7.remote.getSessionTimer();
+						// if the timer isn't defined, that means the app just reloaded, so we need to refresh against the server
+						if( timer === undefined ){
+							a7.log.info( "Refreshing user..." );
+							// if there is a valid token, check authentication state with the server
+							a7.events.publish( "auth.refresh", [ resolve, reject ] );
+						}else{
+							resolve( true );
+						}
+				}else{
+					resolve( false );
 				}
 			}
 		};
@@ -664,23 +697,23 @@ a7.Security = ( function() {
 		// 2. checks sessionStorage for user string
 		// 3. populates User object with stored user information in case of
 		// 	  browser refresh
-		// 4. sets User object into a7.Model
+		// 4. sets User object into a7.model
 
 		init : function() {
-			a7.Log.info( "Security initializing..." );
-			var suser, keys, user = a7.Components.Constructor( a7.Components.User, [], true );
+			a7.log.info( "Security initializing..." );
+			var suser, keys, user = a7.components.Constructor( a7.components.User, [], true );
 			if ( sessionStorage.user && sessionStorage.user !== '' ) {
 				suser = JSON.parse( sessionStorage.user );
 				Object.keys( suser ).map( function( key ) {
 					user[ key ] = suser[ key ];
 				});
 			}
-			a7.Model.set( "a7.user", user );
+			a7.model.set( "a7.user", user );
 		}
 	};
 }());
 
-a7.UI = ( function() {
+a7.ui = ( function() {
 		"use strict";
 
 		var _options = {},
@@ -713,7 +746,7 @@ a7.UI = ( function() {
 								return response.text();
 							})
 							.then( function( text ){
-								a7.Log.info( "Loading " + _options.renderer + " templates... " );
+								a7.log.info( "Loading " + _options.renderer + " templates... " );
 								var parser = new DOMParser(),
 									doc = parser.parseFromString( text, "text/html" ),
 									scripts = doc.querySelectorAll( "script" );
@@ -750,11 +783,11 @@ a7.UI = ( function() {
 
 			init : function( resolve, reject ){
 				var renderers = "Handlebars,Mustache";
-				_options = a7.Model.get( "a7.UI" );
+				_options = a7.model.get( "a7.ui" );
 
-				a7.Log.info( "Layout initializing..." );
+				a7.log.info( "Layout initializing..." );
 				if( renderers.indexOf( _options.renderer ) >=0 ){
-					a7.Model.set( "a7.UI.templatesLoaded", false );
+					a7.model.set( "a7.ui.templatesLoaded", false );
 					if( _options.templates !== undefined ){
 						_loadTemplates( resolve, reject );
 					}
@@ -766,7 +799,7 @@ a7.UI = ( function() {
 
 }( ) );
 
-a7.Util = ( function(){
+a7.util = ( function(){
 
 
 	return{
@@ -774,68 +807,68 @@ a7.Util = ( function(){
 		split : function( val ) {
 			return val.split( /,\s*/ );
 		},
-	
+
 		// return the last item from a comma-separated list
 		extractLast : function( term ) {
 			return this.split( term ).pop();
 		},
-	
+
 		// encode and decode base64
 		base64 : {
 			keyStr : "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",
-	
+
 			encode64 : function( input ) {
 				if ( !String( input ).length ) {
 					return false;
 				}
 				var output = "", chr1, chr2, chr3, enc1, enc2, enc3, enc4, i = 0;
-	
+
 				do {
 					chr1 = input.charCodeAt( i++ );
 					chr2 = input.charCodeAt( i++ );
 					chr3 = input.charCodeAt( i++ );
-	
+
 					enc1 = chr1 >> 2;
 					enc2 = ( ( chr1 & 3 ) << 4 ) | ( chr2 >> 4 );
 					enc3 = ( ( chr2 & 15 ) << 2 ) | ( chr3 >> 6 );
 					enc4 = chr3 & 63;
-	
+
 					if ( isNaN( chr2 ) ) {
 						enc3 = enc4 = 64;
 					} else if ( isNaN( chr3 ) ) {
 						enc4 = 64;
 					}
-	
+
 					output = output + this.keyStr.charAt( enc1 )
 							+ this.keyStr.charAt( enc2 )
 							+ this.keyStr.charAt( enc3 )
 							+ this.keyStr.charAt( enc4 );
 				} while ( i < input.length );
-	
+
 				return output;
 			},
-	
+
 			decode64 : function( input ) {
 				if ( !input ) {
 					return false;
 				}
 				var output = "", chr1, chr2, chr3, enc1, enc2, enc3, enc4, i = 0;
-	
+
 				// remove all characters that are not A-Z, a-z, 0-9, +, /, or =
 				input = input.replace( /[^A-Za-z0-9\+\/\=]/g, "" );
-	
+
 				do {
 					enc1 = this.keyStr.indexOf( input.charAt( i++ ) );
 					enc2 = this.keyStr.indexOf( input.charAt( i++ ) );
 					enc3 = this.keyStr.indexOf( input.charAt( i++ ) );
 					enc4 = this.keyStr.indexOf( input.charAt( i++ ) );
-	
+
 					chr1 = ( enc1 << 2 ) | ( enc2 >> 4 );
 					chr2 = ( ( enc2 & 15 ) << 4 ) | ( enc3 >> 2 );
 					chr3 = ( ( enc3 & 3 ) << 6 ) | enc4;
-	
+
 					output = output + String.fromCharCode( chr1 );
-	
+
 					if ( enc3 !== 64 ) {
 						output = output + String.fromCharCode( chr2 );
 					}
@@ -843,16 +876,16 @@ a7.Util = ( function(){
 						output = output + String.fromCharCode( chr3 );
 					}
 				} while ( i < input.length );
-	
+
 				return output;
 			}
 		},
-	
+
 		// add a leading zero to single numbers so the string is at least two characters
 		leadingZero : function( n ) {
 			return ( n < 10 ) ? ( "0" + n ) : n;
 		},
-	
+
 		dynamicSort : function( property ) {
 			var sortOrder = 1;
 			if ( property[ 0 ] === "-" ) {
@@ -865,12 +898,12 @@ a7.Util = ( function(){
 				return result * sortOrder;
 			};
 		},
-	
+
 		// return yes|no for 1|0
 		yesNo : function( val ) {
 			return parseInt( val, 10 ) < 1 ? "No" : "Yes";
 		},
-	
+
 		// validate a javascript date object
 		isValidDate : function( d ) {
 			if ( Object.prototype.toString.call( d ) !== "[object Date]" ) {
@@ -878,13 +911,13 @@ a7.Util = ( function(){
 			}
 			return !isNaN( d.getTime() );
 		},
-	
+
 		// generate a pseudo-random ID
 		id : function() {
 			return ( ( Math.random() * 100 ).toString() + ( Math.random() * 100 )
 					.toString() ).replace( /\./g, "" );
 		},
-	
+
 		// try/catch a function
 		tryCatch : function( fn, ctx, args ) {
 			var errorObject = {
@@ -897,21 +930,21 @@ a7.Util = ( function(){
 				return errorObject;
 			}
 		},
-	
+
 		// return a numeric representation of the value passed
 		getNumberValue : function( pixelValue ) {
 			return ( isNaN( Number( pixelValue ) ) ? Number( pixelValue.substring( 0, pixelValue.length - 2 ) ) : pixelValue );
 		},
-	
+
 		// check whether a value is numeric
 		isNumeric : function( num ) {
 			return !isNaN( parseFloat( num ) ) && isFinite( num );
 		},
-	
+
 		// get top/left offset of a selector on screen
 		getOffset : function( selector ) {
 			var rect = selector.getBoundingClientRect();
-	
+
 			return {
 				top : rect.top + document.body.scrollTop,
 				left : rect.left + document.body.scrollLeft
@@ -919,4 +952,5 @@ a7.Util = ( function(){
 		}
 	};
 }());
+
 //# sourceMappingURL=a7.js.map

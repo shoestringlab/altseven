@@ -20,12 +20,12 @@
 			var p = new Promise( function( resolve, reject ){
 				a7.init( options, resolve, reject );
 			});
-			
+
 			p.then( function(){
-				a7.Events.publish( "helloworld" );
+				a7.events.publish( "helloworld" );
 				var mainDiv = document.querySelector( "div[name='main']" );
-				mainDiv.innerHTML = a7.Layout.render( "button", { name:'hello', val:"Hello World!"} );
-				mainDiv.innerHTML += a7.Layout.render( "button", { name:'goodbye', val:"So long!"} );
+				mainDiv.innerHTML = a7.layout.render( "button", { name:'hello', val:"Hello World!"} );
+				mainDiv.innerHTML += a7.layout.render( "button", { name:'goodbye', val:"So long!"} );
 			});
 
 			p['catch']( function( message ){
@@ -38,16 +38,16 @@
 	</head>
 	<body>
 	<div>
-	
+
 	<h1>
 	alt-7 Test Page
 	</h1>
 	</div>
-	
+
 	<div name="main">
-	
+
 	</div>
-	
-	
+
+
 	</body>
 </html>

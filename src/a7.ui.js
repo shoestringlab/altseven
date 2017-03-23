@@ -1,4 +1,4 @@
-a7.UI = ( function() {
+a7.ui = ( function() {
 		"use strict";
 
 		var _options = {},
@@ -31,7 +31,7 @@ a7.UI = ( function() {
 								return response.text();
 							})
 							.then( function( text ){
-								a7.Log.info( "Loading " + _options.renderer + " templates... " );
+								a7.log.info( "Loading " + _options.renderer + " templates... " );
 								var parser = new DOMParser(),
 									doc = parser.parseFromString( text, "text/html" ),
 									scripts = doc.querySelectorAll( "script" );
@@ -68,11 +68,11 @@ a7.UI = ( function() {
 
 			init : function( resolve, reject ){
 				var renderers = "Handlebars,Mustache";
-				_options = a7.Model.get( "a7.UI" );
+				_options = a7.model.get( "a7.ui" );
 
-				a7.Log.info( "Layout initializing..." );
+				a7.log.info( "Layout initializing..." );
 				if( renderers.indexOf( _options.renderer ) >=0 ){
-					a7.Model.set( "a7.UI.templatesLoaded", false );
+					a7.model.set( "a7.ui.templatesLoaded", false );
 					if( _options.templates !== undefined ){
 						_loadTemplates( resolve, reject );
 					}

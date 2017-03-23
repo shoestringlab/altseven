@@ -1,4 +1,4 @@
-a7.Remote = ( function(){
+a7.remote = ( function(){
 	var _options = {},
 		_time = new Date(),
 		_token,
@@ -20,8 +20,8 @@ a7.Remote = ( function(){
 		},
 
 		init: function( _modules ){
-			_options = a7.Model.get( "a7.remote" );
-			_options.sessionTimeout = a7.Model.get( "a7.auth" ).sessionTimeout;
+			_options = a7.model.get( "a7.remote" );
+			_options.sessionTimeout = a7.model.get( "a7.auth" ).sessionTimeout;
 			// set token if valid
 			if( _options.useTokens && sessionStorage.token && sessionStorage.token !== '' ) {
 				_token = sessionStorage.token;
@@ -32,7 +32,7 @@ a7.Remote = ( function(){
 						var request,
 								params = { 	method: 'POST',
 										headers: {
-											"Authorization": "Basic " + a7.Util.base64.encode64( username + ":" + password )
+											"Authorization": "Basic " + a7.util.base64.encode64( username + ":" + password )
 										}
 								};
 
@@ -50,12 +50,12 @@ a7.Remote = ( function(){
 								return response.json();
 							})
 							.then( function( json ){
-								var user = a7.Model.get( "a7.user" );
+								var user = a7.model.get( "a7.user" );
 								Object.keys( json.user ).map( function( key ) {
 									user[ key ] = json.user[ key ];
 								});
 								sessionStorage.user = JSON.stringify( user );
-								a7.Model.set( "a7.user", user );
+								a7.model.set( "a7.user", user );
 								if( callback !== undefined ){
 									callback( json );
 								}
@@ -64,7 +64,7 @@ a7.Remote = ( function(){
 
 					},
 					refresh: function( resolve, reject ){
-						a7.Remote.fetch( _options.refreshURL, {}, true )
+						a7.remote.fetch( _options.refreshURL, {}, true )
 						.then( function( response ){
 							return response.json();
 						})
@@ -85,7 +85,7 @@ a7.Remote = ( function(){
 		},
 
 		fetch: function( uri, params, secure ){
-			a7.Log.info( "fetch: " + uri );
+			a7.log.info( "fetch: " + uri );
 			var request,
 					promise;
 			if( secure && _options.useTokens ){
@@ -95,7 +95,7 @@ a7.Remote = ( function(){
 
 				if( minutes > _options.sessionTimeout ){
 					// timeout
-					a7.Events.publish( "auth.sessionTimeout" );
+					a7.events.publish( "auth.sessionTimeout" );
 					return;
 				}else if( _token !== undefined && _token !== null ){
 					if( params.headers === undefined ){
@@ -123,10 +123,10 @@ a7.Remote = ( function(){
 							if( _sessionTimer !== undefined ){
 								clearTimeout( _sessionTimer );
 							}
-							_sessionTimer =	setTimeout( function(){ a7.Remote.invoke( "auth.refresh" ); }, _options.sessionTimeout );
+							_sessionTimer =	setTimeout( function(){ a7.remote.invoke( "auth.refresh" ); }, _options.sessionTimeout );
 
 						} else{
-							a7.Events.publish( "auth.sessionTimeout" );
+							a7.events.publish( "auth.sessionTimeout" );
 						}
 					}
 				});
@@ -138,7 +138,7 @@ a7.Remote = ( function(){
 			var mA = moduleAction.split( "." );
 			// if no action specified, return the list of actions
 			if( mA.length < 2 ){
-				a7.Log.error( "No action specified. Valid actions are: " + Object.keys( _modules[ mA[ 0 ] ] ).toString() );
+				a7.log.error( "No action specified. Valid actions are: " + Object.keys( _modules[ mA[ 0 ] ] ).toString() );
 				return;
 			}
 			if( typeof _modules[ mA[ 0 ] ][ mA[ 1 ] ] === "function" ){

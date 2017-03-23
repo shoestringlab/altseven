@@ -1,41 +1,45 @@
-FAIL	dist/a7.js (38)
+FAIL	dist/a7.js (42)
 dist/a7.js:47:27	'Mustache' was used before it was defined.
 dist/a7.js:47:73	'Handlebars' was used before it was defined.
-dist/a7.js:166:9	Combine this with the previous 'var' statement.
-dist/a7.js:188:22	'WebSocket' was used before it was defined.
-dist/a7.js:190:36	Empty block.
-dist/a7.js:143:3	Unused 'active'.
-dist/a7.js:284:66	Empty block.
-dist/a7.js:287:69	Empty block.
-dist/a7.js:309:2	Missing 'use strict' statement.
-dist/a7.js:313:15	The '&amp;&amp;' subexpression should be wrapped in parens.
-dist/a7.js:332:4	'_deffered' was used before it was defined.
-dist/a7.js:359:21	['create'] is better written in dot notation.
-dist/a7.js:362:21	['destroy'] is better written in dot notation.
-dist/a7.js:365:21	['get'] is better written in dot notation.
-dist/a7.js:368:21	['set'] is better written in dot notation.
-dist/a7.js:371:21	['exists'] is better written in dot notation.
-dist/a7.js:374:21	['bind'] is better written in dot notation.
-dist/a7.js:398:7	Unused 'ix'.
-dist/a7.js:480:2	Missing 'use strict' statement.
-dist/a7.js:517:21	'Request' was used before it was defined.
-dist/a7.js:519:11	Combine this with the previous 'var' statement.
-dist/a7.js:519:21	'fetch' was used before it was defined.
-dist/a7.js:570:9	Combine this with the previous 'var' statement.
-dist/a7.js:578:6	Unnecessary 'else' after disruption.
-dist/a7.js:590:18	'Request' was used before it was defined.
-dist/a7.js:591:14	'fetch' was used before it was defined.
-dist/a7.js:485:3	Unused 'hOP'.
-dist/a7.js:638:11	Combine this with the previous 'var' statement.
-dist/a7.js:665:15	Unused 'keys'.
-dist/a7.js:632:6	Unused '_options'.
-dist/a7.js:694:29	'Handlebars' was used before it was defined.
-dist/a7.js:705:7	'fetch' was used before it was defined.
-dist/a7.js:711:26	'DOMParser' was used before it was defined.
-dist/a7.js:727:13	'Mustache' was used before it was defined.
-dist/a7.js:728:6	Unreachable 'break' after 'return'.
-dist/a7.js:731:6	Unreachable 'break' after 'return'.
-dist/a7.js:759:2	Missing 'use strict' statement.
-dist/a7.js:812:30	Insecure '^'.
+dist/a7.js:165:9	Combine this with the previous 'var' statement.
+dist/a7.js:187:22	'WebSocket' was used before it was defined.
+dist/a7.js:189:36	Empty block.
+dist/a7.js:142:3	Unused 'active'.
+dist/a7.js:255:9	Combine this with the previous 'var' statement.
+dist/a7.js:259:13	Combine this with the previous 'var' statement.
+dist/a7.js:277:31	Empty block.
+dist/a7.js:282:4	Expected ';' and instead saw '}'.
+dist/a7.js:319:66	Empty block.
+dist/a7.js:322:69	Empty block.
+dist/a7.js:344:2	Missing 'use strict' statement.
+dist/a7.js:348:15	The '&amp;&amp;' subexpression should be wrapped in parens.
+dist/a7.js:367:4	'_deffered' was used before it was defined.
+dist/a7.js:395:21	['create'] is better written in dot notation.
+dist/a7.js:398:21	['destroy'] is better written in dot notation.
+dist/a7.js:401:21	['get'] is better written in dot notation.
+dist/a7.js:404:21	['set'] is better written in dot notation.
+dist/a7.js:407:21	['exists'] is better written in dot notation.
+dist/a7.js:410:21	['bind'] is better written in dot notation.
+dist/a7.js:431:6	Unused 'ix'.
+dist/a7.js:520:2	Missing 'use strict' statement.
+dist/a7.js:557:21	'Request' was used before it was defined.
+dist/a7.js:559:11	Combine this with the previous 'var' statement.
+dist/a7.js:559:21	'fetch' was used before it was defined.
+dist/a7.js:610:9	Combine this with the previous 'var' statement.
+dist/a7.js:618:6	Unnecessary 'else' after disruption.
+dist/a7.js:630:18	'Request' was used before it was defined.
+dist/a7.js:631:14	'fetch' was used before it was defined.
+dist/a7.js:525:3	Unused 'hOP'.
+dist/a7.js:678:11	Combine this with the previous 'var' statement.
+dist/a7.js:704:15	Unused 'keys'.
+dist/a7.js:672:6	Unused '_options'.
+dist/a7.js:733:29	'Handlebars' was used before it was defined.
+dist/a7.js:744:7	'fetch' was used before it was defined.
+dist/a7.js:750:26	'DOMParser' was used before it was defined.
+dist/a7.js:767:13	'Mustache' was used before it was defined.
+dist/a7.js:768:6	Unreachable 'break' after 'return'.
+dist/a7.js:771:6	Unreachable 'break' after 'return'.
+dist/a7.js:805:2	Missing 'use strict' statement.
+dist/a7.js:858:30	Insecure '^'.
 
-# JSLint failed, 38 violations in 1.  1 files scanned.
+# JSLint failed, 42 violations in 1.  1 files scanned.

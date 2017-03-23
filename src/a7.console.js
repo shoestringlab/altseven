@@ -1,7 +1,7 @@
-a7.Console = ( function() {
+a7.console = ( function() {
 	"use strict";
 
-	var title = "Console Window", 
+	var title = "Console Window",
 		// width of window relative to it's container ( i.e. browser window )
 		width = "50%",
 		// the div we'll create to host the console content
@@ -21,7 +21,7 @@ a7.Console = ( function() {
 
 	return {
 		init : function( resolve, reject ) {
-			var console = a7.Model.get( "a7.console" );
+			var console = a7.model.get( "a7.console" );
 
 			// check for console state
 			if ( console.enabled ) {
@@ -31,14 +31,14 @@ a7.Console = ( function() {
 				consoleDiv.setAttribute( "class", "a7-console" );
 				document.body.append( consoleDiv );
 				var connection,
-					fp = new gadgetui.display.FloatingPane( consoleDiv, {
+					fp = a7.components.Constructor( gadgetui.display.FloatingPane, [ consoleDiv, {
 						width : width,
 						title : title,
 						opacity : 0.7,
 						position : "absolute",
 						right : console.right,
 						top : console.top
-					} );
+					} ], false );
 
 				fp.selector.setAttribute( "right", 0 );
 
@@ -55,7 +55,7 @@ a7.Console = ( function() {
 				connection = new WebSocket( console.wsServer );
 
 				connection.onopen = function() {
-					//a7.Log.info( "Console initializing..." );
+					//a7.log.info( "Console initializing..." );
 				};
 
 				connection.onerror = function( error ) {
@@ -64,9 +64,9 @@ a7.Console = ( function() {
 						// just in there were some problems with conenction...
 						_addMessage( message, new Date(), "local" );
 					}else{
-						a7.Log.error( message );
+						a7.log.error( message );
 					}
-					
+
 				};
 
 				// most important part - incoming messages
@@ -80,7 +80,7 @@ a7.Console = ( function() {
 					try {
 						json = JSON.parse( message.data );
 					} catch ( er ) {
-						a7.Log.error( "This doesn't look like valid JSON: ", message.data );
+						a7.log.error( "This doesn't look like valid JSON: ", message.data );
 						return;
 					}
 
@@ -94,7 +94,7 @@ a7.Console = ( function() {
 															// message
 						_addMessage( json.data.text, new Date( json.data.time ), "websocket" );
 					} else {
-						a7.Log.error( "This doesn't look like valid JSON: ", json );
+						a7.log.error( "This doesn't look like valid JSON: ", json );
 					}
 				};
 
@@ -102,8 +102,8 @@ a7.Console = ( function() {
 					connection.close();
 				} );
 
-				a7.Console.addMessage = _addMessage;
-				a7.Log.info( "Console initializing..." );
+				a7.console.addMessage = _addMessage;
+				a7.log.info( "Console initializing..." );
 				resolve();
 			}else{
 				// console init should not run if console is set to false

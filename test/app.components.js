@@ -12,7 +12,7 @@ app.components = ( function(){
     },
 
     render : function(){
-      this.selector.innerHTML = a7.UI.render( "todoForm", { text : this.state.text, next : this.state.items.length + 1, items :  this.state.items }, { todoList : a7.UI.getTemplate( "todoList" ) } );
+      this.selector.innerHTML = a7.ui.render( "todoForm", { text : this.state.text, next : this.state.items.length + 1, items :  this.state.items }, { todoList : a7.ui.getTemplate( "todoList" ) } );
       this.todoSelector = document.querySelector( "div[name='todoForm']" );
       this.inputSelector = document.querySelector( "input[name='todoInput']" );
       this.buttonSelector = document.querySelector( "button[name='todoSubmit']" );
@@ -53,8 +53,8 @@ app.components = ( function(){
 
     render : function(){
       // render login
-      this.selector.innerHTML = a7.UI.render( "loginForm", {} );
-      this.selector.innerHTML += a7.UI.render( "instructions", {} );
+      this.selector.innerHTML = a7.ui.render( "loginForm", {} );
+      this.selector.innerHTML += a7.ui.render( "instructions", {} );
       this.setEventHandlers();
     },
 
@@ -62,7 +62,7 @@ app.components = ( function(){
       var loginButton = document.querySelector( "input[name='login']" );
 
       loginButton.addEventListener( "click", function( event ){
-        a7.Events.publish( "auth.login", [ 	document.querySelector( "input[name='username']" ).value,
+        a7.events.publish( "auth.login", [ 	document.querySelector( "input[name='username']" ).value,
                                             document.querySelector( "input[name='password']" ).value,
                                             app.auth.loginHandler ] );
       });
@@ -82,7 +82,7 @@ app.components = ( function(){
 
     render : function(){
       // render Header
-      this.selector.innerHTML = a7.UI.render( "header", this.state.user );
+      this.selector.innerHTML = a7.ui.render( "header", this.state.user );
       this.setEventHandlers();
     },
 
@@ -90,7 +90,7 @@ app.components = ( function(){
       var signout = document.querySelector( "a[name='signout']" );
 
       signout.addEventListener( "click", function( event ){
-        a7.Events.publish( "auth.signout", [] );
+        a7.events.publish( "auth.signout", [] );
       });
     }
   };

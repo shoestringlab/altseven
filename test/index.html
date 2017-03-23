@@ -2,9 +2,9 @@
 <html>
 	<head>
 	<title>alt-7</title>
-	<script src="/bower_components/Lazy/dist/lazy.1.0.0.js"></script>
+	<script src="/bower_components/modlazy/dist/modlazy.min.js"></script>
 	<script>
-		lazy.load( [ "/test/app.components.js  < /test/app.remote.js < /test/app.main.js < /test/app.events.js < /dist/a7.js < /bower_components/gadget-ui/dist/gadget-ui.js < /bower_components/velocity/velocity.js",
+		modlazy.load( [ "/test/app.components.js  < /test/app.remote.js < /test/app.main.js < /test/app.events.js < /dist/a7.js < /bower_components/gadget-ui/dist/gadget-ui.js < /bower_components/velocity/velocity.js",
 		"/bower_components/mustache.js/mustache.js", "/test/styles.css", "/dist/a7.css", "/bower_components/gadget-ui/gadget-ui.css", "/bower_components/open-iconic/font/css/open-iconic.css" ], function(){
 
 			var options = {
@@ -26,7 +26,7 @@
 					refreshURL : "/test/auth.cfc?method=refresh",
 					useTokens: true // defaults to true for the auth system
 				},
-				UI : {
+				ui : {
 					// renderer: // renderer is implicitly set by existence of the templating library, currently Mustache or Handlebars
 					templates: "/test/templates.html"
 				}
@@ -44,7 +44,6 @@
 				console.log( "Something went wrong." );
 			});
 		});
-
 	</script>
 	</head>
 	<body>

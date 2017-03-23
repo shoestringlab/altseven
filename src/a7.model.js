@@ -1,4 +1,4 @@
-a7.Model = ( function() {
+a7.model = ( function() {
 	"use strict";
 	var _model,
 		_methods = {};
@@ -23,7 +23,7 @@ a7.Model = ( function() {
 			return _methods[ "bind" ].apply( _model, arguments );
 		},
 		init: function( options, resolve, reject ){
-			a7.Log.info( "Model initializing... " );
+			a7.log.info( "Model initializing... " );
 			switch( options.model ){
 				case "gadgetui":
 					_model = gadgetui.model;

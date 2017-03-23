@@ -5,26 +5,23 @@ var app = {
 		return {
 			init: function( state ){
 				// cache initial selectors from index.html
-				a7.UI.setSelector( 'mainDiv', document.querySelector( "div[name='main']" ) );
-				a7.UI.setSelector( 'anonDiv', document.querySelector( "div[name='anon']" ) );
-				a7.UI.setSelector( 'secureDiv', document.querySelector( "div[name='secure']" ) );
-				a7.UI.setSelector( 'header', document.querySelector( "div[name='header']" ) );
-				a7.UI.setSelector( 'app', document.querySelector( "div[name='app']" ) );
+				a7.ui.setSelector( 'mainDiv', document.querySelector( "div[name='main']" ) );
+				a7.ui.setSelector( 'anonDiv', document.querySelector( "div[name='anon']" ) );
+				a7.ui.setSelector( 'secureDiv', document.querySelector( "div[name='secure']" ) );
+				a7.ui.setSelector( 'header', document.querySelector( "div[name='header']" ) );
+				a7.ui.setSelector( 'app', document.querySelector( "div[name='app']" ) );
 
-				app.ui.init();
 				app.main.run( state.secure );
 			},
 
 			run : function( secure ){
 				// render the login form
-				var loginForm = a7.Components.Constructor( app.components.LoginForm, [ { selector : a7.UI.selectors[ 'anonDiv' ] } ], true );
+				var loginForm = a7.components.Constructor( app.components.LoginForm, [ { selector : a7.ui.selectors[ 'anonDiv' ] } ], true );
 
 				if( secure ){
-					var user = a7.Model.get( "a7.user" ),
-						header,
-						todo;
-					header = a7.Components.Constructor( app.components.Header, [ { selector : a7.UI.selectors[ 'header' ], user : user } ], true );
-					todo = a7.Components.Constructor( app.components.Todo, [ { selector : a7.UI.selectors[ 'app' ] } ], true );
+					var user = a7.model.get( "a7.user" ),
+					header = a7.components.Constructor( app.components.Header, [ { selector : a7.ui.selectors[ 'header' ], user : user } ], true ),
+					todo = a7.components.Constructor( app.components.Todo, [ { selector : a7.ui.selectors[ 'app' ] } ], true );
 				}
 				app.ui.setLayout( secure );
 			}
@@ -37,7 +34,7 @@ var app = {
 			var _authenticate = function(){
 					var promise = new Promise( function( resolve, reject ){
 						// check whether user is authenticated
-						a7.Security.isAuthenticated( resolve, reject );
+						a7.security.isAuthenticated( resolve, reject );
 					});
 
 					promise.then( function( secure ){
@@ -58,8 +55,8 @@ var app = {
 
 		return {
 			setLayout: function( secure ){
-				a7.UI.selectors[ ( secure ? 'secureDiv' : 'anonDiv' ) ].style.display = 'block';
-				a7.UI.selectors[ ( ! secure ? 'secureDiv' : 'anonDiv' ) ].style.display = 'none';
+				a7.ui.selectors[ ( secure ? 'secureDiv' : 'anonDiv' ) ].style.display = 'block';
+				a7.ui.selectors[ ( ! secure ? 'secureDiv' : 'anonDiv' ) ].style.display = 'none';
 			}
 		};
 	}())

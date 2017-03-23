@@ -2,7 +2,7 @@
 // https://davidwalsh.name/pubsub-javascript
 // MIT License http://opensource.org/licenses/MIT
 
-a7.Events = ( function() {
+a7.events = ( function() {
 	"use strict";
 	var topics = {},
 		hOP = topics.hasOwnProperty;
@@ -26,21 +26,21 @@ a7.Events = ( function() {
 			};
 		},
 		init: function(){
-			a7.Events.subscribe( "auth.login", function( params ){
-				a7.Remote.invoke( "auth.login", params );
+			a7.events.subscribe( "auth.login", function( params ){
+				a7.remote.invoke( "auth.login", params );
 			});
-			a7.Events.subscribe( "auth.refresh", function( params ){
-				a7.Remote.invoke( "auth.refresh", params );
+			a7.events.subscribe( "auth.refresh", function( params ){
+				a7.remote.invoke( "auth.refresh", params );
 			});
-			a7.Events.subscribe( "auth.sessionTimeout", function( params ){
-			//	a7.Remote.invoke( "auth.sessionTimeout" );
+			a7.events.subscribe( "auth.sessionTimeout", function( params ){
+			//	a7.remote.invoke( "auth.sessionTimeout" );
 			});
-			a7.Events.subscribe( "auth.invalidateSession", function( params ){
-				//	a7.Remote.invoke( "auth.sessionTimeout" );
+			a7.events.subscribe( "auth.invalidateSession", function( params ){
+				//	a7.remote.invoke( "auth.sessionTimeout" );
 			});
 		},
 		publish : function( topic, info ) {
-			a7.Log.trace( "event: " + topic );
+			a7.log.trace( "event: " + topic );
 			// If the topic doesn't exist, or there's no listeners in queue,
 			// just leave
 			if ( !hOP.call( topics, topic ) ){
