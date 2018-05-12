@@ -1,6 +1,5 @@
 function Constructor( constructor, args, addBindings ) {
-	var ix, 
-		returnedObj, 
+	var returnedObj, 
 		obj;
 
 	if( addBindings === true ){
@@ -30,5 +29,5 @@ function Constructor( constructor, args, addBindings ) {
 	}
 
 	return returnedObj;
-	
+
 }

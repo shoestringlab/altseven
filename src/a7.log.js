@@ -5,7 +5,7 @@ a7.log = ( function(){
 		_logLevel = "ERROR,FATAL,INFO",
 		_log = function( message, level ){
 			if( _ready && _logLevel.indexOf( level ) >=0 || _logLevel.indexOf( "ALL" ) >=0 ){
-				console.log( message );
+				//console.log( message );
 				if( a7.model.get( "a7.console.enabled" ) ){
 					a7.console.addMessage( message, new Date(), "local", level );
 				}

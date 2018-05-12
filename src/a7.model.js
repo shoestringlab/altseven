@@ -22,13 +22,13 @@ a7.model = ( function() {
 		bind : function(){
 			return _methods[ "bind" ].apply( _model, arguments );
 		},
-		init: function( options, resolve, reject ){
+		init: function( options, resolve ){
 			a7.log.info( "Model initializing... " );
 			switch( options.model ){
 				case "gadgetui":
 					_model = gadgetui.model;
 					// gadgetui maps directly, so we can loop on the keys
-					Object.keys( gadgetui.model ).forEach( function( key, index ){
+					Object.keys( gadgetui.model ).forEach( function( key ){
 						if( key !== "BindableObject" ){
 							_methods[ key ] = gadgetui.model[ key ];
 						}

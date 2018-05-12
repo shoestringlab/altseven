@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
 	<head>
-	<title>alt-7</title>
+	<title>A7</title>
 	<script src="/bower_components/modlazy/dist/modlazy.min.js"></script>
 	<script>
 		modlazy.load( [ "/test/app.components.js  < /test/app.remote.js < /test/app.main.js < /test/app.events.js < /dist/a7.js < /bower_components/gadget-ui/dist/gadget-ui.js < /bower_components/velocity/velocity.js",
@@ -26,7 +26,7 @@
 					refreshURL : "/test/auth.cfc?method=refresh",
 					useTokens: true // defaults to true for the auth system
 				},
-				UI : {
+				ui : {
 					// renderer: // renderer is implicitly set by existence of the templating library, currently Mustache or Handlebars
 					templates: "/test/templates.html"
 				}

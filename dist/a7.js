@@ -10,7 +10,7 @@ var a7 = ( function() {
 		init : function( options, initResolve, initReject ){
 			var pr, p0, p1, p2;
 
-			options.model = ( options.model !== undefined ? options.model : ( typeof gadgetui === 'object' ? "gadgetui" : "" ) );
+			options.model = ( options.model !== undefined ? options.model : ( typeof gadgetui === "object" ? "gadgetui" : "" ) );
 			if( options.model === "" ){
 				// model required
 				initReject( "No model specified." );
@@ -30,8 +30,10 @@ var a7 = ( function() {
 					console : {
 						enabled : ( options.console.enabled || false ),
 						wsServer : ( options.console.wsServer || "" ),
-						top : ( options.console.top || 0 ),
-						right : ( options.console.right || 0 )
+						top : ( options.console.top || 100 ),
+						left : ( options.console.left || 100 ),
+						width : ( options.console.width || 500 ),
+						height : ( options.console.height || 300 ),
 					},
 					logging : {
 						logLevel: ( options.logging.logLevel || "ERROR,FATAL,INFO" )
@@ -134,8 +136,6 @@ a7.console = ( function() {
 	"use strict";
 
 	var title = "Console Window",
-		// width of window relative to it's container ( i.e. browser window )
-		width = "50%",
 		// the div we'll create to host the console content
 		consoleDiv,
 		// flag whether console is running
@@ -164,11 +164,10 @@ a7.console = ( function() {
 				document.body.append( consoleDiv );
 				var connection,
 					fp = a7.components.Constructor( gadgetui.display.FloatingPane, [ consoleDiv, {
-						width : width,
+						width : console.width,
+						left: console.left,
+						height: console.height,
 						title : title,
-						opacity : 0.7,
-						position : "absolute",
-						right : console.right,
 						top : console.top
 					} ], false );
 
@@ -190,7 +189,7 @@ a7.console = ( function() {
 					//a7.log.info( "Console initializing..." );
 				};
 
-				connection.onerror = function( error ) {
+				connection.onerror = function() {
 					var message =  "Can't connect to the console socket server.";
 					if ( console.enabled ) {
 						// just in there were some problems with conenction...
@@ -230,7 +229,7 @@ a7.console = ( function() {
 					}
 				};
 
-				window.addEventListener( "close", function( event ) {
+				window.addEventListener( "close", function() {
 					connection.close();
 				} );
 
@@ -274,7 +273,7 @@ a7.error = ( function(){
   };
 
   return {
-    capture: function( error ){
+    capture: function(){
 
 
     },
@@ -316,10 +315,10 @@ a7.events = ( function() {
 			a7.events.subscribe( "auth.refresh", function( params ){
 				a7.remote.invoke( "auth.refresh", params );
 			});
-			a7.events.subscribe( "auth.sessionTimeout", function( params ){
+			a7.events.subscribe( "auth.sessionTimeout", function(){
 			//	a7.remote.invoke( "auth.sessionTimeout" );
 			});
-			a7.events.subscribe( "auth.invalidateSession", function( params ){
+			a7.events.subscribe( "auth.invalidateSession", function(){
 				//	a7.remote.invoke( "auth.sessionTimeout" );
 			});
 		},
@@ -346,7 +345,7 @@ a7.log = ( function(){
 		_logLevel = "ERROR,FATAL,INFO",
 		_log = function( message, level ){
 			if( _ready && _logLevel.indexOf( level ) >=0 || _logLevel.indexOf( "ALL" ) >=0 ){
-				console.log( message );
+				//console.log( message );
 				if( a7.model.get( "a7.console.enabled" ) ){
 					a7.console.addMessage( message, new Date(), "local", level );
 				}
@@ -409,13 +408,13 @@ a7.model = ( function() {
 		bind : function(){
 			return _methods[ "bind" ].apply( _model, arguments );
 		},
-		init: function( options, resolve, reject ){
+		init: function( options, resolve ){
 			a7.log.info( "Model initializing... " );
 			switch( options.model ){
 				case "gadgetui":
 					_model = gadgetui.model;
 					// gadgetui maps directly, so we can loop on the keys
-					Object.keys( gadgetui.model ).forEach( function( key, index ){
+					Object.keys( gadgetui.model ).forEach( function( key ){
 						if( key !== "BindableObject" ){
 							_methods[ key ] = gadgetui.model[ key ];
 						}
@@ -427,9 +426,9 @@ a7.model = ( function() {
 	};
 
 }() );
+
 a7.components = ( function() {"use strict";function Constructor( constructor, args, addBindings ) {
-	var ix,
-		returnedObj,
+	var returnedObj, 
 		obj;
 
 	if( addBindings === true ){
@@ -491,11 +490,12 @@ var EventBindings = {
 	},
 
 	getAll : function(){
-		return [ { name : "on", func : this.on },
-		         { name : "off", func : this.off },
-				 { name : "fireEvent", func : this.fireEvent } ];
+		return [ 	{ name : "on", func : this.on },
+							{ name : "off", func : this.off },
+							{ name : "fireEvent", func : this.fireEvent } ];
 	}
 };
+
 function User(){
 	// init User
 	return this;
@@ -510,19 +510,18 @@ User.prototype.getMemento = function(){
 };
 
 return {
-	Constructor : Constructor,
-	EventBindings : EventBindings,
-	User: User
+  Constructor: Constructor,
+  EventBindings: EventBindings,
+  User: User
 };
 }());
-
+//
 a7.remote = ( function(){
 	var _options = {},
 		_time = new Date(),
 		_token,
 		_sessionTimer,
 		_modules = {},
-		hOP = _modules.hasOwnProperty,
 
 		_setModule = function( key, module ){
 			_modules[ key ] = module;
@@ -581,7 +580,7 @@ a7.remote = ( function(){
 
 
 					},
-					refresh: function( resolve, reject ){
+					refresh: function( resolve ){
 						a7.remote.fetch( _options.refreshURL, {}, true )
 						.then( function( response ){
 							return response.json();
@@ -594,8 +593,10 @@ a7.remote = ( function(){
 					}
 				};
 
+			// add the auth module
 			_setModule( "auth", authModule );
 
+			// add application modules
 			Object.keys( _modules ).forEach( function( key ){
 				_setModule( key, _modules[ key ] );
 			});
@@ -669,8 +670,7 @@ a7.remote = ( function(){
 a7.security = ( function() {
 	"use strict";
 
-	var _options = {},
-		_isAuthenticated = function( resolve, reject ){
+	var _isAuthenticated = function( resolve, reject ){
 			a7.log.info( "Checking authenticated state.. " );
 			if( a7.model.get( "a7.remote.useTokens" ) ){
 				var token = a7.remote.getToken();
@@ -701,7 +701,7 @@ a7.security = ( function() {
 
 		init : function() {
 			a7.log.info( "Security initializing..." );
-			var suser, keys, user = a7.components.Constructor( a7.components.User, [], true );
+			var suser, user = a7.components.Constructor( a7.components.User, [], true );
 			if ( sessionStorage.user && sessionStorage.user !== '' ) {
 				suser = JSON.parse( sessionStorage.user );
 				Object.keys( suser ).map( function( key ) {
@@ -713,91 +713,87 @@ a7.security = ( function() {
 	};
 }());
 
-a7.ui = ( function() {
-		"use strict";
+a7.ui = (function() {
+  "use strict";
 
-		var _options = {},
-			_selectors = {},
-			_templateMap = {},
+  var _options = {},
+    _selectors = {},
+    _templateMap = {},
+    _setSelector = function(name, selector) {
+      _selectors[name] = selector;
+    },
+    _getSelector = function(name) {
+      return _selectors[name];
+    },
+    _addTemplate = function(key, html) {
+      switch (_options.renderer) {
+        case "Mustache":
+          _templateMap[key] = html.trim();
+          break;
+        case "Handlebars":
+          _templateMap[key] = Handlebars.compile(html.trim());
+          break;
+      }
+    },
+    _loadTemplates = function(resolve) {
+      var ot = Math.ceil(Math.random() * 500);
 
-			_setSelector = function( name, selector ){
-				_selectors[ name ] = selector;
-			},
+      switch (_options.renderer) {
+        case "Mustache":
+        case "Handlebars":
+          fetch(_options.templates + "?" + ot)
+            .then(function(response) {
+              return response.text();
+            })
+            .then(function(text) {
+              a7.log.info("Loading " + _options.renderer + " templates... ");
+              var parser = new DOMParser(),
+                doc = parser.parseFromString(text, "text/html"),
+                scripts = doc.querySelectorAll("script");
+              scripts.forEach(function(script) {
+                _addTemplate(script.getAttribute("id"), script.innerHTML);
+              });
+              resolve();
+            });
+          break;
+      }
+    },
+    _render = function(template, params, partials) {
+      switch (_options.renderer) {
+        case "Mustache":
+          //return Mustache.to_html( _templateMap[ template ], params, _templateMap );
+          return Mustache.render(_templateMap[template], params, partials);
+        case "Handlebars":
+          return _templateMap[template](params);
+      }
+    };
 
-			_addTemplate = function( key, html ){
-				switch( _options.renderer ){
-					case "Mustache":
-						_templateMap[ key ] = html.trim();
-						break;
-					case "Handlebars":
-						_templateMap[ key ] = Handlebars.compile( html.trim() );
-						break;
-				}
-			},
+  return {
+    render: _render,
+    selectors: _selectors,
+    getSelector: _getSelector,
+    setSelector: _setSelector,
 
-			_loadTemplates = function( resolve, reject ){
-				var ot = Math.ceil( Math.random( ) * 500 );
+    getTemplate: function(template) {
+      return _templateMap[template];
+    },
 
-				switch( _options.renderer ){
-					case "Mustache":
-					case "Handlebars":
-						fetch( _options.templates + '?' + ot )
-							.then( function( response ) {
-								return response.text();
-							})
-							.then( function( text ){
-								a7.log.info( "Loading " + _options.renderer + " templates... " );
-								var parser = new DOMParser(),
-									doc = parser.parseFromString( text, "text/html" ),
-									scripts = doc.querySelectorAll( "script" );
-								scripts.forEach( function( script ){
-									_addTemplate( script.getAttribute( "id" ), script.innerHTML );
-								});
-								resolve();
-							});
+    init: function(resolve, reject) {
+      var renderers = "Handlebars,Mustache";
+      _options = a7.model.get("a7.ui");
 
-						break;
-				}
-			},
-
-			_render = function( template, params, partials ){
-				switch( _options.renderer ){
-				case "Mustache":
-					//return Mustache.to_html( _templateMap[ template ], params, _templateMap );
-					return Mustache.render( _templateMap[ template ], params, partials );
-					break;
-				case "Handlebars":
-					return _templateMap[ template ]( params );
-					break;
-				}
-			};
-
-		return{
-			render : _render,
-			selectors: _selectors,
-			setSelector: _setSelector,
-
-			getTemplate : function( template ){
-				return _templateMap[ template ];
-			},
-
-			init : function( resolve, reject ){
-				var renderers = "Handlebars,Mustache";
-				_options = a7.model.get( "a7.ui" );
-
-				a7.log.info( "Layout initializing..." );
-				if( renderers.indexOf( _options.renderer ) >=0 ){
-					a7.model.set( "a7.ui.templatesLoaded", false );
-					if( _options.templates !== undefined ){
-						_loadTemplates( resolve, reject );
-					}
-				}else{
-					resolve();
-				}
-			}
-		};
-
-}( ) );
+      a7.log.info("Layout initializing...");
+      if (renderers.indexOf(_options.renderer) >= 0) {
+        a7.model.set("a7.ui.templatesLoaded", false);
+        if (_options.templates !== undefined) {
+          _loadTemplates(resolve, reject);
+        }
+      } else {
+        resolve();
+      }
+    }
+  };
+})();
 
 a7.util = ( function(){
 

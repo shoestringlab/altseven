@@ -1,45 +1,40 @@
-FAIL	dist/a7.js (42)
-dist/a7.js:47:27	'Mustache' was used before it was defined.
-dist/a7.js:47:73	'Handlebars' was used before it was defined.
+FAIL	dist/a7.js (37)
+dist/a7.js:36:49	Unexpected ','.
+dist/a7.js:49:27	'Mustache' was used before it was defined.
+dist/a7.js:49:73	'Handlebars' was used before it was defined.
 dist/a7.js:165:9	Combine this with the previous 'var' statement.
-dist/a7.js:187:22	'WebSocket' was used before it was defined.
-dist/a7.js:189:36	Empty block.
+dist/a7.js:186:22	'WebSocket' was used before it was defined.
+dist/a7.js:188:36	Empty block.
 dist/a7.js:142:3	Unused 'active'.
-dist/a7.js:255:9	Combine this with the previous 'var' statement.
-dist/a7.js:259:13	Combine this with the previous 'var' statement.
-dist/a7.js:277:31	Empty block.
-dist/a7.js:282:4	Expected ';' and instead saw '}'.
-dist/a7.js:319:66	Empty block.
-dist/a7.js:322:69	Empty block.
-dist/a7.js:344:2	Missing 'use strict' statement.
-dist/a7.js:348:15	The '&amp;&amp;' subexpression should be wrapped in parens.
-dist/a7.js:367:4	'_deffered' was used before it was defined.
-dist/a7.js:395:21	['create'] is better written in dot notation.
-dist/a7.js:398:21	['destroy'] is better written in dot notation.
-dist/a7.js:401:21	['get'] is better written in dot notation.
-dist/a7.js:404:21	['set'] is better written in dot notation.
-dist/a7.js:407:21	['exists'] is better written in dot notation.
-dist/a7.js:410:21	['bind'] is better written in dot notation.
-dist/a7.js:431:6	Unused 'ix'.
+dist/a7.js:254:9	Combine this with the previous 'var' statement.
+dist/a7.js:258:13	Combine this with the previous 'var' statement.
+dist/a7.js:276:24	Empty block.
+dist/a7.js:281:4	Expected ';' and instead saw '}'.
+dist/a7.js:318:58	Empty block.
+dist/a7.js:321:61	Empty block.
+dist/a7.js:343:2	Missing 'use strict' statement.
+dist/a7.js:347:15	The '&amp;&amp;' subexpression should be wrapped in parens.
+dist/a7.js:366:4	'_deffered' was used before it was defined.
+dist/a7.js:394:21	['create'] is better written in dot notation.
+dist/a7.js:397:21	['destroy'] is better written in dot notation.
+dist/a7.js:400:21	['get'] is better written in dot notation.
+dist/a7.js:403:21	['set'] is better written in dot notation.
+dist/a7.js:406:21	['exists'] is better written in dot notation.
+dist/a7.js:409:21	['bind'] is better written in dot notation.
 dist/a7.js:520:2	Missing 'use strict' statement.
-dist/a7.js:557:21	'Request' was used before it was defined.
-dist/a7.js:559:11	Combine this with the previous 'var' statement.
-dist/a7.js:559:21	'fetch' was used before it was defined.
-dist/a7.js:610:9	Combine this with the previous 'var' statement.
-dist/a7.js:618:6	Unnecessary 'else' after disruption.
-dist/a7.js:630:18	'Request' was used before it was defined.
-dist/a7.js:631:14	'fetch' was used before it was defined.
-dist/a7.js:525:3	Unused 'hOP'.
-dist/a7.js:678:11	Combine this with the previous 'var' statement.
-dist/a7.js:704:15	Unused 'keys'.
-dist/a7.js:672:6	Unused '_options'.
-dist/a7.js:733:29	'Handlebars' was used before it was defined.
-dist/a7.js:744:7	'fetch' was used before it was defined.
-dist/a7.js:750:26	'DOMParser' was used before it was defined.
-dist/a7.js:767:13	'Mustache' was used before it was defined.
-dist/a7.js:768:6	Unreachable 'break' after 'return'.
-dist/a7.js:771:6	Unreachable 'break' after 'return'.
-dist/a7.js:805:2	Missing 'use strict' statement.
-dist/a7.js:858:30	Insecure '^'.
+dist/a7.js:556:21	'Request' was used before it was defined.
+dist/a7.js:558:11	Combine this with the previous 'var' statement.
+dist/a7.js:558:21	'fetch' was used before it was defined.
+dist/a7.js:609:9	Combine this with the previous 'var' statement.
+dist/a7.js:617:6	Unnecessary 'else' after disruption.
+dist/a7.js:629:18	'Request' was used before it was defined.
+dist/a7.js:630:14	'fetch' was used before it was defined.
+dist/a7.js:676:11	Combine this with the previous 'var' statement.
+dist/a7.js:731:29	'Handlebars' was used before it was defined.
+dist/a7.js:742:7	'fetch' was used before it was defined.
+dist/a7.js:748:26	'DOMParser' was used before it was defined.
+dist/a7.js:765:13	'Mustache' was used before it was defined.
+dist/a7.js:801:2	Missing 'use strict' statement.
+dist/a7.js:854:30	Insecure '^'.
 
-# JSLint failed, 42 violations in 1.  1 files scanned.
+# JSLint failed, 37 violations in 1.  1 files scanned.

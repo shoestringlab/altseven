@@ -4,7 +4,6 @@ a7.remote = ( function(){
 		_token,
 		_sessionTimer,
 		_modules = {},
-		hOP = _modules.hasOwnProperty,
 
 		_setModule = function( key, module ){
 			_modules[ key ] = module;
@@ -63,7 +62,7 @@ a7.remote = ( function(){
 
 
 					},
-					refresh: function( resolve, reject ){
+					refresh: function( resolve ){
 						a7.remote.fetch( _options.refreshURL, {}, true )
 						.then( function( response ){
 							return response.json();
@@ -76,8 +75,10 @@ a7.remote = ( function(){
 					}
 				};
 
+			// add the auth module
 			_setModule( "auth", authModule );
 
+			// add application modules
 			Object.keys( _modules ).forEach( function( key ){
 				_setModule( key, _modules[ key ] );
 			});

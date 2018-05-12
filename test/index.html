@@ -5,7 +5,7 @@
 	<script src="/bower_components/modlazy/dist/modlazy.min.js"></script>
 	<script>
 		modlazy.load( [ "/test/app.components.js  < /test/app.remote.js < /test/app.main.js < /test/app.events.js < /dist/a7.js < /bower_components/gadget-ui/dist/gadget-ui.js < /bower_components/velocity/velocity.js",
-		"/bower_components/mustache.js/mustache.js", "/test/styles.css", "/dist/a7.css", "/bower_components/gadget-ui/gadget-ui.css", "/bower_components/open-iconic/font/css/open-iconic.css" ], function(){
+		"/bower_components/mustache.js/mustache.js", "/test/styles.css", "/dist/a7.css", "/bower_components/gadget-ui/dist/gadget-ui.css", "/bower_components/open-iconic/font/css/open-iconic.css" ], function(){
 
 			var options = {
 				auth: {
@@ -14,8 +14,10 @@
 				console: {
 					enabled: true,
 					wsServer: 'ws://www.altseven.home:8000',
-					top: 10,
-					right: 10
+					top: 100,
+					left: 500,
+					height:300,
+					width:500
 				},
 				logging : {
 					logLevel: "INFO,ERROR,FATAL,TRACE"

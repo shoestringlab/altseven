@@ -1,47 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
 <jslint>
 <file name="dist/a7.js">
-<issue line="47" char="27" reason="'Mustache' was used before it was defined." evidence="						renderer : ( typeof Mustache === 'object' ? &quot;Mustache&quot; : ( typeof Handlebars === 'object' ? &quot;Handlebars&quot; : &quot;&quot; ) ),"/>
-<issue line="47" char="73" reason="'Handlebars' was used before it was defined." evidence="						renderer : ( typeof Mustache === 'object' ? &quot;Mustache&quot; : ( typeof Handlebars === 'object' ? &quot;Handlebars&quot; : &quot;&quot; ) ),"/>
+<issue line="36" char="49" reason="Unexpected ','." evidence="						height : ( options.console.height || 300 ),"/>
+<issue line="49" char="27" reason="'Mustache' was used before it was defined." evidence="						renderer : ( typeof Mustache === 'object' ? &quot;Mustache&quot; : ( typeof Handlebars === 'object' ? &quot;Handlebars&quot; : &quot;&quot; ) ),"/>
+<issue line="49" char="73" reason="'Handlebars' was used before it was defined." evidence="						renderer : ( typeof Mustache === 'object' ? &quot;Mustache&quot; : ( typeof Handlebars === 'object' ? &quot;Handlebars&quot; : &quot;&quot; ) ),"/>
 <issue line="165" char="9" reason="Combine this with the previous 'var' statement." evidence="				var connection,"/>
-<issue line="187" char="22" reason="'WebSocket' was used before it was defined." evidence="				connection = new WebSocket( console.wsServer );"/>
-<issue line="189" char="36" reason="Empty block." evidence="				connection.onopen = function() {"/>
+<issue line="186" char="22" reason="'WebSocket' was used before it was defined." evidence="				connection = new WebSocket( console.wsServer );"/>
+<issue line="188" char="36" reason="Empty block." evidence="				connection.onopen = function() {"/>
 <issue line="142" char="3" reason="Unused 'active'." evidence="		active = false,"/>
-<issue line="255" char="9" reason="Combine this with the previous 'var' statement." evidence="    var substring = &quot;script error&quot;;"/>
-<issue line="259" char="13" reason="Combine this with the previous 'var' statement." evidence="        var message = ["/>
-<issue line="277" char="31" reason="Empty block." evidence="    capture: function( error ){"/>
-<issue line="282" char="4" reason="Expected ';' and instead saw '}'." evidence="  }"/>
-<issue line="319" char="66" reason="Empty block." evidence="			a7.events.subscribe( &quot;auth.sessionTimeout&quot;, function( params ){"/>
-<issue line="322" char="69" reason="Empty block." evidence="			a7.events.subscribe( &quot;auth.invalidateSession&quot;, function( params ){"/>
-<issue line="344" char="2" reason="Missing 'use strict' statement." evidence="	var _ready = false,"/>
-<issue line="348" char="15" reason="The '&amp;amp;&amp;amp;' subexpression should be wrapped in parens." evidence="			if( _ready &amp;&amp; _logLevel.indexOf( level ) &gt;=0 || _logLevel.indexOf( &quot;ALL&quot; ) &gt;=0 ){"/>
-<issue line="367" char="4" reason="'_deffered' was used before it was defined." evidence="			_deffered = [];"/>
-<issue line="395" char="21" reason="['create'] is better written in dot notation." evidence="			return _methods[ &quot;create&quot; ].apply( _model, arguments );"/>
-<issue line="398" char="21" reason="['destroy'] is better written in dot notation." evidence="			return _methods[ &quot;destroy&quot; ].apply( _model, arguments );"/>
-<issue line="401" char="21" reason="['get'] is better written in dot notation." evidence="			return _methods[ &quot;get&quot; ].apply( _model, arguments );"/>
-<issue line="404" char="21" reason="['set'] is better written in dot notation." evidence="			return _methods[ &quot;set&quot; ].apply( _model, arguments );"/>
-<issue line="407" char="21" reason="['exists'] is better written in dot notation." evidence="			return _methods[ &quot;exists&quot; ].apply( _model, arguments );"/>
-<issue line="410" char="21" reason="['bind'] is better written in dot notation." evidence="			return _methods[ &quot;bind&quot; ].apply( _model, arguments );"/>
-<issue line="431" char="6" reason="Unused 'ix'." evidence="	var ix,"/>
+<issue line="254" char="9" reason="Combine this with the previous 'var' statement." evidence="    var substring = &quot;script error&quot;;"/>
+<issue line="258" char="13" reason="Combine this with the previous 'var' statement." evidence="        var message = ["/>
+<issue line="276" char="24" reason="Empty block." evidence="    capture: function(){"/>
+<issue line="281" char="4" reason="Expected ';' and instead saw '}'." evidence="  }"/>
+<issue line="318" char="58" reason="Empty block." evidence="			a7.events.subscribe( &quot;auth.sessionTimeout&quot;, function(){"/>
+<issue line="321" char="61" reason="Empty block." evidence="			a7.events.subscribe( &quot;auth.invalidateSession&quot;, function(){"/>
+<issue line="343" char="2" reason="Missing 'use strict' statement." evidence="	var _ready = false,"/>
+<issue line="347" char="15" reason="The '&amp;amp;&amp;amp;' subexpression should be wrapped in parens." evidence="			if( _ready &amp;&amp; _logLevel.indexOf( level ) &gt;=0 || _logLevel.indexOf( &quot;ALL&quot; ) &gt;=0 ){"/>
+<issue line="366" char="4" reason="'_deffered' was used before it was defined." evidence="			_deffered = [];"/>
+<issue line="394" char="21" reason="['create'] is better written in dot notation." evidence="			return _methods[ &quot;create&quot; ].apply( _model, arguments );"/>
+<issue line="397" char="21" reason="['destroy'] is better written in dot notation." evidence="			return _methods[ &quot;destroy&quot; ].apply( _model, arguments );"/>
+<issue line="400" char="21" reason="['get'] is better written in dot notation." evidence="			return _methods[ &quot;get&quot; ].apply( _model, arguments );"/>
+<issue line="403" char="21" reason="['set'] is better written in dot notation." evidence="			return _methods[ &quot;set&quot; ].apply( _model, arguments );"/>
+<issue line="406" char="21" reason="['exists'] is better written in dot notation." evidence="			return _methods[ &quot;exists&quot; ].apply( _model, arguments );"/>
+<issue line="409" char="21" reason="['bind'] is better written in dot notation." evidence="			return _methods[ &quot;bind&quot; ].apply( _model, arguments );"/>
 <issue line="520" char="2" reason="Missing 'use strict' statement." evidence="	var _options = {},"/>
-<issue line="557" char="21" reason="'Request' was used before it was defined." evidence="						request = new Request( _options.loginURL , params );"/>
-<issue line="559" char="11" reason="Combine this with the previous 'var' statement." evidence="						var promise = fetch( request );"/>
-<issue line="559" char="21" reason="'fetch' was used before it was defined." evidence="						var promise = fetch( request );"/>
-<issue line="610" char="9" reason="Combine this with the previous 'var' statement." evidence="				var currentTime = new Date( ),"/>
-<issue line="618" char="6" reason="Unnecessary 'else' after disruption." evidence="				}else if( _token !== undefined &amp;&amp; _token !== null ){"/>
-<issue line="630" char="18" reason="'Request' was used before it was defined." evidence="			request = new Request( uri, params );"/>
-<issue line="631" char="14" reason="'fetch' was used before it was defined." evidence="			promise = fetch( request );"/>
-<issue line="525" char="3" reason="Unused 'hOP'." evidence="		hOP = _modules.hasOwnProperty,"/>
-<issue line="678" char="11" reason="Combine this with the previous 'var' statement." evidence="						var timer = a7.remote.getSessionTimer();"/>
-<issue line="704" char="15" reason="Unused 'keys'." evidence="			var suser, keys, user = a7.components.Constructor( a7.components.User, [], true );"/>
-<issue line="672" char="6" reason="Unused '_options'." evidence="	var _options = {},"/>
-<issue line="733" char="29" reason="'Handlebars' was used before it was defined." evidence="						_templateMap[ key ] = Handlebars.compile( html.trim() );"/>
-<issue line="744" char="7" reason="'fetch' was used before it was defined." evidence="						fetch( _options.templates + '?' + ot )"/>
-<issue line="750" char="26" reason="'DOMParser' was used before it was defined." evidence="								var parser = new DOMParser(),"/>
-<issue line="767" char="13" reason="'Mustache' was used before it was defined." evidence="					return Mustache.render( _templateMap[ template ], params, partials );"/>
-<issue line="768" char="6" reason="Unreachable 'break' after 'return'." evidence="					break;"/>
-<issue line="771" char="6" reason="Unreachable 'break' after 'return'." evidence="					break;"/>
-<issue line="805" char="2" reason="Missing 'use strict' statement." evidence="	return{"/>
-<issue line="858" char="30" reason="Insecure '^'." evidence="				input = input.replace( /[^A-Za-z0-9\+\/\=]/g, &quot;&quot; );"/>
+<issue line="556" char="21" reason="'Request' was used before it was defined." evidence="						request = new Request( _options.loginURL , params );"/>
+<issue line="558" char="11" reason="Combine this with the previous 'var' statement." evidence="						var promise = fetch( request );"/>
+<issue line="558" char="21" reason="'fetch' was used before it was defined." evidence="						var promise = fetch( request );"/>
+<issue line="609" char="9" reason="Combine this with the previous 'var' statement." evidence="				var currentTime = new Date( ),"/>
+<issue line="617" char="6" reason="Unnecessary 'else' after disruption." evidence="				}else if( _token !== undefined &amp;&amp; _token !== null ){"/>
+<issue line="629" char="18" reason="'Request' was used before it was defined." evidence="			request = new Request( uri, params );"/>
+<issue line="630" char="14" reason="'fetch' was used before it was defined." evidence="			promise = fetch( request );"/>
+<issue line="676" char="11" reason="Combine this with the previous 'var' statement." evidence="						var timer = a7.remote.getSessionTimer();"/>
+<issue line="731" char="29" reason="'Handlebars' was used before it was defined." evidence="						_templateMap[ key ] = Handlebars.compile( html.trim() );"/>
+<issue line="742" char="7" reason="'fetch' was used before it was defined." evidence="						fetch( _options.templates + '?' + ot )"/>
+<issue line="748" char="26" reason="'DOMParser' was used before it was defined." evidence="								var parser = new DOMParser(),"/>
+<issue line="765" char="13" reason="'Mustache' was used before it was defined." evidence="					return Mustache.render( _templateMap[ template ], params, partials );"/>
+<issue line="801" char="2" reason="Missing 'use strict' statement." evidence="	return{"/>
+<issue line="854" char="30" reason="Insecure '^'." evidence="				input = input.replace( /[^A-Za-z0-9\+\/\=]/g, &quot;&quot; );"/>
 </file>
 </jslint>
