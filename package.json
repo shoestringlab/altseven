@@ -7,9 +7,8 @@
     "test": "test"
   },
   "dependencies": {
-    "grunt-cli": "^1.2.0",
-    "react": "^15.4.2",
-    "react-dom": "^15.4.2"
+    "handlebars": "^4.0.12",
+    "mustache.js": "^1.0.0"
   },
   "devDependencies": {
     "eslint": "^4.2.0",
@@ -22,7 +21,9 @@
     "grunt-jslint": "^1.1.12",
     "grunt-newer": "^1.1.0",
     "load-grunt-config": "*",
-    "load-grunt-tasks": "^3.1.0"
+    "load-grunt-tasks": "^3.1.0",
+    "react": "^15.4.2",
+    "react-dom": "^15.4.2"
   },
   "scripts": {
     "test": "/test/index.html"
@@ -31,6 +32,6 @@
     "JavaScript",
     "framework"
   ],
-  "author": "Robert Munn <robert.d.munn@gmail.com>",
+  "author": "Robert Munn <robertdmunn@gmail.com>",
   "license": "ISC"
 }

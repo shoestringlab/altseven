@@ -34,7 +34,7 @@ a7.components = (function() {
 
   /*
  * EventBindings
- * author: Robert Munn <robert.d.munn@gmail.com>
+ * author: Robert Munn <robertdmunn@gmail.com>
  *
  */
 

@@ -1,42 +1,47 @@
 <?xml version="1.0" encoding="utf-8"?>
 <checkstyle>
 <file name="dist/a7.js">
-<error line="36" column="49" severity="warning" message="Unexpected ','." source="com.jslint"/>
-<error line="49" column="27" severity="warning" message="'Mustache' was used before it was defined." source="com.jslint"/>
-<error line="49" column="73" severity="warning" message="'Handlebars' was used before it was defined." source="com.jslint"/>
-<error line="165" column="9" severity="warning" message="Combine this with the previous 'var' statement." source="com.jslint"/>
-<error line="186" column="22" severity="warning" message="'WebSocket' was used before it was defined." source="com.jslint"/>
-<error line="188" column="36" severity="warning" message="Empty block." source="com.jslint"/>
-<error line="142" column="3" severity="warning" message="Unused 'active'." source="com.jslint"/>
-<error line="254" column="9" severity="warning" message="Combine this with the previous 'var' statement." source="com.jslint"/>
-<error line="258" column="13" severity="warning" message="Combine this with the previous 'var' statement." source="com.jslint"/>
-<error line="276" column="24" severity="warning" message="Empty block." source="com.jslint"/>
-<error line="281" column="4" severity="warning" message="Expected ';' and instead saw '}'." source="com.jslint"/>
-<error line="318" column="58" severity="warning" message="Empty block." source="com.jslint"/>
-<error line="321" column="61" severity="warning" message="Empty block." source="com.jslint"/>
-<error line="343" column="2" severity="warning" message="Missing 'use strict' statement." source="com.jslint"/>
-<error line="347" column="15" severity="warning" message="The '&amp;&amp;' subexpression should be wrapped in parens." source="com.jslint"/>
-<error line="366" column="4" severity="warning" message="'_deffered' was used before it was defined." source="com.jslint"/>
-<error line="394" column="21" severity="warning" message="['create'] is better written in dot notation." source="com.jslint"/>
-<error line="397" column="21" severity="warning" message="['destroy'] is better written in dot notation." source="com.jslint"/>
-<error line="400" column="21" severity="warning" message="['get'] is better written in dot notation." source="com.jslint"/>
-<error line="403" column="21" severity="warning" message="['set'] is better written in dot notation." source="com.jslint"/>
-<error line="406" column="21" severity="warning" message="['exists'] is better written in dot notation." source="com.jslint"/>
-<error line="409" column="21" severity="warning" message="['bind'] is better written in dot notation." source="com.jslint"/>
-<error line="520" column="2" severity="warning" message="Missing 'use strict' statement." source="com.jslint"/>
-<error line="556" column="21" severity="warning" message="'Request' was used before it was defined." source="com.jslint"/>
-<error line="558" column="11" severity="warning" message="Combine this with the previous 'var' statement." source="com.jslint"/>
-<error line="558" column="21" severity="warning" message="'fetch' was used before it was defined." source="com.jslint"/>
-<error line="609" column="9" severity="warning" message="Combine this with the previous 'var' statement." source="com.jslint"/>
-<error line="617" column="6" severity="warning" message="Unnecessary 'else' after disruption." source="com.jslint"/>
-<error line="629" column="18" severity="warning" message="'Request' was used before it was defined." source="com.jslint"/>
-<error line="630" column="14" severity="warning" message="'fetch' was used before it was defined." source="com.jslint"/>
-<error line="676" column="11" severity="warning" message="Combine this with the previous 'var' statement." source="com.jslint"/>
-<error line="731" column="29" severity="warning" message="'Handlebars' was used before it was defined." source="com.jslint"/>
-<error line="742" column="7" severity="warning" message="'fetch' was used before it was defined." source="com.jslint"/>
-<error line="748" column="26" severity="warning" message="'DOMParser' was used before it was defined." source="com.jslint"/>
-<error line="765" column="13" severity="warning" message="'Mustache' was used before it was defined." source="com.jslint"/>
-<error line="801" column="2" severity="warning" message="Missing 'use strict' statement." source="com.jslint"/>
-<error line="854" column="30" severity="warning" message="Insecure '^'." source="com.jslint"/>
+<error line="54" column="22" severity="warning" message="'Mustache' was used before it was defined." source="com.jslint"/>
+<error line="56" column="26" severity="warning" message="'Handlebars' was used before it was defined." source="com.jslint"/>
+<error line="141" column="3" severity="warning" message="Move the invocation into the parens that contain the function." source="com.jslint"/>
+<error line="181" column="13" severity="warning" message="Combine this with the previous 'var' statement." source="com.jslint"/>
+<error line="209" column="26" severity="warning" message="'WebSocket' was used before it was defined." source="com.jslint"/>
+<error line="211" column="40" severity="warning" message="Empty block." source="com.jslint"/>
+<error line="150" column="5" severity="warning" message="Unused 'active'." source="com.jslint"/>
+<error line="275" column="3" severity="warning" message="Move the invocation into the parens that contain the function." source="com.jslint"/>
+<error line="282" column="9" severity="warning" message="Combine this with the previous 'var' statement." source="com.jslint"/>
+<error line="286" column="11" severity="warning" message="Combine this with the previous 'var' statement." source="com.jslint"/>
+<error line="304" column="25" severity="warning" message="Empty block." source="com.jslint"/>
+<error line="307" column="3" severity="warning" message="Move the invocation into the parens that contain the function." source="com.jslint"/>
+<error line="342" column="61" severity="warning" message="Empty block." source="com.jslint"/>
+<error line="345" column="64" severity="warning" message="Empty block." source="com.jslint"/>
+<error line="363" column="3" severity="warning" message="Move the invocation into the parens that contain the function." source="com.jslint"/>
+<error line="367" column="2" severity="warning" message="Missing 'use strict' statement." source="com.jslint"/>
+<error line="371" column="15" severity="warning" message="The '&amp;&amp;' subexpression should be wrapped in parens." source="com.jslint"/>
+<error line="390" column="4" severity="warning" message="'_deffered' was used before it was defined." source="com.jslint"/>
+<error line="418" column="21" severity="warning" message="['create'] is better written in dot notation." source="com.jslint"/>
+<error line="421" column="21" severity="warning" message="['destroy'] is better written in dot notation." source="com.jslint"/>
+<error line="424" column="21" severity="warning" message="['get'] is better written in dot notation." source="com.jslint"/>
+<error line="427" column="21" severity="warning" message="['set'] is better written in dot notation." source="com.jslint"/>
+<error line="430" column="21" severity="warning" message="['exists'] is better written in dot notation." source="com.jslint"/>
+<error line="433" column="21" severity="warning" message="['bind'] is better written in dot notation." source="com.jslint"/>
+<error line="544" column="3" severity="warning" message="Move the invocation into the parens that contain the function." source="com.jslint"/>
+<error line="548" column="2" severity="warning" message="Missing 'use strict' statement." source="com.jslint"/>
+<error line="584" column="21" severity="warning" message="'Request' was used before it was defined." source="com.jslint"/>
+<error line="586" column="11" severity="warning" message="Combine this with the previous 'var' statement." source="com.jslint"/>
+<error line="586" column="21" severity="warning" message="'fetch' was used before it was defined." source="com.jslint"/>
+<error line="639" column="9" severity="warning" message="Combine this with the previous 'var' statement." source="com.jslint"/>
+<error line="647" column="6" severity="warning" message="Unnecessary 'else' after disruption." source="com.jslint"/>
+<error line="659" column="18" severity="warning" message="'Request' was used before it was defined." source="com.jslint"/>
+<error line="660" column="14" severity="warning" message="'fetch' was used before it was defined." source="com.jslint"/>
+<error line="706" column="13" severity="warning" message="Combine this with the previous 'var' statement." source="com.jslint"/>
+<error line="743" column="3" severity="warning" message="Move the invocation into the parens that contain the function." source="com.jslint"/>
+<error line="763" column="31" severity="warning" message="'Handlebars' was used before it was defined." source="com.jslint"/>
+<error line="773" column="11" severity="warning" message="'fetch' was used before it was defined." source="com.jslint"/>
+<error line="779" column="32" severity="warning" message="'DOMParser' was used before it was defined." source="com.jslint"/>
+<error line="794" column="18" severity="warning" message="'Mustache' was used before it was defined." source="com.jslint"/>
+<error line="825" column="3" severity="warning" message="Move the invocation into the parens that contain the function." source="com.jslint"/>
+<error line="830" column="2" severity="warning" message="Missing 'use strict' statement." source="com.jslint"/>
+<error line="883" column="30" severity="warning" message="Insecure '^'." source="com.jslint"/>
 </file>
 </checkstyle>

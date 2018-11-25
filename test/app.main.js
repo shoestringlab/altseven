@@ -20,8 +20,8 @@ var app = {
 
 				if( secure ){
 					var user = a7.model.get( "a7.user" ),
-					header = a7.components.Constructor( app.components.Header, [ { selector : a7.ui.selectors[ 'header' ], user : user } ], true ),
-					todo = a7.components.Constructor( app.components.Todo, [ { selector : a7.ui.selectors[ 'app' ] } ], true );
+							header = a7.components.Constructor( app.components.Header, [ { selector : a7.ui.selectors[ 'header' ], user : user } ], true ),
+							todo = a7.components.Constructor( app.components.Todo, [ { selector : a7.ui.selectors[ 'app' ] } ], true );
 				}
 				app.ui.setLayout( secure );
 			}

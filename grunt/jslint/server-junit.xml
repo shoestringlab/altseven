@@ -1,115 +1,130 @@
 <?xml version="1.0" encoding="utf-8"?>
 <testsuites>
   <testsuite>
-<testcase classname="dist.a7" name="a7:36:49">
-  <failure message="Unexpected ','." />
-</testcase>
-<testcase classname="dist.a7" name="a7:49:27">
+<testcase classname="dist.a7" name="a7:54:22">
   <failure message="'Mustache' was used before it was defined." />
 </testcase>
-<testcase classname="dist.a7" name="a7:49:73">
+<testcase classname="dist.a7" name="a7:56:26">
   <failure message="'Handlebars' was used before it was defined." />
 </testcase>
-<testcase classname="dist.a7" name="a7:165:9">
+<testcase classname="dist.a7" name="a7:141:3">
+  <failure message="Move the invocation into the parens that contain the function." />
+</testcase>
+<testcase classname="dist.a7" name="a7:181:13">
   <failure message="Combine this with the previous 'var' statement." />
 </testcase>
-<testcase classname="dist.a7" name="a7:186:22">
+<testcase classname="dist.a7" name="a7:209:26">
   <failure message="'WebSocket' was used before it was defined." />
 </testcase>
-<testcase classname="dist.a7" name="a7:188:36">
+<testcase classname="dist.a7" name="a7:211:40">
   <failure message="Empty block." />
 </testcase>
-<testcase classname="dist.a7" name="a7:142:3">
+<testcase classname="dist.a7" name="a7:150:5">
   <failure message="Unused 'active'." />
 </testcase>
-<testcase classname="dist.a7" name="a7:254:9">
+<testcase classname="dist.a7" name="a7:275:3">
+  <failure message="Move the invocation into the parens that contain the function." />
+</testcase>
+<testcase classname="dist.a7" name="a7:282:9">
   <failure message="Combine this with the previous 'var' statement." />
 </testcase>
-<testcase classname="dist.a7" name="a7:258:13">
+<testcase classname="dist.a7" name="a7:286:11">
   <failure message="Combine this with the previous 'var' statement." />
 </testcase>
-<testcase classname="dist.a7" name="a7:276:24">
+<testcase classname="dist.a7" name="a7:304:25">
   <failure message="Empty block." />
 </testcase>
-<testcase classname="dist.a7" name="a7:281:4">
-  <failure message="Expected ';' and instead saw '}'." />
+<testcase classname="dist.a7" name="a7:307:3">
+  <failure message="Move the invocation into the parens that contain the function." />
 </testcase>
-<testcase classname="dist.a7" name="a7:318:58">
+<testcase classname="dist.a7" name="a7:342:61">
   <failure message="Empty block." />
 </testcase>
-<testcase classname="dist.a7" name="a7:321:61">
+<testcase classname="dist.a7" name="a7:345:64">
   <failure message="Empty block." />
 </testcase>
-<testcase classname="dist.a7" name="a7:343:2">
+<testcase classname="dist.a7" name="a7:363:3">
+  <failure message="Move the invocation into the parens that contain the function." />
+</testcase>
+<testcase classname="dist.a7" name="a7:367:2">
   <failure message="Missing 'use strict' statement." />
 </testcase>
-<testcase classname="dist.a7" name="a7:347:15">
+<testcase classname="dist.a7" name="a7:371:15">
   <failure message="The '&amp;&amp;' subexpression should be wrapped in parens." />
 </testcase>
-<testcase classname="dist.a7" name="a7:366:4">
+<testcase classname="dist.a7" name="a7:390:4">
   <failure message="'_deffered' was used before it was defined." />
 </testcase>
-<testcase classname="dist.a7" name="a7:394:21">
+<testcase classname="dist.a7" name="a7:418:21">
   <failure message="['create'] is better written in dot notation." />
 </testcase>
-<testcase classname="dist.a7" name="a7:397:21">
+<testcase classname="dist.a7" name="a7:421:21">
   <failure message="['destroy'] is better written in dot notation." />
 </testcase>
-<testcase classname="dist.a7" name="a7:400:21">
+<testcase classname="dist.a7" name="a7:424:21">
   <failure message="['get'] is better written in dot notation." />
 </testcase>
-<testcase classname="dist.a7" name="a7:403:21">
+<testcase classname="dist.a7" name="a7:427:21">
   <failure message="['set'] is better written in dot notation." />
 </testcase>
-<testcase classname="dist.a7" name="a7:406:21">
+<testcase classname="dist.a7" name="a7:430:21">
   <failure message="['exists'] is better written in dot notation." />
 </testcase>
-<testcase classname="dist.a7" name="a7:409:21">
+<testcase classname="dist.a7" name="a7:433:21">
   <failure message="['bind'] is better written in dot notation." />
 </testcase>
-<testcase classname="dist.a7" name="a7:520:2">
+<testcase classname="dist.a7" name="a7:544:3">
+  <failure message="Move the invocation into the parens that contain the function." />
+</testcase>
+<testcase classname="dist.a7" name="a7:548:2">
   <failure message="Missing 'use strict' statement." />
 </testcase>
-<testcase classname="dist.a7" name="a7:556:21">
+<testcase classname="dist.a7" name="a7:584:21">
   <failure message="'Request' was used before it was defined." />
 </testcase>
-<testcase classname="dist.a7" name="a7:558:11">
+<testcase classname="dist.a7" name="a7:586:11">
   <failure message="Combine this with the previous 'var' statement." />
 </testcase>
-<testcase classname="dist.a7" name="a7:558:21">
+<testcase classname="dist.a7" name="a7:586:21">
   <failure message="'fetch' was used before it was defined." />
 </testcase>
-<testcase classname="dist.a7" name="a7:609:9">
+<testcase classname="dist.a7" name="a7:639:9">
   <failure message="Combine this with the previous 'var' statement." />
 </testcase>
-<testcase classname="dist.a7" name="a7:617:6">
+<testcase classname="dist.a7" name="a7:647:6">
   <failure message="Unnecessary 'else' after disruption." />
 </testcase>
-<testcase classname="dist.a7" name="a7:629:18">
+<testcase classname="dist.a7" name="a7:659:18">
   <failure message="'Request' was used before it was defined." />
 </testcase>
-<testcase classname="dist.a7" name="a7:630:14">
+<testcase classname="dist.a7" name="a7:660:14">
   <failure message="'fetch' was used before it was defined." />
 </testcase>
-<testcase classname="dist.a7" name="a7:676:11">
+<testcase classname="dist.a7" name="a7:706:13">
   <failure message="Combine this with the previous 'var' statement." />
 </testcase>
-<testcase classname="dist.a7" name="a7:731:29">
+<testcase classname="dist.a7" name="a7:743:3">
+  <failure message="Move the invocation into the parens that contain the function." />
+</testcase>
+<testcase classname="dist.a7" name="a7:763:31">
   <failure message="'Handlebars' was used before it was defined." />
 </testcase>
-<testcase classname="dist.a7" name="a7:742:7">
+<testcase classname="dist.a7" name="a7:773:11">
   <failure message="'fetch' was used before it was defined." />
 </testcase>
-<testcase classname="dist.a7" name="a7:748:26">
+<testcase classname="dist.a7" name="a7:779:32">
   <failure message="'DOMParser' was used before it was defined." />
 </testcase>
-<testcase classname="dist.a7" name="a7:765:13">
+<testcase classname="dist.a7" name="a7:794:18">
   <failure message="'Mustache' was used before it was defined." />
 </testcase>
-<testcase classname="dist.a7" name="a7:801:2">
+<testcase classname="dist.a7" name="a7:825:3">
+  <failure message="Move the invocation into the parens that contain the function." />
+</testcase>
+<testcase classname="dist.a7" name="a7:830:2">
   <failure message="Missing 'use strict' statement." />
 </testcase>
-<testcase classname="dist.a7" name="a7:854:30">
+<testcase classname="dist.a7" name="a7:883:30">
   <failure message="Insecure '^'." />
 </testcase>
   </testsuite>
