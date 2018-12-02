@@ -1,131 +1,344 @@
 <?xml version="1.0" encoding="utf-8"?>
 <testsuites>
   <testsuite>
-<testcase classname="dist.a7" name="a7:54:22">
-  <failure message="'Mustache' was used before it was defined." />
+<testcase classname="dist.a7" name="a7:0:10">
+  <failure message="Don't wrap function literals in parens." />
 </testcase>
-<testcase classname="dist.a7" name="a7:56:26">
-  <failure message="'Handlebars' was used before it was defined." />
+<testcase classname="dist.a7" name="a7:24:8">
+  <failure message="'a7' is out of scope." />
 </testcase>
-<testcase classname="dist.a7" name="a7:141:3">
-  <failure message="Move the invocation into the parens that contain the function." />
+<testcase classname="dist.a7" name="a7:25:8">
+  <failure message="'a7' is out of scope." />
 </testcase>
-<testcase classname="dist.a7" name="a7:181:13">
-  <failure message="Combine this with the previous 'var' statement." />
+<testcase classname="dist.a7" name="a7:29:8">
+  <failure message="'a7' is out of scope." />
 </testcase>
-<testcase classname="dist.a7" name="a7:209:26">
-  <failure message="'WebSocket' was used before it was defined." />
+<testcase classname="dist.a7" name="a7:53:21">
+  <failure message="Undeclared 'Mustache'." />
 </testcase>
-<testcase classname="dist.a7" name="a7:211:40">
-  <failure message="Empty block." />
+<testcase classname="dist.a7" name="a7:55:25">
+  <failure message="Undeclared 'Handlebars'." />
 </testcase>
-<testcase classname="dist.a7" name="a7:150:5">
+<testcase classname="dist.a7" name="a7:65:14">
+  <failure message="'a7' is out of scope." />
+</testcase>
+<testcase classname="dist.a7" name="a7:66:12">
+  <failure message="'a7' is out of scope." />
+</testcase>
+<testcase classname="dist.a7" name="a7:67:12">
+  <failure message="'a7' is out of scope." />
+</testcase>
+<testcase classname="dist.a7" name="a7:74:10">
+  <failure message="'a7' is out of scope." />
+</testcase>
+<testcase classname="dist.a7" name="a7:75:10">
+  <failure message="'a7' is out of scope." />
+</testcase>
+<testcase classname="dist.a7" name="a7:78:12">
+  <failure message="'a7' is out of scope." />
+</testcase>
+<testcase classname="dist.a7" name="a7:80:12">
+  <failure message="'a7' is out of scope." />
+</testcase>
+<testcase classname="dist.a7" name="a7:83:12">
+  <failure message="'a7' is out of scope." />
+</testcase>
+<testcase classname="dist.a7" name="a7:84:12">
+  <failure message="'a7' is out of scope." />
+</testcase>
+<testcase classname="dist.a7" name="a7:87:12">
+  <failure message="'a7' is out of scope." />
+</testcase>
+<testcase classname="dist.a7" name="a7:88:12">
+  <failure message="'a7' is out of scope." />
+</testcase>
+<testcase classname="dist.a7" name="a7:92:14">
+  <failure message="'a7' is out of scope." />
+</testcase>
+<testcase classname="dist.a7" name="a7:94:14">
+  <failure message="'a7' is out of scope." />
+</testcase>
+<testcase classname="dist.a7" name="a7:99:16">
+  <failure message="'a7' is out of scope." />
+</testcase>
+<testcase classname="dist.a7" name="a7:101:16">
+  <failure message="'a7' is out of scope." />
+</testcase>
+<testcase classname="dist.a7" name="a7:105:16">
+  <failure message="'a7' is out of scope." />
+</testcase>
+<testcase classname="dist.a7" name="a7:106:16">
+  <failure message="'a7' is out of scope." />
+</testcase>
+<testcase classname="dist.a7" name="a7:112:17">
+  <failure message="['catch'] is better written in dot notation." />
+</testcase>
+<testcase classname="dist.a7" name="a7:113:16">
+  <failure message="'a7' is out of scope." />
+</testcase>
+<testcase classname="dist.a7" name="a7:119:11">
+  <failure message="['catch'] is better written in dot notation." />
+</testcase>
+<testcase classname="dist.a7" name="a7:120:10">
+  <failure message="'a7' is out of scope." />
+</testcase>
+<testcase classname="dist.a7" name="a7:125:9">
+  <failure message="['catch'] is better written in dot notation." />
+</testcase>
+<testcase classname="dist.a7" name="a7:126:8">
+  <failure message="'a7' is out of scope." />
+</testcase>
+<testcase classname="dist.a7" name="a7:140:2">
+  <failure message="Wrap an immediate function invocation in parentheses to assist the reader in understanding that the expression is the result of a function, and not the function itself." />
+</testcase>
+<testcase classname="dist.a7" name="a7:142:14">
+  <failure message="Don't wrap function literals in parens." />
+</testcase>
+<testcase classname="dist.a7" name="a7:149:4">
   <failure message="Unused 'active'." />
 </testcase>
-<testcase classname="dist.a7" name="a7:275:3">
-  <failure message="Move the invocation into the parens that contain the function." />
+<testcase classname="dist.a7" name="a7:210:25">
+  <failure message="Undeclared 'WebSocket'." />
 </testcase>
-<testcase classname="dist.a7" name="a7:282:9">
-  <failure message="Combine this with the previous 'var' statement." />
-</testcase>
-<testcase classname="dist.a7" name="a7:286:11">
-  <failure message="Combine this with the previous 'var' statement." />
-</testcase>
-<testcase classname="dist.a7" name="a7:304:25">
+<testcase classname="dist.a7" name="a7:212:39">
   <failure message="Empty block." />
 </testcase>
-<testcase classname="dist.a7" name="a7:307:3">
-  <failure message="Move the invocation into the parens that contain the function." />
+<testcase classname="dist.a7" name="a7:236:19">
+  <failure message="Unused 'er'." />
 </testcase>
-<testcase classname="dist.a7" name="a7:342:61">
+<testcase classname="dist.a7" name="a7:245:12">
+  <failure message="Unexpected 'for'." />
+</testcase>
+<testcase classname="dist.a7" name="a7:245:50">
+  <failure message="Expected '+= 1' and instead saw '++'." />
+</testcase>
+<testcase classname="dist.a7" name="a7:276:2">
+  <failure message="Wrap an immediate function invocation in parentheses to assist the reader in understanding that the expression is the result of a function, and not the function itself." />
+</testcase>
+<testcase classname="dist.a7" name="a7:278:12">
+  <failure message="Don't wrap function literals in parens." />
+</testcase>
+<testcase classname="dist.a7" name="a7:293:7">
+  <failure message="Unexpected '.'." />
+</testcase>
+<testcase classname="dist.a7" name="a7:305:24">
   <failure message="Empty block." />
 </testcase>
-<testcase classname="dist.a7" name="a7:345:64">
+<testcase classname="dist.a7" name="a7:308:2">
+  <failure message="Wrap an immediate function invocation in parentheses to assist the reader in understanding that the expression is the result of a function, and not the function itself." />
+</testcase>
+<testcase classname="dist.a7" name="a7:314:13">
+  <failure message="Don't wrap function literals in parens." />
+</testcase>
+<testcase classname="dist.a7" name="a7:343:60">
   <failure message="Empty block." />
 </testcase>
-<testcase classname="dist.a7" name="a7:363:3">
-  <failure message="Move the invocation into the parens that contain the function." />
+<testcase classname="dist.a7" name="a7:346:63">
+  <failure message="Empty block." />
 </testcase>
-<testcase classname="dist.a7" name="a7:367:2">
-  <failure message="Missing 'use strict' statement." />
+<testcase classname="dist.a7" name="a7:364:2">
+  <failure message="Wrap an immediate function invocation in parentheses to assist the reader in understanding that the expression is the result of a function, and not the function itself." />
 </testcase>
-<testcase classname="dist.a7" name="a7:371:15">
+<testcase classname="dist.a7" name="a7:368:1">
+  <failure message="Expected 'use strict' before 'var'." />
+</testcase>
+<testcase classname="dist.a7" name="a7:372:14">
   <failure message="The '&amp;&amp;' subexpression should be wrapped in parens." />
 </testcase>
-<testcase classname="dist.a7" name="a7:390:4">
-  <failure message="'_deffered' was used before it was defined." />
+<testcase classname="dist.a7" name="a7:391:3">
+  <failure message="Undeclared '_deffered'." />
 </testcase>
-<testcase classname="dist.a7" name="a7:418:21">
+<testcase classname="dist.a7" name="a7:419:20">
   <failure message="['create'] is better written in dot notation." />
 </testcase>
-<testcase classname="dist.a7" name="a7:421:21">
+<testcase classname="dist.a7" name="a7:419:46">
+  <failure message="Unexpected 'arguments'." />
+</testcase>
+<testcase classname="dist.a7" name="a7:422:20">
   <failure message="['destroy'] is better written in dot notation." />
 </testcase>
-<testcase classname="dist.a7" name="a7:424:21">
+<testcase classname="dist.a7" name="a7:422:47">
+  <failure message="Unexpected 'arguments'." />
+</testcase>
+<testcase classname="dist.a7" name="a7:425:20">
   <failure message="['get'] is better written in dot notation." />
 </testcase>
-<testcase classname="dist.a7" name="a7:427:21">
+<testcase classname="dist.a7" name="a7:425:43">
+  <failure message="Unexpected 'arguments'." />
+</testcase>
+<testcase classname="dist.a7" name="a7:428:20">
   <failure message="['set'] is better written in dot notation." />
 </testcase>
-<testcase classname="dist.a7" name="a7:430:21">
+<testcase classname="dist.a7" name="a7:428:43">
+  <failure message="Unexpected 'arguments'." />
+</testcase>
+<testcase classname="dist.a7" name="a7:431:20">
   <failure message="['exists'] is better written in dot notation." />
 </testcase>
-<testcase classname="dist.a7" name="a7:433:21">
+<testcase classname="dist.a7" name="a7:431:46">
+  <failure message="Unexpected 'arguments'." />
+</testcase>
+<testcase classname="dist.a7" name="a7:434:20">
   <failure message="['bind'] is better written in dot notation." />
 </testcase>
-<testcase classname="dist.a7" name="a7:544:3">
-  <failure message="Move the invocation into the parens that contain the function." />
+<testcase classname="dist.a7" name="a7:434:44">
+  <failure message="Unexpected 'arguments'." />
 </testcase>
-<testcase classname="dist.a7" name="a7:548:2">
-  <failure message="Missing 'use strict' statement." />
+<testcase classname="dist.a7" name="a7:455:17">
+  <failure message="Don't wrap function literals in parens." />
 </testcase>
-<testcase classname="dist.a7" name="a7:584:21">
-  <failure message="'Request' was used before it was defined." />
+<testcase classname="dist.a7" name="a7:462:6">
+  <failure message="'EventBindings' is out of scope." />
 </testcase>
-<testcase classname="dist.a7" name="a7:586:11">
-  <failure message="Combine this with the previous 'var' statement." />
+<testcase classname="dist.a7" name="a7:497:10">
+  <failure message="Unexpected 'this'." />
 </testcase>
-<testcase classname="dist.a7" name="a7:586:21">
-  <failure message="'fetch' was used before it was defined." />
+<testcase classname="dist.a7" name="a7:498:8">
+  <failure message="Unexpected 'this'." />
 </testcase>
-<testcase classname="dist.a7" name="a7:639:9">
-  <failure message="Combine this with the previous 'var' statement." />
+<testcase classname="dist.a7" name="a7:500:6">
+  <failure message="Unexpected 'this'." />
 </testcase>
-<testcase classname="dist.a7" name="a7:647:6">
-  <failure message="Unnecessary 'else' after disruption." />
+<testcase classname="dist.a7" name="a7:501:13">
+  <failure message="Unexpected 'this'." />
 </testcase>
-<testcase classname="dist.a7" name="a7:659:18">
-  <failure message="'Request' was used before it was defined." />
+<testcase classname="dist.a7" name="a7:506:6">
+  <failure message="Unexpected 'this'." />
 </testcase>
-<testcase classname="dist.a7" name="a7:660:14">
-  <failure message="'fetch' was used before it was defined." />
+<testcase classname="dist.a7" name="a7:507:13">
+  <failure message="Unexpected 'this'." />
 </testcase>
-<testcase classname="dist.a7" name="a7:706:13">
-  <failure message="Combine this with the previous 'var' statement." />
+<testcase classname="dist.a7" name="a7:511:18">
+  <failure message="Unexpected 'this'." />
 </testcase>
-<testcase classname="dist.a7" name="a7:743:3">
-  <failure message="Move the invocation into the parens that contain the function." />
+<testcase classname="dist.a7" name="a7:512:6">
+  <failure message="Unexpected 'this'." />
 </testcase>
-<testcase classname="dist.a7" name="a7:763:31">
-  <failure message="'Handlebars' was used before it was defined." />
+<testcase classname="dist.a7" name="a7:519:28">
+  <failure message="Unexpected 'this'." />
 </testcase>
-<testcase classname="dist.a7" name="a7:773:11">
-  <failure message="'fetch' was used before it was defined." />
+<testcase classname="dist.a7" name="a7:520:29">
+  <failure message="Unexpected 'this'." />
 </testcase>
-<testcase classname="dist.a7" name="a7:779:32">
-  <failure message="'DOMParser' was used before it was defined." />
+<testcase classname="dist.a7" name="a7:521:35">
+  <failure message="Unexpected 'this'." />
 </testcase>
-<testcase classname="dist.a7" name="a7:794:18">
-  <failure message="'Mustache' was used before it was defined." />
+<testcase classname="dist.a7" name="a7:528:11">
+  <failure message="Unexpected 'this'." />
 </testcase>
-<testcase classname="dist.a7" name="a7:825:3">
-  <failure message="Move the invocation into the parens that contain the function." />
+<testcase classname="dist.a7" name="a7:533:13">
+  <failure message="Unexpected 'this'." />
 </testcase>
-<testcase classname="dist.a7" name="a7:830:2">
-  <failure message="Missing 'use strict' statement." />
+<testcase classname="dist.a7" name="a7:534:16">
+  <failure message="Unexpected 'this'." />
 </testcase>
-<testcase classname="dist.a7" name="a7:883:30">
-  <failure message="Insecure '^'." />
+<testcase classname="dist.a7" name="a7:545:2">
+  <failure message="Wrap an immediate function invocation in parentheses to assist the reader in understanding that the expression is the result of a function, and not the function itself." />
+</testcase>
+<testcase classname="dist.a7" name="a7:549:1">
+  <failure message="Expected 'use strict' before 'var'." />
+</testcase>
+<testcase classname="dist.a7" name="a7:585:20">
+  <failure message="Undeclared 'Request'." />
+</testcase>
+<testcase classname="dist.a7" name="a7:587:20">
+  <failure message="Undeclared 'fetch'." />
+</testcase>
+<testcase classname="dist.a7" name="a7:648:5">
+  <failure message="Unexpected 'else'." />
+</testcase>
+<testcase classname="dist.a7" name="a7:660:17">
+  <failure message="Undeclared 'Request'." />
+</testcase>
+<testcase classname="dist.a7" name="a7:661:13">
+  <failure message="Undeclared 'fetch'." />
+</testcase>
+<testcase classname="dist.a7" name="a7:699:15">
+  <failure message="Don't wrap function literals in parens." />
+</testcase>
+<testcase classname="dist.a7" name="a7:744:2">
+  <failure message="Wrap an immediate function invocation in parentheses to assist the reader in understanding that the expression is the result of a function, and not the function itself." />
+</testcase>
+<testcase classname="dist.a7" name="a7:746:9">
+  <failure message="Don't wrap function literals in parens." />
+</testcase>
+<testcase classname="dist.a7" name="a7:764:30">
+  <failure message="Undeclared 'Handlebars'." />
+</testcase>
+<testcase classname="dist.a7" name="a7:774:10">
+  <failure message="Undeclared 'fetch'." />
+</testcase>
+<testcase classname="dist.a7" name="a7:780:31">
+  <failure message="Undeclared 'DOMParser'." />
+</testcase>
+<testcase classname="dist.a7" name="a7:795:17">
+  <failure message="Undeclared 'Mustache'." />
+</testcase>
+<testcase classname="dist.a7" name="a7:826:2">
+  <failure message="Wrap an immediate function invocation in parentheses to assist the reader in understanding that the expression is the result of a function, and not the function itself." />
+</testcase>
+<testcase classname="dist.a7" name="a7:831:1">
+  <failure message="Expected 'use strict' before 'return'." />
+</testcase>
+<testcase classname="dist.a7" name="a7:839:10">
+  <failure message="Unexpected 'this'." />
+</testcase>
+<testcase classname="dist.a7" name="a7:853:31">
+  <failure message="Unexpected '++'." />
+</testcase>
+<testcase classname="dist.a7" name="a7:854:31">
+  <failure message="Unexpected '++'." />
+</testcase>
+<testcase classname="dist.a7" name="a7:855:31">
+  <failure message="Unexpected '++'." />
+</testcase>
+<testcase classname="dist.a7" name="a7:863:18">
+  <failure message="Unexpected '='." />
+</testcase>
+<testcase classname="dist.a7" name="a7:868:23">
+  <failure message="Unexpected 'this'." />
+</testcase>
+<testcase classname="dist.a7" name="a7:869:9">
+  <failure message="Unexpected 'this'." />
+</testcase>
+<testcase classname="dist.a7" name="a7:870:9">
+  <failure message="Unexpected 'this'." />
+</testcase>
+<testcase classname="dist.a7" name="a7:871:9">
+  <failure message="Unexpected 'this'." />
+</testcase>
+<testcase classname="dist.a7" name="a7:887:12">
+  <failure message="Unexpected 'this'." />
+</testcase>
+<testcase classname="dist.a7" name="a7:887:48">
+  <failure message="Unexpected '++'." />
+</testcase>
+<testcase classname="dist.a7" name="a7:888:12">
+  <failure message="Unexpected 'this'." />
+</testcase>
+<testcase classname="dist.a7" name="a7:888:48">
+  <failure message="Unexpected '++'." />
+</testcase>
+<testcase classname="dist.a7" name="a7:889:12">
+  <failure message="Unexpected 'this'." />
+</testcase>
+<testcase classname="dist.a7" name="a7:889:48">
+  <failure message="Unexpected '++'." />
+</testcase>
+<testcase classname="dist.a7" name="a7:890:12">
+  <failure message="Unexpected 'this'." />
+</testcase>
+<testcase classname="dist.a7" name="a7:890:48">
+  <failure message="Unexpected '++'." />
+</testcase>
+<testcase classname="dist.a7" name="a7:943:35">
+  <failure message="Unexpected '.'." />
+</testcase>
+<testcase classname="dist.a7" name="a7:944:5">
+  <failure message="Unexpected '.'." />
+</testcase>
+<testcase classname="dist.a7" name="a7:944:18">
+  <failure message="Unexpected '.'." />
 </testcase>
   </testsuite>
 </testsuites>

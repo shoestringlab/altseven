@@ -188,7 +188,9 @@ a7.console = (function() {
                 left: console.left,
                 height: console.height,
                 title: title,
-                top: console.top
+                top: console.top,
+                enableShrink: false,
+                enableClose: true
               }
             ],
             false

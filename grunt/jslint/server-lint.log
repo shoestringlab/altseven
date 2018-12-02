@@ -1,45 +1,116 @@
-FAIL	dist/a7.js (42)
-dist/a7.js:54:22	'Mustache' was used before it was defined.
-dist/a7.js:56:26	'Handlebars' was used before it was defined.
-dist/a7.js:141:3	Move the invocation into the parens that contain the function.
-dist/a7.js:181:13	Combine this with the previous 'var' statement.
-dist/a7.js:209:26	'WebSocket' was used before it was defined.
-dist/a7.js:211:40	Empty block.
-dist/a7.js:150:5	Unused 'active'.
-dist/a7.js:275:3	Move the invocation into the parens that contain the function.
-dist/a7.js:282:9	Combine this with the previous 'var' statement.
-dist/a7.js:286:11	Combine this with the previous 'var' statement.
-dist/a7.js:304:25	Empty block.
-dist/a7.js:307:3	Move the invocation into the parens that contain the function.
-dist/a7.js:342:61	Empty block.
-dist/a7.js:345:64	Empty block.
-dist/a7.js:363:3	Move the invocation into the parens that contain the function.
-dist/a7.js:367:2	Missing 'use strict' statement.
-dist/a7.js:371:15	The '&amp;&amp;' subexpression should be wrapped in parens.
-dist/a7.js:390:4	'_deffered' was used before it was defined.
-dist/a7.js:418:21	['create'] is better written in dot notation.
-dist/a7.js:421:21	['destroy'] is better written in dot notation.
-dist/a7.js:424:21	['get'] is better written in dot notation.
-dist/a7.js:427:21	['set'] is better written in dot notation.
-dist/a7.js:430:21	['exists'] is better written in dot notation.
-dist/a7.js:433:21	['bind'] is better written in dot notation.
-dist/a7.js:544:3	Move the invocation into the parens that contain the function.
-dist/a7.js:548:2	Missing 'use strict' statement.
-dist/a7.js:584:21	'Request' was used before it was defined.
-dist/a7.js:586:11	Combine this with the previous 'var' statement.
-dist/a7.js:586:21	'fetch' was used before it was defined.
-dist/a7.js:639:9	Combine this with the previous 'var' statement.
-dist/a7.js:647:6	Unnecessary 'else' after disruption.
-dist/a7.js:659:18	'Request' was used before it was defined.
-dist/a7.js:660:14	'fetch' was used before it was defined.
-dist/a7.js:706:13	Combine this with the previous 'var' statement.
-dist/a7.js:743:3	Move the invocation into the parens that contain the function.
-dist/a7.js:763:31	'Handlebars' was used before it was defined.
-dist/a7.js:773:11	'fetch' was used before it was defined.
-dist/a7.js:779:32	'DOMParser' was used before it was defined.
-dist/a7.js:794:18	'Mustache' was used before it was defined.
-dist/a7.js:825:3	Move the invocation into the parens that contain the function.
-dist/a7.js:830:2	Missing 'use strict' statement.
-dist/a7.js:883:30	Insecure '^'.
+FAIL	dist/a7.js (113)
+dist/a7.js:0:10	Don't wrap function literals in parens.
+dist/a7.js:24:8	'a7' is out of scope.
+dist/a7.js:25:8	'a7' is out of scope.
+dist/a7.js:29:8	'a7' is out of scope.
+dist/a7.js:53:21	Undeclared 'Mustache'.
+dist/a7.js:55:25	Undeclared 'Handlebars'.
+dist/a7.js:65:14	'a7' is out of scope.
+dist/a7.js:66:12	'a7' is out of scope.
+dist/a7.js:67:12	'a7' is out of scope.
+dist/a7.js:74:10	'a7' is out of scope.
+dist/a7.js:75:10	'a7' is out of scope.
+dist/a7.js:78:12	'a7' is out of scope.
+dist/a7.js:80:12	'a7' is out of scope.
+dist/a7.js:83:12	'a7' is out of scope.
+dist/a7.js:84:12	'a7' is out of scope.
+dist/a7.js:87:12	'a7' is out of scope.
+dist/a7.js:88:12	'a7' is out of scope.
+dist/a7.js:92:14	'a7' is out of scope.
+dist/a7.js:94:14	'a7' is out of scope.
+dist/a7.js:99:16	'a7' is out of scope.
+dist/a7.js:101:16	'a7' is out of scope.
+dist/a7.js:105:16	'a7' is out of scope.
+dist/a7.js:106:16	'a7' is out of scope.
+dist/a7.js:112:17	['catch'] is better written in dot notation.
+dist/a7.js:113:16	'a7' is out of scope.
+dist/a7.js:119:11	['catch'] is better written in dot notation.
+dist/a7.js:120:10	'a7' is out of scope.
+dist/a7.js:125:9	['catch'] is better written in dot notation.
+dist/a7.js:126:8	'a7' is out of scope.
+dist/a7.js:140:2	Wrap an immediate function invocation in parentheses to assist the reader in understanding that the expression is the result of a function, and not the function itself.
+dist/a7.js:142:14	Don't wrap function literals in parens.
+dist/a7.js:149:4	Unused 'active'.
+dist/a7.js:210:25	Undeclared 'WebSocket'.
+dist/a7.js:212:39	Empty block.
+dist/a7.js:236:19	Unused 'er'.
+dist/a7.js:245:12	Unexpected 'for'.
+dist/a7.js:245:50	Expected '+= 1' and instead saw '++'.
+dist/a7.js:276:2	Wrap an immediate function invocation in parentheses to assist the reader in understanding that the expression is the result of a function, and not the function itself.
+dist/a7.js:278:12	Don't wrap function literals in parens.
+dist/a7.js:293:7	Unexpected '.'.
+dist/a7.js:305:24	Empty block.
+dist/a7.js:308:2	Wrap an immediate function invocation in parentheses to assist the reader in understanding that the expression is the result of a function, and not the function itself.
+dist/a7.js:314:13	Don't wrap function literals in parens.
+dist/a7.js:343:60	Empty block.
+dist/a7.js:346:63	Empty block.
+dist/a7.js:364:2	Wrap an immediate function invocation in parentheses to assist the reader in understanding that the expression is the result of a function, and not the function itself.
+dist/a7.js:368:1	Expected 'use strict' before 'var'.
+dist/a7.js:372:14	The '&amp;&amp;' subexpression should be wrapped in parens.
+dist/a7.js:391:3	Undeclared '_deffered'.
+dist/a7.js:419:20	['create'] is better written in dot notation.
+dist/a7.js:419:46	Unexpected 'arguments'.
+dist/a7.js:422:20	['destroy'] is better written in dot notation.
+dist/a7.js:422:47	Unexpected 'arguments'.
+dist/a7.js:425:20	['get'] is better written in dot notation.
+dist/a7.js:425:43	Unexpected 'arguments'.
+dist/a7.js:428:20	['set'] is better written in dot notation.
+dist/a7.js:428:43	Unexpected 'arguments'.
+dist/a7.js:431:20	['exists'] is better written in dot notation.
+dist/a7.js:431:46	Unexpected 'arguments'.
+dist/a7.js:434:20	['bind'] is better written in dot notation.
+dist/a7.js:434:44	Unexpected 'arguments'.
+dist/a7.js:455:17	Don't wrap function literals in parens.
+dist/a7.js:462:6	'EventBindings' is out of scope.
+dist/a7.js:497:10	Unexpected 'this'.
+dist/a7.js:498:8	Unexpected 'this'.
+dist/a7.js:500:6	Unexpected 'this'.
+dist/a7.js:501:13	Unexpected 'this'.
+dist/a7.js:506:6	Unexpected 'this'.
+dist/a7.js:507:13	Unexpected 'this'.
+dist/a7.js:511:18	Unexpected 'this'.
+dist/a7.js:512:6	Unexpected 'this'.
+dist/a7.js:519:28	Unexpected 'this'.
+dist/a7.js:520:29	Unexpected 'this'.
+dist/a7.js:521:35	Unexpected 'this'.
+dist/a7.js:528:11	Unexpected 'this'.
+dist/a7.js:533:13	Unexpected 'this'.
+dist/a7.js:534:16	Unexpected 'this'.
+dist/a7.js:545:2	Wrap an immediate function invocation in parentheses to assist the reader in understanding that the expression is the result of a function, and not the function itself.
+dist/a7.js:549:1	Expected 'use strict' before 'var'.
+dist/a7.js:585:20	Undeclared 'Request'.
+dist/a7.js:587:20	Undeclared 'fetch'.
+dist/a7.js:648:5	Unexpected 'else'.
+dist/a7.js:660:17	Undeclared 'Request'.
+dist/a7.js:661:13	Undeclared 'fetch'.
+dist/a7.js:699:15	Don't wrap function literals in parens.
+dist/a7.js:744:2	Wrap an immediate function invocation in parentheses to assist the reader in understanding that the expression is the result of a function, and not the function itself.
+dist/a7.js:746:9	Don't wrap function literals in parens.
+dist/a7.js:764:30	Undeclared 'Handlebars'.
+dist/a7.js:774:10	Undeclared 'fetch'.
+dist/a7.js:780:31	Undeclared 'DOMParser'.
+dist/a7.js:795:17	Undeclared 'Mustache'.
+dist/a7.js:826:2	Wrap an immediate function invocation in parentheses to assist the reader in understanding that the expression is the result of a function, and not the function itself.
+dist/a7.js:831:1	Expected 'use strict' before 'return'.
+dist/a7.js:839:10	Unexpected 'this'.
+dist/a7.js:853:31	Unexpected '++'.
+dist/a7.js:854:31	Unexpected '++'.
+dist/a7.js:855:31	Unexpected '++'.
+dist/a7.js:863:18	Unexpected '='.
+dist/a7.js:868:23	Unexpected 'this'.
+dist/a7.js:869:9	Unexpected 'this'.
+dist/a7.js:870:9	Unexpected 'this'.
+dist/a7.js:871:9	Unexpected 'this'.
+dist/a7.js:887:12	Unexpected 'this'.
+dist/a7.js:887:48	Unexpected '++'.
+dist/a7.js:888:12	Unexpected 'this'.
+dist/a7.js:888:48	Unexpected '++'.
+dist/a7.js:889:12	Unexpected 'this'.
+dist/a7.js:889:48	Unexpected '++'.
+dist/a7.js:890:12	Unexpected 'this'.
+dist/a7.js:890:48	Unexpected '++'.
+dist/a7.js:943:35	Unexpected '.'.
+dist/a7.js:944:5	Unexpected '.'.
+dist/a7.js:944:18	Unexpected '.'.
 
-# JSLint failed, 42 violations in 1.  1 files scanned.
+# JSLint failed, 113 violations in 1.  1 files scanned.

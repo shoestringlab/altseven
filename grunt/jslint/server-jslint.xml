@@ -1,47 +1,118 @@
 <?xml version="1.0" encoding="utf-8"?>
 <jslint>
 <file name="dist/a7.js">
-<issue line="54" char="22" reason="'Mustache' was used before it was defined." evidence="              typeof Mustache === &quot;object&quot;"/>
-<issue line="56" char="26" reason="'Handlebars' was used before it was defined." evidence="                : typeof Handlebars === &quot;object&quot;"/>
-<issue line="141" char="3" reason="Move the invocation into the parens that contain the function." evidence="})();"/>
-<issue line="181" char="13" reason="Combine this with the previous 'var' statement." evidence="        var connection,"/>
-<issue line="209" char="26" reason="'WebSocket' was used before it was defined." evidence="        connection = new WebSocket(console.wsServer);"/>
-<issue line="211" char="40" reason="Empty block." evidence="        connection.onopen = function() {"/>
-<issue line="150" char="5" reason="Unused 'active'." evidence="    active = false,"/>
-<issue line="275" char="3" reason="Move the invocation into the parens that contain the function." evidence="})();"/>
-<issue line="282" char="9" reason="Combine this with the previous 'var' statement." evidence="    var substring = &quot;script error&quot;;"/>
-<issue line="286" char="11" reason="Combine this with the previous 'var' statement." evidence="      var message = ["/>
-<issue line="304" char="25" reason="Empty block." evidence="    capture: function() {},"/>
-<issue line="307" char="3" reason="Move the invocation into the parens that contain the function." evidence="})();"/>
-<issue line="342" char="61" reason="Empty block." evidence="      a7.events.subscribe(&quot;auth.sessionTimeout&quot;, function() {"/>
-<issue line="345" char="64" reason="Empty block." evidence="      a7.events.subscribe(&quot;auth.invalidateSession&quot;, function() {"/>
-<issue line="363" char="3" reason="Move the invocation into the parens that contain the function." evidence="})();"/>
-<issue line="367" char="2" reason="Missing 'use strict' statement." evidence="	var _ready = false,"/>
-<issue line="371" char="15" reason="The '&amp;amp;&amp;amp;' subexpression should be wrapped in parens." evidence="			if( _ready &amp;&amp; _logLevel.indexOf( level ) &gt;=0 || _logLevel.indexOf( &quot;ALL&quot; ) &gt;=0 ){"/>
-<issue line="390" char="4" reason="'_deffered' was used before it was defined." evidence="			_deffered = [];"/>
-<issue line="418" char="21" reason="['create'] is better written in dot notation." evidence="			return _methods[ &quot;create&quot; ].apply( _model, arguments );"/>
-<issue line="421" char="21" reason="['destroy'] is better written in dot notation." evidence="			return _methods[ &quot;destroy&quot; ].apply( _model, arguments );"/>
-<issue line="424" char="21" reason="['get'] is better written in dot notation." evidence="			return _methods[ &quot;get&quot; ].apply( _model, arguments );"/>
-<issue line="427" char="21" reason="['set'] is better written in dot notation." evidence="			return _methods[ &quot;set&quot; ].apply( _model, arguments );"/>
-<issue line="430" char="21" reason="['exists'] is better written in dot notation." evidence="			return _methods[ &quot;exists&quot; ].apply( _model, arguments );"/>
-<issue line="433" char="21" reason="['bind'] is better written in dot notation." evidence="			return _methods[ &quot;bind&quot; ].apply( _model, arguments );"/>
-<issue line="544" char="3" reason="Move the invocation into the parens that contain the function." evidence="})();"/>
-<issue line="548" char="2" reason="Missing 'use strict' statement." evidence="	var _options = {},"/>
-<issue line="584" char="21" reason="'Request' was used before it was defined." evidence="						request = new Request( _options.loginURL , params );"/>
-<issue line="586" char="11" reason="Combine this with the previous 'var' statement." evidence="						var promise = fetch( request );"/>
-<issue line="586" char="21" reason="'fetch' was used before it was defined." evidence="						var promise = fetch( request );"/>
-<issue line="639" char="9" reason="Combine this with the previous 'var' statement." evidence="				var currentTime = new Date( ),"/>
-<issue line="647" char="6" reason="Unnecessary 'else' after disruption." evidence="				}else if( _token !== undefined &amp;&amp; _token !== null ){"/>
-<issue line="659" char="18" reason="'Request' was used before it was defined." evidence="			request = new Request( uri, params );"/>
-<issue line="660" char="14" reason="'fetch' was used before it was defined." evidence="			promise = fetch( request );"/>
-<issue line="706" char="13" reason="Combine this with the previous 'var' statement." evidence="        var timer = a7.remote.getSessionTimer();"/>
-<issue line="743" char="3" reason="Move the invocation into the parens that contain the function." evidence="})();"/>
-<issue line="763" char="31" reason="'Handlebars' was used before it was defined." evidence="          _templateMap[key] = Handlebars.compile(html.trim());"/>
-<issue line="773" char="11" reason="'fetch' was used before it was defined." evidence="          fetch(_options.templates + &quot;?&quot; + ot)"/>
-<issue line="779" char="32" reason="'DOMParser' was used before it was defined." evidence="              var parser = new DOMParser(),"/>
-<issue line="794" char="18" reason="'Mustache' was used before it was defined." evidence="          return Mustache.render(_templateMap[template], params, partials);"/>
-<issue line="825" char="3" reason="Move the invocation into the parens that contain the function." evidence="})();"/>
-<issue line="830" char="2" reason="Missing 'use strict' statement." evidence="	return{"/>
-<issue line="883" char="30" reason="Insecure '^'." evidence="				input = input.replace( /[^A-Za-z0-9\+\/\=]/g, &quot;&quot; );"/>
+<issue line="0" char="10" reason="Don't wrap function literals in parens." evidence=""/>
+<issue line="24" char="8" reason="'a7' is out of scope." evidence=""/>
+<issue line="25" char="8" reason="'a7' is out of scope." evidence=""/>
+<issue line="29" char="8" reason="'a7' is out of scope." evidence=""/>
+<issue line="53" char="21" reason="Undeclared 'Mustache'." evidence=""/>
+<issue line="55" char="25" reason="Undeclared 'Handlebars'." evidence=""/>
+<issue line="65" char="14" reason="'a7' is out of scope." evidence=""/>
+<issue line="66" char="12" reason="'a7' is out of scope." evidence=""/>
+<issue line="67" char="12" reason="'a7' is out of scope." evidence=""/>
+<issue line="74" char="10" reason="'a7' is out of scope." evidence=""/>
+<issue line="75" char="10" reason="'a7' is out of scope." evidence=""/>
+<issue line="78" char="12" reason="'a7' is out of scope." evidence=""/>
+<issue line="80" char="12" reason="'a7' is out of scope." evidence=""/>
+<issue line="83" char="12" reason="'a7' is out of scope." evidence=""/>
+<issue line="84" char="12" reason="'a7' is out of scope." evidence=""/>
+<issue line="87" char="12" reason="'a7' is out of scope." evidence=""/>
+<issue line="88" char="12" reason="'a7' is out of scope." evidence=""/>
+<issue line="92" char="14" reason="'a7' is out of scope." evidence=""/>
+<issue line="94" char="14" reason="'a7' is out of scope." evidence=""/>
+<issue line="99" char="16" reason="'a7' is out of scope." evidence=""/>
+<issue line="101" char="16" reason="'a7' is out of scope." evidence=""/>
+<issue line="105" char="16" reason="'a7' is out of scope." evidence=""/>
+<issue line="106" char="16" reason="'a7' is out of scope." evidence=""/>
+<issue line="112" char="17" reason="['catch'] is better written in dot notation." evidence=""/>
+<issue line="113" char="16" reason="'a7' is out of scope." evidence=""/>
+<issue line="119" char="11" reason="['catch'] is better written in dot notation." evidence=""/>
+<issue line="120" char="10" reason="'a7' is out of scope." evidence=""/>
+<issue line="125" char="9" reason="['catch'] is better written in dot notation." evidence=""/>
+<issue line="126" char="8" reason="'a7' is out of scope." evidence=""/>
+<issue line="140" char="2" reason="Wrap an immediate function invocation in parentheses to assist the reader in understanding that the expression is the result of a function, and not the function itself." evidence=""/>
+<issue line="142" char="14" reason="Don't wrap function literals in parens." evidence=""/>
+<issue line="149" char="4" reason="Unused 'active'." evidence=""/>
+<issue line="210" char="25" reason="Undeclared 'WebSocket'." evidence=""/>
+<issue line="212" char="39" reason="Empty block." evidence=""/>
+<issue line="236" char="19" reason="Unused 'er'." evidence=""/>
+<issue line="245" char="12" reason="Unexpected 'for'." evidence=""/>
+<issue line="245" char="50" reason="Expected '+= 1' and instead saw '++'." evidence=""/>
+<issue line="276" char="2" reason="Wrap an immediate function invocation in parentheses to assist the reader in understanding that the expression is the result of a function, and not the function itself." evidence=""/>
+<issue line="278" char="12" reason="Don't wrap function literals in parens." evidence=""/>
+<issue line="293" char="7" reason="Unexpected '.'." evidence=""/>
+<issue line="305" char="24" reason="Empty block." evidence=""/>
+<issue line="308" char="2" reason="Wrap an immediate function invocation in parentheses to assist the reader in understanding that the expression is the result of a function, and not the function itself." evidence=""/>
+<issue line="314" char="13" reason="Don't wrap function literals in parens." evidence=""/>
+<issue line="343" char="60" reason="Empty block." evidence=""/>
+<issue line="346" char="63" reason="Empty block." evidence=""/>
+<issue line="364" char="2" reason="Wrap an immediate function invocation in parentheses to assist the reader in understanding that the expression is the result of a function, and not the function itself." evidence=""/>
+<issue line="368" char="1" reason="Expected 'use strict' before 'var'." evidence=""/>
+<issue line="372" char="14" reason="The '&amp;amp;&amp;amp;' subexpression should be wrapped in parens." evidence=""/>
+<issue line="391" char="3" reason="Undeclared '_deffered'." evidence=""/>
+<issue line="419" char="20" reason="['create'] is better written in dot notation." evidence=""/>
+<issue line="419" char="46" reason="Unexpected 'arguments'." evidence=""/>
+<issue line="422" char="20" reason="['destroy'] is better written in dot notation." evidence=""/>
+<issue line="422" char="47" reason="Unexpected 'arguments'." evidence=""/>
+<issue line="425" char="20" reason="['get'] is better written in dot notation." evidence=""/>
+<issue line="425" char="43" reason="Unexpected 'arguments'." evidence=""/>
+<issue line="428" char="20" reason="['set'] is better written in dot notation." evidence=""/>
+<issue line="428" char="43" reason="Unexpected 'arguments'." evidence=""/>
+<issue line="431" char="20" reason="['exists'] is better written in dot notation." evidence=""/>
+<issue line="431" char="46" reason="Unexpected 'arguments'." evidence=""/>
+<issue line="434" char="20" reason="['bind'] is better written in dot notation." evidence=""/>
+<issue line="434" char="44" reason="Unexpected 'arguments'." evidence=""/>
+<issue line="455" char="17" reason="Don't wrap function literals in parens." evidence=""/>
+<issue line="462" char="6" reason="'EventBindings' is out of scope." evidence=""/>
+<issue line="497" char="10" reason="Unexpected 'this'." evidence=""/>
+<issue line="498" char="8" reason="Unexpected 'this'." evidence=""/>
+<issue line="500" char="6" reason="Unexpected 'this'." evidence=""/>
+<issue line="501" char="13" reason="Unexpected 'this'." evidence=""/>
+<issue line="506" char="6" reason="Unexpected 'this'." evidence=""/>
+<issue line="507" char="13" reason="Unexpected 'this'." evidence=""/>
+<issue line="511" char="18" reason="Unexpected 'this'." evidence=""/>
+<issue line="512" char="6" reason="Unexpected 'this'." evidence=""/>
+<issue line="519" char="28" reason="Unexpected 'this'." evidence=""/>
+<issue line="520" char="29" reason="Unexpected 'this'." evidence=""/>
+<issue line="521" char="35" reason="Unexpected 'this'." evidence=""/>
+<issue line="528" char="11" reason="Unexpected 'this'." evidence=""/>
+<issue line="533" char="13" reason="Unexpected 'this'." evidence=""/>
+<issue line="534" char="16" reason="Unexpected 'this'." evidence=""/>
+<issue line="545" char="2" reason="Wrap an immediate function invocation in parentheses to assist the reader in understanding that the expression is the result of a function, and not the function itself." evidence=""/>
+<issue line="549" char="1" reason="Expected 'use strict' before 'var'." evidence=""/>
+<issue line="585" char="20" reason="Undeclared 'Request'." evidence=""/>
+<issue line="587" char="20" reason="Undeclared 'fetch'." evidence=""/>
+<issue line="648" char="5" reason="Unexpected 'else'." evidence=""/>
+<issue line="660" char="17" reason="Undeclared 'Request'." evidence=""/>
+<issue line="661" char="13" reason="Undeclared 'fetch'." evidence=""/>
+<issue line="699" char="15" reason="Don't wrap function literals in parens." evidence=""/>
+<issue line="744" char="2" reason="Wrap an immediate function invocation in parentheses to assist the reader in understanding that the expression is the result of a function, and not the function itself." evidence=""/>
+<issue line="746" char="9" reason="Don't wrap function literals in parens." evidence=""/>
+<issue line="764" char="30" reason="Undeclared 'Handlebars'." evidence=""/>
+<issue line="774" char="10" reason="Undeclared 'fetch'." evidence=""/>
+<issue line="780" char="31" reason="Undeclared 'DOMParser'." evidence=""/>
+<issue line="795" char="17" reason="Undeclared 'Mustache'." evidence=""/>
+<issue line="826" char="2" reason="Wrap an immediate function invocation in parentheses to assist the reader in understanding that the expression is the result of a function, and not the function itself." evidence=""/>
+<issue line="831" char="1" reason="Expected 'use strict' before 'return'." evidence=""/>
+<issue line="839" char="10" reason="Unexpected 'this'." evidence=""/>
+<issue line="853" char="31" reason="Unexpected '++'." evidence=""/>
+<issue line="854" char="31" reason="Unexpected '++'." evidence=""/>
+<issue line="855" char="31" reason="Unexpected '++'." evidence=""/>
+<issue line="863" char="18" reason="Unexpected '='." evidence=""/>
+<issue line="868" char="23" reason="Unexpected 'this'." evidence=""/>
+<issue line="869" char="9" reason="Unexpected 'this'." evidence=""/>
+<issue line="870" char="9" reason="Unexpected 'this'." evidence=""/>
+<issue line="871" char="9" reason="Unexpected 'this'." evidence=""/>
+<issue line="887" char="12" reason="Unexpected 'this'." evidence=""/>
+<issue line="887" char="48" reason="Unexpected '++'." evidence=""/>
+<issue line="888" char="12" reason="Unexpected 'this'." evidence=""/>
+<issue line="888" char="48" reason="Unexpected '++'." evidence=""/>
+<issue line="889" char="12" reason="Unexpected 'this'." evidence=""/>
+<issue line="889" char="48" reason="Unexpected '++'." evidence=""/>
+<issue line="890" char="12" reason="Unexpected 'this'." evidence=""/>
+<issue line="890" char="48" reason="Unexpected '++'." evidence=""/>
+<issue line="943" char="35" reason="Unexpected '.'." evidence=""/>
+<issue line="944" char="5" reason="Unexpected '.'." evidence=""/>
+<issue line="944" char="18" reason="Unexpected '.'." evidence=""/>
 </file>
 </jslint>

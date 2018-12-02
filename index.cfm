@@ -2,10 +2,10 @@
 <html>
 	<head>
 	<title>A7</title>
-	<script src="/bower_components/modlazy/dist/modlazy.min.js"></script>
+	<script src="/node_modules/modlazy/dist/modlazy.min.js"></script>
 	<script>
-		modlazy.load( [ "/test/app.components.js  < /test/app.remote.js < /test/app.main.js < /test/app.events.js < /dist/a7.js < /bower_components/gadget-ui/dist/gadget-ui.js < /bower_components/velocity/velocity.js",
-		"/bower_components/mustache.js/mustache.js", "/test/styles.css", "/dist/a7.css", "/bower_components/gadget-ui/gadget-ui.css", "/bower_components/open-iconic/font/css/open-iconic.css" ], function(){
+		modlazy.load( [ "/test/app.components.js  < /test/app.remote.js < /test/app.main.js < /test/app.events.js < /dist/a7.js < /node_modules/gadget-ui/dist/gadget-ui.js < /bower_components/velocity/velocity.js",
+		"/bower_components/mustache.js/mustache.js", "/test/styles.css", "/dist/a7.css", "/node_modules/gadget-ui/gadget-ui.css", "/node_modules/open-iconic/font/css/open-iconic.css" ], function(){
 
 			var options = {
 				auth: {

@@ -2,9 +2,9 @@
 <html>
 	<head>
 	<title>mustache</title>
-	<script src="/bower_components/Lazy/dist/lazy.1.0.0.js"></script>
+	<script src="/bower_components/modlazy/dist/modlazy.min.js"></script>
 	<script>
-		lazy.load( [ "/bower_components/mustache.js/mustache.js" ], function(){
+		lazy.load( [ "/node_modules/mustache.js/mustache.js" ], function(){
 			var _templateMap=[],
 				ot = Math.ceil( Math.random( ) * 500 );
 
@@ -23,7 +23,7 @@
 				scripts.forEach( function( script ){
 					_addTemplate( script.getAttribute( "id" ), script.innerHTML );
 				});
-				
+
 				var button = Mustache.to_html( _templateMap['button'], { name:"foo", val:"Hello!"}, _templateMap );
 				var mainDiv = document.querySelector( "div[name='main']" );
 				mainDiv.innerHTML = button;
@@ -34,16 +34,16 @@
 	</head>
 	<body>
 	<div>
-	
+
 	<h1>
 	Mustache tests
 	</h1>
 	</div>
-	
+
 	<div name="main">
-	
+
 	</div>
-	
-	
+
+
 	</body>
 </html>

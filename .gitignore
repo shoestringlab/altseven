@@ -6,3 +6,5 @@ server.json
 config
 wirebox
 models
+grunt/jslint
+

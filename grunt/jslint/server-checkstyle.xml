@@ -1,47 +1,118 @@
 <?xml version="1.0" encoding="utf-8"?>
 <checkstyle>
 <file name="dist/a7.js">
-<error line="54" column="22" severity="warning" message="'Mustache' was used before it was defined." source="com.jslint"/>
-<error line="56" column="26" severity="warning" message="'Handlebars' was used before it was defined." source="com.jslint"/>
-<error line="141" column="3" severity="warning" message="Move the invocation into the parens that contain the function." source="com.jslint"/>
-<error line="181" column="13" severity="warning" message="Combine this with the previous 'var' statement." source="com.jslint"/>
-<error line="209" column="26" severity="warning" message="'WebSocket' was used before it was defined." source="com.jslint"/>
-<error line="211" column="40" severity="warning" message="Empty block." source="com.jslint"/>
-<error line="150" column="5" severity="warning" message="Unused 'active'." source="com.jslint"/>
-<error line="275" column="3" severity="warning" message="Move the invocation into the parens that contain the function." source="com.jslint"/>
-<error line="282" column="9" severity="warning" message="Combine this with the previous 'var' statement." source="com.jslint"/>
-<error line="286" column="11" severity="warning" message="Combine this with the previous 'var' statement." source="com.jslint"/>
-<error line="304" column="25" severity="warning" message="Empty block." source="com.jslint"/>
-<error line="307" column="3" severity="warning" message="Move the invocation into the parens that contain the function." source="com.jslint"/>
-<error line="342" column="61" severity="warning" message="Empty block." source="com.jslint"/>
-<error line="345" column="64" severity="warning" message="Empty block." source="com.jslint"/>
-<error line="363" column="3" severity="warning" message="Move the invocation into the parens that contain the function." source="com.jslint"/>
-<error line="367" column="2" severity="warning" message="Missing 'use strict' statement." source="com.jslint"/>
-<error line="371" column="15" severity="warning" message="The '&amp;&amp;' subexpression should be wrapped in parens." source="com.jslint"/>
-<error line="390" column="4" severity="warning" message="'_deffered' was used before it was defined." source="com.jslint"/>
-<error line="418" column="21" severity="warning" message="['create'] is better written in dot notation." source="com.jslint"/>
-<error line="421" column="21" severity="warning" message="['destroy'] is better written in dot notation." source="com.jslint"/>
-<error line="424" column="21" severity="warning" message="['get'] is better written in dot notation." source="com.jslint"/>
-<error line="427" column="21" severity="warning" message="['set'] is better written in dot notation." source="com.jslint"/>
-<error line="430" column="21" severity="warning" message="['exists'] is better written in dot notation." source="com.jslint"/>
-<error line="433" column="21" severity="warning" message="['bind'] is better written in dot notation." source="com.jslint"/>
-<error line="544" column="3" severity="warning" message="Move the invocation into the parens that contain the function." source="com.jslint"/>
-<error line="548" column="2" severity="warning" message="Missing 'use strict' statement." source="com.jslint"/>
-<error line="584" column="21" severity="warning" message="'Request' was used before it was defined." source="com.jslint"/>
-<error line="586" column="11" severity="warning" message="Combine this with the previous 'var' statement." source="com.jslint"/>
-<error line="586" column="21" severity="warning" message="'fetch' was used before it was defined." source="com.jslint"/>
-<error line="639" column="9" severity="warning" message="Combine this with the previous 'var' statement." source="com.jslint"/>
-<error line="647" column="6" severity="warning" message="Unnecessary 'else' after disruption." source="com.jslint"/>
-<error line="659" column="18" severity="warning" message="'Request' was used before it was defined." source="com.jslint"/>
-<error line="660" column="14" severity="warning" message="'fetch' was used before it was defined." source="com.jslint"/>
-<error line="706" column="13" severity="warning" message="Combine this with the previous 'var' statement." source="com.jslint"/>
-<error line="743" column="3" severity="warning" message="Move the invocation into the parens that contain the function." source="com.jslint"/>
-<error line="763" column="31" severity="warning" message="'Handlebars' was used before it was defined." source="com.jslint"/>
-<error line="773" column="11" severity="warning" message="'fetch' was used before it was defined." source="com.jslint"/>
-<error line="779" column="32" severity="warning" message="'DOMParser' was used before it was defined." source="com.jslint"/>
-<error line="794" column="18" severity="warning" message="'Mustache' was used before it was defined." source="com.jslint"/>
-<error line="825" column="3" severity="warning" message="Move the invocation into the parens that contain the function." source="com.jslint"/>
-<error line="830" column="2" severity="warning" message="Missing 'use strict' statement." source="com.jslint"/>
-<error line="883" column="30" severity="warning" message="Insecure '^'." source="com.jslint"/>
+<error line="0" column="10" severity="warning" message="Don't wrap function literals in parens." source="com.jslint"/>
+<error line="24" column="8" severity="warning" message="'a7' is out of scope." source="com.jslint"/>
+<error line="25" column="8" severity="warning" message="'a7' is out of scope." source="com.jslint"/>
+<error line="29" column="8" severity="warning" message="'a7' is out of scope." source="com.jslint"/>
+<error line="53" column="21" severity="warning" message="Undeclared 'Mustache'." source="com.jslint"/>
+<error line="55" column="25" severity="warning" message="Undeclared 'Handlebars'." source="com.jslint"/>
+<error line="65" column="14" severity="warning" message="'a7' is out of scope." source="com.jslint"/>
+<error line="66" column="12" severity="warning" message="'a7' is out of scope." source="com.jslint"/>
+<error line="67" column="12" severity="warning" message="'a7' is out of scope." source="com.jslint"/>
+<error line="74" column="10" severity="warning" message="'a7' is out of scope." source="com.jslint"/>
+<error line="75" column="10" severity="warning" message="'a7' is out of scope." source="com.jslint"/>
+<error line="78" column="12" severity="warning" message="'a7' is out of scope." source="com.jslint"/>
+<error line="80" column="12" severity="warning" message="'a7' is out of scope." source="com.jslint"/>
+<error line="83" column="12" severity="warning" message="'a7' is out of scope." source="com.jslint"/>
+<error line="84" column="12" severity="warning" message="'a7' is out of scope." source="com.jslint"/>
+<error line="87" column="12" severity="warning" message="'a7' is out of scope." source="com.jslint"/>
+<error line="88" column="12" severity="warning" message="'a7' is out of scope." source="com.jslint"/>
+<error line="92" column="14" severity="warning" message="'a7' is out of scope." source="com.jslint"/>
+<error line="94" column="14" severity="warning" message="'a7' is out of scope." source="com.jslint"/>
+<error line="99" column="16" severity="warning" message="'a7' is out of scope." source="com.jslint"/>
+<error line="101" column="16" severity="warning" message="'a7' is out of scope." source="com.jslint"/>
+<error line="105" column="16" severity="warning" message="'a7' is out of scope." source="com.jslint"/>
+<error line="106" column="16" severity="warning" message="'a7' is out of scope." source="com.jslint"/>
+<error line="112" column="17" severity="warning" message="['catch'] is better written in dot notation." source="com.jslint"/>
+<error line="113" column="16" severity="warning" message="'a7' is out of scope." source="com.jslint"/>
+<error line="119" column="11" severity="warning" message="['catch'] is better written in dot notation." source="com.jslint"/>
+<error line="120" column="10" severity="warning" message="'a7' is out of scope." source="com.jslint"/>
+<error line="125" column="9" severity="warning" message="['catch'] is better written in dot notation." source="com.jslint"/>
+<error line="126" column="8" severity="warning" message="'a7' is out of scope." source="com.jslint"/>
+<error line="140" column="2" severity="warning" message="Wrap an immediate function invocation in parentheses to assist the reader in understanding that the expression is the result of a function, and not the function itself." source="com.jslint"/>
+<error line="142" column="14" severity="warning" message="Don't wrap function literals in parens." source="com.jslint"/>
+<error line="149" column="4" severity="warning" message="Unused 'active'." source="com.jslint"/>
+<error line="210" column="25" severity="warning" message="Undeclared 'WebSocket'." source="com.jslint"/>
+<error line="212" column="39" severity="warning" message="Empty block." source="com.jslint"/>
+<error line="236" column="19" severity="warning" message="Unused 'er'." source="com.jslint"/>
+<error line="245" column="12" severity="warning" message="Unexpected 'for'." source="com.jslint"/>
+<error line="245" column="50" severity="warning" message="Expected '+= 1' and instead saw '++'." source="com.jslint"/>
+<error line="276" column="2" severity="warning" message="Wrap an immediate function invocation in parentheses to assist the reader in understanding that the expression is the result of a function, and not the function itself." source="com.jslint"/>
+<error line="278" column="12" severity="warning" message="Don't wrap function literals in parens." source="com.jslint"/>
+<error line="293" column="7" severity="warning" message="Unexpected '.'." source="com.jslint"/>
+<error line="305" column="24" severity="warning" message="Empty block." source="com.jslint"/>
+<error line="308" column="2" severity="warning" message="Wrap an immediate function invocation in parentheses to assist the reader in understanding that the expression is the result of a function, and not the function itself." source="com.jslint"/>
+<error line="314" column="13" severity="warning" message="Don't wrap function literals in parens." source="com.jslint"/>
+<error line="343" column="60" severity="warning" message="Empty block." source="com.jslint"/>
+<error line="346" column="63" severity="warning" message="Empty block." source="com.jslint"/>
+<error line="364" column="2" severity="warning" message="Wrap an immediate function invocation in parentheses to assist the reader in understanding that the expression is the result of a function, and not the function itself." source="com.jslint"/>
+<error line="368" column="1" severity="warning" message="Expected 'use strict' before 'var'." source="com.jslint"/>
+<error line="372" column="14" severity="warning" message="The '&amp;&amp;' subexpression should be wrapped in parens." source="com.jslint"/>
+<error line="391" column="3" severity="warning" message="Undeclared '_deffered'." source="com.jslint"/>
+<error line="419" column="20" severity="warning" message="['create'] is better written in dot notation." source="com.jslint"/>
+<error line="419" column="46" severity="warning" message="Unexpected 'arguments'." source="com.jslint"/>
+<error line="422" column="20" severity="warning" message="['destroy'] is better written in dot notation." source="com.jslint"/>
+<error line="422" column="47" severity="warning" message="Unexpected 'arguments'." source="com.jslint"/>
+<error line="425" column="20" severity="warning" message="['get'] is better written in dot notation." source="com.jslint"/>
+<error line="425" column="43" severity="warning" message="Unexpected 'arguments'." source="com.jslint"/>
+<error line="428" column="20" severity="warning" message="['set'] is better written in dot notation." source="com.jslint"/>
+<error line="428" column="43" severity="warning" message="Unexpected 'arguments'." source="com.jslint"/>
+<error line="431" column="20" severity="warning" message="['exists'] is better written in dot notation." source="com.jslint"/>
+<error line="431" column="46" severity="warning" message="Unexpected 'arguments'." source="com.jslint"/>
+<error line="434" column="20" severity="warning" message="['bind'] is better written in dot notation." source="com.jslint"/>
+<error line="434" column="44" severity="warning" message="Unexpected 'arguments'." source="com.jslint"/>
+<error line="455" column="17" severity="warning" message="Don't wrap function literals in parens." source="com.jslint"/>
+<error line="462" column="6" severity="warning" message="'EventBindings' is out of scope." source="com.jslint"/>
+<error line="497" column="10" severity="warning" message="Unexpected 'this'." source="com.jslint"/>
+<error line="498" column="8" severity="warning" message="Unexpected 'this'." source="com.jslint"/>
+<error line="500" column="6" severity="warning" message="Unexpected 'this'." source="com.jslint"/>
+<error line="501" column="13" severity="warning" message="Unexpected 'this'." source="com.jslint"/>
+<error line="506" column="6" severity="warning" message="Unexpected 'this'." source="com.jslint"/>
+<error line="507" column="13" severity="warning" message="Unexpected 'this'." source="com.jslint"/>
+<error line="511" column="18" severity="warning" message="Unexpected 'this'." source="com.jslint"/>
+<error line="512" column="6" severity="warning" message="Unexpected 'this'." source="com.jslint"/>
+<error line="519" column="28" severity="warning" message="Unexpected 'this'." source="com.jslint"/>
+<error line="520" column="29" severity="warning" message="Unexpected 'this'." source="com.jslint"/>
+<error line="521" column="35" severity="warning" message="Unexpected 'this'." source="com.jslint"/>
+<error line="528" column="11" severity="warning" message="Unexpected 'this'." source="com.jslint"/>
+<error line="533" column="13" severity="warning" message="Unexpected 'this'." source="com.jslint"/>
+<error line="534" column="16" severity="warning" message="Unexpected 'this'." source="com.jslint"/>
+<error line="545" column="2" severity="warning" message="Wrap an immediate function invocation in parentheses to assist the reader in understanding that the expression is the result of a function, and not the function itself." source="com.jslint"/>
+<error line="549" column="1" severity="warning" message="Expected 'use strict' before 'var'." source="com.jslint"/>
+<error line="585" column="20" severity="warning" message="Undeclared 'Request'." source="com.jslint"/>
+<error line="587" column="20" severity="warning" message="Undeclared 'fetch'." source="com.jslint"/>
+<error line="648" column="5" severity="warning" message="Unexpected 'else'." source="com.jslint"/>
+<error line="660" column="17" severity="warning" message="Undeclared 'Request'." source="com.jslint"/>
+<error line="661" column="13" severity="warning" message="Undeclared 'fetch'." source="com.jslint"/>
+<error line="699" column="15" severity="warning" message="Don't wrap function literals in parens." source="com.jslint"/>
+<error line="744" column="2" severity="warning" message="Wrap an immediate function invocation in parentheses to assist the reader in understanding that the expression is the result of a function, and not the function itself." source="com.jslint"/>
+<error line="746" column="9" severity="warning" message="Don't wrap function literals in parens." source="com.jslint"/>
+<error line="764" column="30" severity="warning" message="Undeclared 'Handlebars'." source="com.jslint"/>
+<error line="774" column="10" severity="warning" message="Undeclared 'fetch'." source="com.jslint"/>
+<error line="780" column="31" severity="warning" message="Undeclared 'DOMParser'." source="com.jslint"/>
+<error line="795" column="17" severity="warning" message="Undeclared 'Mustache'." source="com.jslint"/>
+<error line="826" column="2" severity="warning" message="Wrap an immediate function invocation in parentheses to assist the reader in understanding that the expression is the result of a function, and not the function itself." source="com.jslint"/>
+<error line="831" column="1" severity="warning" message="Expected 'use strict' before 'return'." source="com.jslint"/>
+<error line="839" column="10" severity="warning" message="Unexpected 'this'." source="com.jslint"/>
+<error line="853" column="31" severity="warning" message="Unexpected '++'." source="com.jslint"/>
+<error line="854" column="31" severity="warning" message="Unexpected '++'." source="com.jslint"/>
+<error line="855" column="31" severity="warning" message="Unexpected '++'." source="com.jslint"/>
+<error line="863" column="18" severity="warning" message="Unexpected '='." source="com.jslint"/>
+<error line="868" column="23" severity="warning" message="Unexpected 'this'." source="com.jslint"/>
+<error line="869" column="9" severity="warning" message="Unexpected 'this'." source="com.jslint"/>
+<error line="870" column="9" severity="warning" message="Unexpected 'this'." source="com.jslint"/>
+<error line="871" column="9" severity="warning" message="Unexpected 'this'." source="com.jslint"/>
+<error line="887" column="12" severity="warning" message="Unexpected 'this'." source="com.jslint"/>
+<error line="887" column="48" severity="warning" message="Unexpected '++'." source="com.jslint"/>
+<error line="888" column="12" severity="warning" message="Unexpected 'this'." source="com.jslint"/>
+<error line="888" column="48" severity="warning" message="Unexpected '++'." source="com.jslint"/>
+<error line="889" column="12" severity="warning" message="Unexpected 'this'." source="com.jslint"/>
+<error line="889" column="48" severity="warning" message="Unexpected '++'." source="com.jslint"/>
+<error line="890" column="12" severity="warning" message="Unexpected 'this'." source="com.jslint"/>
+<error line="890" column="48" severity="warning" message="Unexpected '++'." source="com.jslint"/>
+<error line="943" column="35" severity="warning" message="Unexpected '.'." source="com.jslint"/>
+<error line="944" column="5" severity="warning" message="Unexpected '.'." source="com.jslint"/>
+<error line="944" column="18" severity="warning" message="Unexpected '.'." source="com.jslint"/>
 </file>
 </checkstyle>
