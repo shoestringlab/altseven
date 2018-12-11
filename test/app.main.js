@@ -16,12 +16,13 @@ var app = {
 
 			run : function( secure ){
 				// render the login form
-				var loginForm = a7.components.Constructor( app.components.LoginForm, [ { selector : a7.ui.selectors[ 'anonDiv' ] } ], true );
+				a7.ui.setView( 'loginForm', a7.components.Constructor( app.components.LoginForm, [ { selector : a7.ui.selectors[ 'anonDiv' ] } ], true ) );
 
 				if( secure ){
-					var user = a7.model.get( "a7.user" ),
-							header = a7.components.Constructor( app.components.Header, [ { selector : a7.ui.selectors[ 'header' ], user : user } ], true ),
-							todo = a7.components.Constructor( app.components.Todo, [ { selector : a7.ui.selectors[ 'app' ] } ], true );
+					var user = a7.model.get( "a7.user" );
+
+					a7.ui.setView( 'header', a7.components.Constructor( app.components.Header, [ { selector : a7.ui.selectors[ 'header' ], user : user } ], true ) );
+					a7.ui.setView( 'todo', a7.components.Constructor( app.components.Todo, [ { selector : a7.ui.selectors[ 'app' ] } ], true ) );
 				}
 				app.ui.setLayout( secure );
 			}
