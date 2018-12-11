@@ -63,7 +63,7 @@ var a7 = (function() {
         });
       }).then(function() {
         p0 = new Promise(function(resolve, reject) {
-          if (a7.model.get("a7.console.enabled")) {
+          if (a7.model.get("a7.console").enabled) {
             a7.log.trace("a7 - console init");
             a7.console.init(resolve, reject);
           } else {
@@ -74,21 +74,21 @@ var a7 = (function() {
         p0.then(function() {
           a7.log.trace("a7 - log init");
           a7.log.init();
-        })
-          .then(function() {
+/*         })
+          .then(function() { */
             a7.log.trace("a7 - security init");
             // init user state
             a7.security.init();
-          })
-          .then(function() {
+/*           })
+          .then(function() { */
             a7.log.trace("a7 - remote init");
             a7.remote.init(options.remote.modules);
-          })
-          .then(function() {
+/*           })
+          .then(function() { */
             a7.log.trace("a7 - events init");
             a7.events.init();
-          })
-          .then(function() {
+/*           })
+          .then(function() { */
             p1 = new Promise(function(resolve, reject) {
               a7.log.trace("a7 - layout init");
               // initialize templating engine
@@ -372,7 +372,7 @@ a7.log = ( function(){
 		_log = function( message, level ){
 			if( _ready && _logLevel.indexOf( level ) >=0 || _logLevel.indexOf( "ALL" ) >=0 ){
 				//console.log( message );
-				if( a7.model.get( "a7.console.enabled" ) ){
+				if( a7.model.get( "a7.console" ).enabled ){
 					a7.console.addMessage( message, new Date(), "local", level );
 				}
 			} else if( ! _ready ){
@@ -612,10 +612,12 @@ a7.remote = ( function(){
 					},
 					refresh: function( resolve ){
 						a7.remote.fetch( _options.refreshURL, {}, true )
+						// initial fetch needs to parse response
 						.then( function( response ){
 							return response.json();
 						})
 						.then( function( json ){
+							// then json is handled
 							if( resolve !== undefined ){
 								resolve( json.success );
 							}
@@ -637,6 +639,8 @@ a7.remote = ( function(){
 			a7.log.info( "fetch: " + uri );
 			var request,
 					promise;
+
+			//if secure and tokens, we need to check timeout and add X-Token header
 			if( secure && _options.useTokens ){
 				var currentTime = new Date( ),
 						diff = Math.abs( currentTime - _time ),
@@ -647,6 +651,7 @@ a7.remote = ( function(){
 					a7.events.publish( "auth.sessionTimeout" );
 					return;
 				}else if( _token !== undefined && _token !== null ){
+					// set X-Token
 					if( params.headers === undefined ){
 						params.headers = {
 							"X-Token": _token
@@ -659,6 +664,7 @@ a7.remote = ( function(){
 				_time = currentTime;
 			}
 			request = new Request( uri, params );
+			//calling the native JS fetch method ...
 			promise = fetch( request );
 
 			promise
@@ -750,11 +756,21 @@ a7.ui = (function() {
   var _options = {},
     _selectors = {},
     _templateMap = {},
+    _views = [],
     _setSelector = function(name, selector) {
       _selectors[name] = selector;
     },
-    _getSelector = function(name) {
+    _getSelector = function(name){
       return _selectors[name];
+    },
+    _setView = function( id, view ){
+      _views[ id ] = view;
+    },
+    _getView = function( id ){
+      return _views[ id ];
+    },
+    _removeView = function( id ){
+      delete _views[ id ];
     },
     _addTemplate = function(key, html) {
       switch (_options.renderer) {
@@ -804,7 +820,9 @@ a7.ui = (function() {
     selectors: _selectors,
     getSelector: _getSelector,
     setSelector: _setSelector,
-
+    setView: _setView,
+    getView: _getView,
+    removeView: _removeView,
     getTemplate: function(template) {
       return _templateMap[template];
     },

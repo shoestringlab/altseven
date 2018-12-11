@@ -64,10 +64,12 @@ a7.remote = ( function(){
 					},
 					refresh: function( resolve ){
 						a7.remote.fetch( _options.refreshURL, {}, true )
+						// initial fetch needs to parse response
 						.then( function( response ){
 							return response.json();
 						})
 						.then( function( json ){
+							// then json is handled
 							if( resolve !== undefined ){
 								resolve( json.success );
 							}
@@ -89,6 +91,8 @@ a7.remote = ( function(){
 			a7.log.info( "fetch: " + uri );
 			var request,
 					promise;
+
+			//if secure and tokens, we need to check timeout and add X-Token header
 			if( secure && _options.useTokens ){
 				var currentTime = new Date( ),
 						diff = Math.abs( currentTime - _time ),
@@ -99,6 +103,7 @@ a7.remote = ( function(){
 					a7.events.publish( "auth.sessionTimeout" );
 					return;
 				}else if( _token !== undefined && _token !== null ){
+					// set X-Token
 					if( params.headers === undefined ){
 						params.headers = {
 							"X-Token": _token
@@ -111,6 +116,7 @@ a7.remote = ( function(){
 				_time = currentTime;
 			}
 			request = new Request( uri, params );
+			//calling the native JS fetch method ...
 			promise = fetch( request );
 
 			promise

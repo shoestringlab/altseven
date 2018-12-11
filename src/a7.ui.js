@@ -4,11 +4,21 @@ a7.ui = (function() {
   var _options = {},
     _selectors = {},
     _templateMap = {},
+    _views = [],
     _setSelector = function(name, selector) {
       _selectors[name] = selector;
     },
-    _getSelector = function(name) {
+    _getSelector = function(name){
       return _selectors[name];
+    },
+    _setView = function( id, view ){
+      _views[ id ] = view;
+    },
+    _getView = function( id ){
+      return _views[ id ];
+    },
+    _removeView = function( id ){
+      delete _views[ id ];
     },
     _addTemplate = function(key, html) {
       switch (_options.renderer) {
@@ -58,7 +68,9 @@ a7.ui = (function() {
     selectors: _selectors,
     getSelector: _getSelector,
     setSelector: _setSelector,
-
+    setView: _setView,
+    getView: _getView,
+    removeView: _removeView,
     getTemplate: function(template) {
       return _templateMap[template];
     },

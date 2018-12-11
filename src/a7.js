@@ -63,7 +63,7 @@ var a7 = (function() {
         });
       }).then(function() {
         p0 = new Promise(function(resolve, reject) {
-          if (a7.model.get("a7.console.enabled")) {
+          if (a7.model.get("a7.console").enabled) {
             a7.log.trace("a7 - console init");
             a7.console.init(resolve, reject);
           } else {
@@ -74,21 +74,21 @@ var a7 = (function() {
         p0.then(function() {
           a7.log.trace("a7 - log init");
           a7.log.init();
-        })
-          .then(function() {
+/*         })
+          .then(function() { */
             a7.log.trace("a7 - security init");
             // init user state
             a7.security.init();
-          })
-          .then(function() {
+/*           })
+          .then(function() { */
             a7.log.trace("a7 - remote init");
             a7.remote.init(options.remote.modules);
-          })
-          .then(function() {
+/*           })
+          .then(function() { */
             a7.log.trace("a7 - events init");
             a7.events.init();
-          })
-          .then(function() {
+/*           })
+          .then(function() { */
             p1 = new Promise(function(resolve, reject) {
               a7.log.trace("a7 - layout init");
               // initialize templating engine

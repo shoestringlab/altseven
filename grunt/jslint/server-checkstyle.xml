@@ -82,37 +82,37 @@
 <error line="549" column="1" severity="warning" message="Expected 'use strict' before 'var'." source="com.jslint"/>
 <error line="585" column="20" severity="warning" message="Undeclared 'Request'." source="com.jslint"/>
 <error line="587" column="20" severity="warning" message="Undeclared 'fetch'." source="com.jslint"/>
-<error line="648" column="5" severity="warning" message="Unexpected 'else'." source="com.jslint"/>
-<error line="660" column="17" severity="warning" message="Undeclared 'Request'." source="com.jslint"/>
-<error line="661" column="13" severity="warning" message="Undeclared 'fetch'." source="com.jslint"/>
-<error line="699" column="15" severity="warning" message="Don't wrap function literals in parens." source="com.jslint"/>
-<error line="744" column="2" severity="warning" message="Wrap an immediate function invocation in parentheses to assist the reader in understanding that the expression is the result of a function, and not the function itself." source="com.jslint"/>
-<error line="746" column="9" severity="warning" message="Don't wrap function literals in parens." source="com.jslint"/>
-<error line="764" column="30" severity="warning" message="Undeclared 'Handlebars'." source="com.jslint"/>
-<error line="774" column="10" severity="warning" message="Undeclared 'fetch'." source="com.jslint"/>
-<error line="780" column="31" severity="warning" message="Undeclared 'DOMParser'." source="com.jslint"/>
-<error line="795" column="17" severity="warning" message="Undeclared 'Mustache'." source="com.jslint"/>
-<error line="826" column="2" severity="warning" message="Wrap an immediate function invocation in parentheses to assist the reader in understanding that the expression is the result of a function, and not the function itself." source="com.jslint"/>
-<error line="831" column="1" severity="warning" message="Expected 'use strict' before 'return'." source="com.jslint"/>
-<error line="839" column="10" severity="warning" message="Unexpected 'this'." source="com.jslint"/>
-<error line="853" column="31" severity="warning" message="Unexpected '++'." source="com.jslint"/>
-<error line="854" column="31" severity="warning" message="Unexpected '++'." source="com.jslint"/>
-<error line="855" column="31" severity="warning" message="Unexpected '++'." source="com.jslint"/>
-<error line="863" column="18" severity="warning" message="Unexpected '='." source="com.jslint"/>
-<error line="868" column="23" severity="warning" message="Unexpected 'this'." source="com.jslint"/>
-<error line="869" column="9" severity="warning" message="Unexpected 'this'." source="com.jslint"/>
-<error line="870" column="9" severity="warning" message="Unexpected 'this'." source="com.jslint"/>
-<error line="871" column="9" severity="warning" message="Unexpected 'this'." source="com.jslint"/>
-<error line="887" column="12" severity="warning" message="Unexpected 'this'." source="com.jslint"/>
-<error line="887" column="48" severity="warning" message="Unexpected '++'." source="com.jslint"/>
-<error line="888" column="12" severity="warning" message="Unexpected 'this'." source="com.jslint"/>
-<error line="888" column="48" severity="warning" message="Unexpected '++'." source="com.jslint"/>
-<error line="889" column="12" severity="warning" message="Unexpected 'this'." source="com.jslint"/>
-<error line="889" column="48" severity="warning" message="Unexpected '++'." source="com.jslint"/>
-<error line="890" column="12" severity="warning" message="Unexpected 'this'." source="com.jslint"/>
-<error line="890" column="48" severity="warning" message="Unexpected '++'." source="com.jslint"/>
-<error line="943" column="35" severity="warning" message="Unexpected '.'." source="com.jslint"/>
-<error line="944" column="5" severity="warning" message="Unexpected '.'." source="com.jslint"/>
-<error line="944" column="18" severity="warning" message="Unexpected '.'." source="com.jslint"/>
+<error line="652" column="5" severity="warning" message="Unexpected 'else'." source="com.jslint"/>
+<error line="665" column="17" severity="warning" message="Undeclared 'Request'." source="com.jslint"/>
+<error line="667" column="13" severity="warning" message="Undeclared 'fetch'." source="com.jslint"/>
+<error line="705" column="15" severity="warning" message="Don't wrap function literals in parens." source="com.jslint"/>
+<error line="750" column="2" severity="warning" message="Wrap an immediate function invocation in parentheses to assist the reader in understanding that the expression is the result of a function, and not the function itself." source="com.jslint"/>
+<error line="752" column="9" severity="warning" message="Don't wrap function literals in parens." source="com.jslint"/>
+<error line="780" column="30" severity="warning" message="Undeclared 'Handlebars'." source="com.jslint"/>
+<error line="790" column="10" severity="warning" message="Undeclared 'fetch'." source="com.jslint"/>
+<error line="796" column="31" severity="warning" message="Undeclared 'DOMParser'." source="com.jslint"/>
+<error line="811" column="17" severity="warning" message="Undeclared 'Mustache'." source="com.jslint"/>
+<error line="844" column="2" severity="warning" message="Wrap an immediate function invocation in parentheses to assist the reader in understanding that the expression is the result of a function, and not the function itself." source="com.jslint"/>
+<error line="849" column="1" severity="warning" message="Expected 'use strict' before 'return'." source="com.jslint"/>
+<error line="857" column="10" severity="warning" message="Unexpected 'this'." source="com.jslint"/>
+<error line="871" column="31" severity="warning" message="Unexpected '++'." source="com.jslint"/>
+<error line="872" column="31" severity="warning" message="Unexpected '++'." source="com.jslint"/>
+<error line="873" column="31" severity="warning" message="Unexpected '++'." source="com.jslint"/>
+<error line="881" column="18" severity="warning" message="Unexpected '='." source="com.jslint"/>
+<error line="886" column="23" severity="warning" message="Unexpected 'this'." source="com.jslint"/>
+<error line="887" column="9" severity="warning" message="Unexpected 'this'." source="com.jslint"/>
+<error line="888" column="9" severity="warning" message="Unexpected 'this'." source="com.jslint"/>
+<error line="889" column="9" severity="warning" message="Unexpected 'this'." source="com.jslint"/>
+<error line="905" column="12" severity="warning" message="Unexpected 'this'." source="com.jslint"/>
+<error line="905" column="48" severity="warning" message="Unexpected '++'." source="com.jslint"/>
+<error line="906" column="12" severity="warning" message="Unexpected 'this'." source="com.jslint"/>
+<error line="906" column="48" severity="warning" message="Unexpected '++'." source="com.jslint"/>
+<error line="907" column="12" severity="warning" message="Unexpected 'this'." source="com.jslint"/>
+<error line="907" column="48" severity="warning" message="Unexpected '++'." source="com.jslint"/>
+<error line="908" column="12" severity="warning" message="Unexpected 'this'." source="com.jslint"/>
+<error line="908" column="48" severity="warning" message="Unexpected '++'." source="com.jslint"/>
+<error line="961" column="35" severity="warning" message="Unexpected '.'." source="com.jslint"/>
+<error line="962" column="5" severity="warning" message="Unexpected '.'." source="com.jslint"/>
+<error line="962" column="18" severity="warning" message="Unexpected '.'." source="com.jslint"/>
 </file>
 </checkstyle>
