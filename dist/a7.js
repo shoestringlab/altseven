@@ -453,99 +453,105 @@ a7.model = ( function() {
 
 }() );
 
-a7.components = (function() {
-  "use strict";
-  function Constructor(constructor, args, addBindings) {
-    var returnedObj, obj;
+a7.components = ( function() {"use strict";function Constructor( constructor, args, addBindings ) {
+	var returnedObj,
+		obj;
 
-    if (addBindings === true) {
-      //bindings = EventBindings.getAll();
-      EventBindings.getAll().forEach(function(binding) {
-        if (constructor.prototype[binding] === undefined) {
-          constructor.prototype[binding] = binding.func;
-        }
-      });
-    }
+	// add bindings for custom events
+	// this section pulls the bindings ( on, off, fireEvent ) from the
+	// EventBindings object and add them to the object being instantiated
+	if( addBindings === true ){
+		//bindings = EventBindings.getAll();
+		EventBindings.getAll().forEach( function( binding ){
+			if( constructor.prototype[ binding ] === undefined ) {
+				constructor.prototype[ binding ] = binding.func;
+			}
+		});
+	}
 
-    // construct the object
-    obj = Object.create(constructor.prototype);
-    returnedObj = constructor.apply(obj, args);
-    if (returnedObj === undefined) {
-      returnedObj = obj;
-    }
+	// construct the object
+	obj = Object.create( constructor.prototype );
+	returnedObj = constructor.apply( obj, args );
+	if( returnedObj === undefined ){
+		returnedObj = obj;
+	}
 
-    if (addBindings === true) {
-      // create specified event list from prototype
-      returnedObj.events = {};
-      if (constructor.prototype.events !== undefined) {
-        constructor.prototype.events.forEach(function(event) {
-          returnedObj.events[event] = [];
-        });
-      }
-    }
+	// this section adds any events specified in the prototype as events of
+	// the object being instantiated
+	// you can then trigger an event from the object by calling:
+	// <object>.fireEvent( eventName, args );
+	// args can be anything you want to send with the event
+	// you can then listen for these events using .on( eventName, function(){});
+	// <object>.on( eventName, function(){ })
+	if( addBindings === true ){
+		// create specified event list from prototype
+		returnedObj.events = {};
+		if( constructor.prototype.events !== undefined ){
+			constructor.prototype.events.forEach( function( event ){
+				returnedObj.events[ event ] = [ ];
+			});
+		}
+	}
 
-    return returnedObj;
-  }
+	return returnedObj;
 
-  /*
+}
+
+/*
  * EventBindings
- * author: Robert Munn <robertdmunn@gmail.com>
+ * author: Robert Munn <robert.d.munn@gmail.com>
  *
  */
 
-  var EventBindings = {
-    on: function(event, func) {
-      if (this.events[event] === undefined) {
-        this.events[event] = [];
-      }
-      this.events[event].push(func);
-      return this;
-    },
+var EventBindings = {
+	on : function( event, func ){
+		if( this.events[ event ] === undefined ){
+			this.events[ event ] = [];
+		}
+		this.events[ event ].push( func );
+		return this;
+	},
 
-    off: function(event) {
-      // clear listeners
-      this.events[event] = [];
-      return this;
-    },
+	off : function( event ){
+		// clear listeners
+		this.events[ event ] = [];
+		return this;
+	},
 
-    fireEvent: function(key, args) {
-      var _this = this;
-      this.events[key].forEach(function(func) {
-        func(_this, args);
-      });
-    },
+	fireEvent : function( key, args ){
+		var _this = this;
+		this.events[ key ].forEach( function( func ){
+			func( _this, args );
+		});
+	},
 
-    getAll: function() {
-      return [
-        { name: "on", func: this.on },
-        { name: "off", func: this.off },
-        { name: "fireEvent", func: this.fireEvent }
-      ];
-    }
-  };
+	getAll : function(){
+		return [ 	{ name : "on", func : this.on },
+							{ name : "off", func : this.off },
+							{ name : "fireEvent", func : this.fireEvent } ];
+	}
+};
 
-  function User() {
-    // init User
-    return this;
-  }
+function User(){
+	// init User
+	return this;
+}
 
-  User.prototype.getMemento = function() {
-    var user = {},
-      self = this;
-    Object.keys(this).forEach(function(key) {
-      user[key] = self[key];
-    });
-    return user;
-  };
+User.prototype.getMemento = function(){
+	var user = {}, self = this;
+	Object.keys( this ).forEach( function( key ){
+		user[ key ] = self[ key ];
+	});
+	return user;
+};
 
-  return {
-    Constructor: Constructor,
-    EventBindings: EventBindings,
-    User: User
-  };
-})();
+return {
+  Constructor: Constructor,
+  EventBindings: EventBindings,
+  User: User
+};
+}());
 //
-
 a7.remote = ( function(){
 	var _options = {},
 		_time = new Date(),
@@ -697,7 +703,8 @@ a7.remote = ( function(){
 				return;
 			}
 			if( typeof _modules[ mA[ 0 ] ][ mA[ 1 ] ] === "function" ){
-				_modules[ mA[ 0 ] ][ mA[ 1 ] ].apply( _modules[ mA[ 0 ] ][ mA[ 1 ] ], params );
+			//	_modules[ mA[ 0 ] ][ mA[ 1 ] ].apply( _modules[ mA[ 0 ] ][ mA[ 1 ] ].prototype, params );
+				_modules[ mA[ 0 ] ][ mA[ 1 ] ]( params );
 			}
 		}
 	};

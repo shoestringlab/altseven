@@ -1,4 +1,4 @@
-FAIL	dist/a7.js (113)
+FAIL	dist/a7.js (111)
 dist/a7.js:0:10	Don't wrap function literals in parens.
 dist/a7.js:24:8	'a7' is out of scope.
 dist/a7.js:25:8	'a7' is out of scope.
@@ -60,57 +60,55 @@ dist/a7.js:431:20	['exists'] is better written in dot notation.
 dist/a7.js:431:46	Unexpected 'arguments'.
 dist/a7.js:434:20	['bind'] is better written in dot notation.
 dist/a7.js:434:44	Unexpected 'arguments'.
-dist/a7.js:455:17	Don't wrap function literals in parens.
-dist/a7.js:462:6	'EventBindings' is out of scope.
-dist/a7.js:497:10	Unexpected 'this'.
-dist/a7.js:498:8	Unexpected 'this'.
-dist/a7.js:500:6	Unexpected 'this'.
-dist/a7.js:501:13	Unexpected 'this'.
-dist/a7.js:506:6	Unexpected 'this'.
-dist/a7.js:507:13	Unexpected 'this'.
-dist/a7.js:511:18	Unexpected 'this'.
-dist/a7.js:512:6	Unexpected 'this'.
-dist/a7.js:519:28	Unexpected 'this'.
-dist/a7.js:520:29	Unexpected 'this'.
-dist/a7.js:521:35	Unexpected 'this'.
-dist/a7.js:528:11	Unexpected 'this'.
-dist/a7.js:533:13	Unexpected 'this'.
-dist/a7.js:534:16	Unexpected 'this'.
-dist/a7.js:545:2	Wrap an immediate function invocation in parentheses to assist the reader in understanding that the expression is the result of a function, and not the function itself.
-dist/a7.js:549:1	Expected 'use strict' before 'var'.
-dist/a7.js:585:20	Undeclared 'Request'.
-dist/a7.js:587:20	Undeclared 'fetch'.
-dist/a7.js:652:5	Unexpected 'else'.
-dist/a7.js:665:17	Undeclared 'Request'.
-dist/a7.js:667:13	Undeclared 'fetch'.
-dist/a7.js:705:15	Don't wrap function literals in parens.
-dist/a7.js:750:2	Wrap an immediate function invocation in parentheses to assist the reader in understanding that the expression is the result of a function, and not the function itself.
-dist/a7.js:752:9	Don't wrap function literals in parens.
-dist/a7.js:780:30	Undeclared 'Handlebars'.
-dist/a7.js:790:10	Undeclared 'fetch'.
-dist/a7.js:796:31	Undeclared 'DOMParser'.
-dist/a7.js:811:17	Undeclared 'Mustache'.
-dist/a7.js:844:2	Wrap an immediate function invocation in parentheses to assist the reader in understanding that the expression is the result of a function, and not the function itself.
-dist/a7.js:849:1	Expected 'use strict' before 'return'.
-dist/a7.js:857:10	Unexpected 'this'.
-dist/a7.js:871:31	Unexpected '++'.
-dist/a7.js:872:31	Unexpected '++'.
-dist/a7.js:873:31	Unexpected '++'.
-dist/a7.js:881:18	Unexpected '='.
-dist/a7.js:886:23	Unexpected 'this'.
-dist/a7.js:887:9	Unexpected 'this'.
-dist/a7.js:888:9	Unexpected 'this'.
-dist/a7.js:889:9	Unexpected 'this'.
-dist/a7.js:905:12	Unexpected 'this'.
-dist/a7.js:905:48	Unexpected '++'.
-dist/a7.js:906:12	Unexpected 'this'.
-dist/a7.js:906:48	Unexpected '++'.
-dist/a7.js:907:12	Unexpected 'this'.
-dist/a7.js:907:48	Unexpected '++'.
-dist/a7.js:908:12	Unexpected 'this'.
-dist/a7.js:908:48	Unexpected '++'.
-dist/a7.js:961:35	Unexpected '.'.
-dist/a7.js:962:5	Unexpected '.'.
-dist/a7.js:962:18	Unexpected '.'.
+dist/a7.js:464:2	'EventBindings' is out of scope.
+dist/a7.js:507:6	Unexpected 'this'.
+dist/a7.js:508:3	Unexpected 'this'.
+dist/a7.js:510:2	Unexpected 'this'.
+dist/a7.js:511:9	Unexpected 'this'.
+dist/a7.js:516:2	Unexpected 'this'.
+dist/a7.js:517:9	Unexpected 'this'.
+dist/a7.js:521:14	Unexpected 'this'.
+dist/a7.js:522:2	Unexpected 'this'.
+dist/a7.js:528:34	Unexpected 'this'.
+dist/a7.js:529:30	Unexpected 'this'.
+dist/a7.js:530:36	Unexpected 'this'.
+dist/a7.js:536:8	Unexpected 'this'.
+dist/a7.js:540:23	Unexpected 'this'.
+dist/a7.js:541:14	Unexpected 'this'.
+dist/a7.js:555:1	Expected 'use strict' before 'var'.
+dist/a7.js:591:20	Undeclared 'Request'.
+dist/a7.js:593:20	Undeclared 'fetch'.
+dist/a7.js:658:5	Unexpected 'else'.
+dist/a7.js:671:17	Undeclared 'Request'.
+dist/a7.js:673:13	Undeclared 'fetch'.
+dist/a7.js:712:15	Don't wrap function literals in parens.
+dist/a7.js:757:2	Wrap an immediate function invocation in parentheses to assist the reader in understanding that the expression is the result of a function, and not the function itself.
+dist/a7.js:759:9	Don't wrap function literals in parens.
+dist/a7.js:787:30	Undeclared 'Handlebars'.
+dist/a7.js:797:10	Undeclared 'fetch'.
+dist/a7.js:803:31	Undeclared 'DOMParser'.
+dist/a7.js:818:17	Undeclared 'Mustache'.
+dist/a7.js:851:2	Wrap an immediate function invocation in parentheses to assist the reader in understanding that the expression is the result of a function, and not the function itself.
+dist/a7.js:856:1	Expected 'use strict' before 'return'.
+dist/a7.js:864:10	Unexpected 'this'.
+dist/a7.js:878:31	Unexpected '++'.
+dist/a7.js:879:31	Unexpected '++'.
+dist/a7.js:880:31	Unexpected '++'.
+dist/a7.js:888:18	Unexpected '='.
+dist/a7.js:893:23	Unexpected 'this'.
+dist/a7.js:894:9	Unexpected 'this'.
+dist/a7.js:895:9	Unexpected 'this'.
+dist/a7.js:896:9	Unexpected 'this'.
+dist/a7.js:912:12	Unexpected 'this'.
+dist/a7.js:912:48	Unexpected '++'.
+dist/a7.js:913:12	Unexpected 'this'.
+dist/a7.js:913:48	Unexpected '++'.
+dist/a7.js:914:12	Unexpected 'this'.
+dist/a7.js:914:48	Unexpected '++'.
+dist/a7.js:915:12	Unexpected 'this'.
+dist/a7.js:915:48	Unexpected '++'.
+dist/a7.js:968:35	Unexpected '.'.
+dist/a7.js:969:5	Unexpected '.'.
+dist/a7.js:969:18	Unexpected '.'.
 
-# JSLint failed, 113 violations in 1.  1 files scanned.
+# JSLint failed, 111 violations in 1.  1 files scanned.

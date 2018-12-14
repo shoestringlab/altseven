@@ -149,7 +149,8 @@ a7.remote = ( function(){
 				return;
 			}
 			if( typeof _modules[ mA[ 0 ] ][ mA[ 1 ] ] === "function" ){
-				_modules[ mA[ 0 ] ][ mA[ 1 ] ].apply( _modules[ mA[ 0 ] ][ mA[ 1 ] ], params );
+			//	_modules[ mA[ 0 ] ][ mA[ 1 ] ].apply( _modules[ mA[ 0 ] ][ mA[ 1 ] ].prototype, params );
+				_modules[ mA[ 0 ] ][ mA[ 1 ] ]( params );
 			}
 		}
 	};
