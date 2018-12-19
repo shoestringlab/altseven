@@ -27,15 +27,15 @@ a7.remote = ( function(){
 			}
 
 			var authModule = {
-					login: function( username, password, callback ){
+					login: function( params ){
 						var request,
-								params = { 	method: 'POST',
+								args = { 	method: 'POST',
 										headers: {
-											"Authorization": "Basic " + a7.util.base64.encode64( username + ":" + password )
+											"Authorization": "Basic " + a7.util.base64.encode64( params.username + ":" + params.password )
 										}
 								};
 
-						request = new Request( _options.loginURL , params );
+						request = new Request( _options.loginURL , args );
 
 						var promise = fetch( request );
 
@@ -55,8 +55,8 @@ a7.remote = ( function(){
 								});
 								sessionStorage.user = JSON.stringify( user );
 								a7.model.set( "a7.user", user );
-								if( callback !== undefined ){
-									callback( json );
+								if( params.callback !== undefined ){
+									params.callback( json );
 								}
 							});
 

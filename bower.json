@@ -1,6 +1,6 @@
 {
   "name": "alt-seven",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "authors": [
     "Robert Munn <robertdmunn@gmail.com>"
   ],
@@ -14,9 +14,7 @@
     "node_modules"
     ],
   "dependencies": {
-  	"gadget-ui" : "*",
-    "mustache.js" : "*",
-    "handlebars" : "*",
-    "modlazy" : "*"
+  	"mustache.js" : "*",
+    "velocity" : "*"
   }
 }

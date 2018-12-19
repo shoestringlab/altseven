@@ -62,9 +62,9 @@ app.components = ( function(){
       var loginButton = document.querySelector( "input[name='login']" );
 
       loginButton.addEventListener( "click", function( event ){
-        a7.events.publish( "auth.login", [ 	document.querySelector( "input[name='username']" ).value,
-                                            document.querySelector( "input[name='password']" ).value,
-                                            app.auth.loginHandler ] );
+        a7.events.publish( "auth.login", { username: 	document.querySelector( "input[name='username']" ).value,
+                                           password:  document.querySelector( "input[name='password']" ).value,
+                                           callback: app.auth.loginHandler } );
       });
     }
   };
