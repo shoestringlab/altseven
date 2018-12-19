@@ -12,105 +12,105 @@
 <issue line="67" char="12" reason="'a7' is out of scope." evidence=""/>
 <issue line="74" char="10" reason="'a7' is out of scope." evidence=""/>
 <issue line="75" char="10" reason="'a7' is out of scope." evidence=""/>
+<issue line="76" char="12" reason="'a7' is out of scope." evidence=""/>
 <issue line="78" char="12" reason="'a7' is out of scope." evidence=""/>
+<issue line="79" char="12" reason="'a7' is out of scope." evidence=""/>
 <issue line="80" char="12" reason="'a7' is out of scope." evidence=""/>
-<issue line="83" char="12" reason="'a7' is out of scope." evidence=""/>
-<issue line="84" char="12" reason="'a7' is out of scope." evidence=""/>
-<issue line="87" char="12" reason="'a7' is out of scope." evidence=""/>
-<issue line="88" char="12" reason="'a7' is out of scope." evidence=""/>
-<issue line="92" char="14" reason="'a7' is out of scope." evidence=""/>
-<issue line="94" char="14" reason="'a7' is out of scope." evidence=""/>
-<issue line="99" char="16" reason="'a7' is out of scope." evidence=""/>
-<issue line="101" char="16" reason="'a7' is out of scope." evidence=""/>
+<issue line="81" char="12" reason="'a7' is out of scope." evidence=""/>
+<issue line="82" char="12" reason="'a7' is out of scope." evidence=""/>
+<issue line="84" char="14" reason="'a7' is out of scope." evidence=""/>
+<issue line="86" char="14" reason="'a7' is out of scope." evidence=""/>
+<issue line="91" char="16" reason="'a7' is out of scope." evidence=""/>
+<issue line="93" char="16" reason="'a7' is out of scope." evidence=""/>
+<issue line="97" char="16" reason="'a7' is out of scope." evidence=""/>
+<issue line="98" char="16" reason="'a7' is out of scope." evidence=""/>
+<issue line="104" char="17" reason="['catch'] is better written in dot notation." evidence=""/>
 <issue line="105" char="16" reason="'a7' is out of scope." evidence=""/>
-<issue line="106" char="16" reason="'a7' is out of scope." evidence=""/>
-<issue line="112" char="17" reason="['catch'] is better written in dot notation." evidence=""/>
-<issue line="113" char="16" reason="'a7' is out of scope." evidence=""/>
-<issue line="119" char="11" reason="['catch'] is better written in dot notation." evidence=""/>
-<issue line="120" char="10" reason="'a7' is out of scope." evidence=""/>
-<issue line="125" char="9" reason="['catch'] is better written in dot notation." evidence=""/>
-<issue line="126" char="8" reason="'a7' is out of scope." evidence=""/>
-<issue line="140" char="2" reason="Wrap an immediate function invocation in parentheses to assist the reader in understanding that the expression is the result of a function, and not the function itself." evidence=""/>
-<issue line="142" char="14" reason="Don't wrap function literals in parens." evidence=""/>
-<issue line="149" char="4" reason="Unused 'active'." evidence=""/>
-<issue line="210" char="25" reason="Undeclared 'WebSocket'." evidence=""/>
-<issue line="212" char="39" reason="Empty block." evidence=""/>
-<issue line="236" char="19" reason="Unused 'er'." evidence=""/>
-<issue line="245" char="12" reason="Unexpected 'for'." evidence=""/>
-<issue line="245" char="50" reason="Expected '+= 1' and instead saw '++'." evidence=""/>
-<issue line="276" char="2" reason="Wrap an immediate function invocation in parentheses to assist the reader in understanding that the expression is the result of a function, and not the function itself." evidence=""/>
-<issue line="278" char="12" reason="Don't wrap function literals in parens." evidence=""/>
-<issue line="293" char="7" reason="Unexpected '.'." evidence=""/>
-<issue line="305" char="24" reason="Empty block." evidence=""/>
-<issue line="308" char="2" reason="Wrap an immediate function invocation in parentheses to assist the reader in understanding that the expression is the result of a function, and not the function itself." evidence=""/>
-<issue line="314" char="13" reason="Don't wrap function literals in parens." evidence=""/>
-<issue line="343" char="60" reason="Empty block." evidence=""/>
-<issue line="346" char="63" reason="Empty block." evidence=""/>
-<issue line="364" char="2" reason="Wrap an immediate function invocation in parentheses to assist the reader in understanding that the expression is the result of a function, and not the function itself." evidence=""/>
-<issue line="368" char="1" reason="Expected 'use strict' before 'var'." evidence=""/>
-<issue line="372" char="14" reason="The '&amp;amp;&amp;amp;' subexpression should be wrapped in parens." evidence=""/>
-<issue line="391" char="3" reason="Undeclared '_deffered'." evidence=""/>
-<issue line="419" char="20" reason="['create'] is better written in dot notation." evidence=""/>
-<issue line="419" char="46" reason="Unexpected 'arguments'." evidence=""/>
-<issue line="422" char="20" reason="['destroy'] is better written in dot notation." evidence=""/>
-<issue line="422" char="47" reason="Unexpected 'arguments'." evidence=""/>
-<issue line="425" char="20" reason="['get'] is better written in dot notation." evidence=""/>
-<issue line="425" char="43" reason="Unexpected 'arguments'." evidence=""/>
-<issue line="428" char="20" reason="['set'] is better written in dot notation." evidence=""/>
-<issue line="428" char="43" reason="Unexpected 'arguments'." evidence=""/>
-<issue line="431" char="20" reason="['exists'] is better written in dot notation." evidence=""/>
-<issue line="431" char="46" reason="Unexpected 'arguments'." evidence=""/>
-<issue line="434" char="20" reason="['bind'] is better written in dot notation." evidence=""/>
-<issue line="434" char="44" reason="Unexpected 'arguments'." evidence=""/>
-<issue line="464" char="2" reason="'EventBindings' is out of scope." evidence=""/>
-<issue line="507" char="6" reason="Unexpected 'this'." evidence=""/>
-<issue line="508" char="3" reason="Unexpected 'this'." evidence=""/>
-<issue line="510" char="2" reason="Unexpected 'this'." evidence=""/>
-<issue line="511" char="9" reason="Unexpected 'this'." evidence=""/>
-<issue line="516" char="2" reason="Unexpected 'this'." evidence=""/>
-<issue line="517" char="9" reason="Unexpected 'this'." evidence=""/>
-<issue line="521" char="14" reason="Unexpected 'this'." evidence=""/>
-<issue line="522" char="2" reason="Unexpected 'this'." evidence=""/>
-<issue line="528" char="34" reason="Unexpected 'this'." evidence=""/>
-<issue line="529" char="30" reason="Unexpected 'this'." evidence=""/>
-<issue line="530" char="36" reason="Unexpected 'this'." evidence=""/>
-<issue line="536" char="8" reason="Unexpected 'this'." evidence=""/>
-<issue line="540" char="23" reason="Unexpected 'this'." evidence=""/>
-<issue line="541" char="14" reason="Unexpected 'this'." evidence=""/>
-<issue line="555" char="1" reason="Expected 'use strict' before 'var'." evidence=""/>
-<issue line="591" char="20" reason="Undeclared 'Request'." evidence=""/>
-<issue line="593" char="20" reason="Undeclared 'fetch'." evidence=""/>
-<issue line="658" char="5" reason="Unexpected 'else'." evidence=""/>
-<issue line="671" char="17" reason="Undeclared 'Request'." evidence=""/>
-<issue line="673" char="13" reason="Undeclared 'fetch'." evidence=""/>
-<issue line="712" char="15" reason="Don't wrap function literals in parens." evidence=""/>
-<issue line="757" char="2" reason="Wrap an immediate function invocation in parentheses to assist the reader in understanding that the expression is the result of a function, and not the function itself." evidence=""/>
-<issue line="759" char="9" reason="Don't wrap function literals in parens." evidence=""/>
-<issue line="787" char="30" reason="Undeclared 'Handlebars'." evidence=""/>
-<issue line="797" char="10" reason="Undeclared 'fetch'." evidence=""/>
-<issue line="803" char="31" reason="Undeclared 'DOMParser'." evidence=""/>
-<issue line="818" char="17" reason="Undeclared 'Mustache'." evidence=""/>
-<issue line="851" char="2" reason="Wrap an immediate function invocation in parentheses to assist the reader in understanding that the expression is the result of a function, and not the function itself." evidence=""/>
-<issue line="856" char="1" reason="Expected 'use strict' before 'return'." evidence=""/>
-<issue line="864" char="10" reason="Unexpected 'this'." evidence=""/>
-<issue line="878" char="31" reason="Unexpected '++'." evidence=""/>
-<issue line="879" char="31" reason="Unexpected '++'." evidence=""/>
-<issue line="880" char="31" reason="Unexpected '++'." evidence=""/>
-<issue line="888" char="18" reason="Unexpected '='." evidence=""/>
-<issue line="893" char="23" reason="Unexpected 'this'." evidence=""/>
-<issue line="894" char="9" reason="Unexpected 'this'." evidence=""/>
-<issue line="895" char="9" reason="Unexpected 'this'." evidence=""/>
-<issue line="896" char="9" reason="Unexpected 'this'." evidence=""/>
-<issue line="912" char="12" reason="Unexpected 'this'." evidence=""/>
-<issue line="912" char="48" reason="Unexpected '++'." evidence=""/>
-<issue line="913" char="12" reason="Unexpected 'this'." evidence=""/>
-<issue line="913" char="48" reason="Unexpected '++'." evidence=""/>
-<issue line="914" char="12" reason="Unexpected 'this'." evidence=""/>
-<issue line="914" char="48" reason="Unexpected '++'." evidence=""/>
-<issue line="915" char="12" reason="Unexpected 'this'." evidence=""/>
-<issue line="915" char="48" reason="Unexpected '++'." evidence=""/>
-<issue line="968" char="35" reason="Unexpected '.'." evidence=""/>
-<issue line="969" char="5" reason="Unexpected '.'." evidence=""/>
-<issue line="969" char="18" reason="Unexpected '.'." evidence=""/>
+<issue line="111" char="11" reason="['catch'] is better written in dot notation." evidence=""/>
+<issue line="112" char="10" reason="'a7' is out of scope." evidence=""/>
+<issue line="117" char="9" reason="['catch'] is better written in dot notation." evidence=""/>
+<issue line="118" char="8" reason="'a7' is out of scope." evidence=""/>
+<issue line="123" char="2" reason="Wrap an immediate function invocation in parentheses to assist the reader in understanding that the expression is the result of a function, and not the function itself." evidence=""/>
+<issue line="125" char="14" reason="Don't wrap function literals in parens." evidence=""/>
+<issue line="132" char="4" reason="Unused 'active'." evidence=""/>
+<issue line="193" char="25" reason="Undeclared 'WebSocket'." evidence=""/>
+<issue line="195" char="39" reason="Empty block." evidence=""/>
+<issue line="219" char="19" reason="Unused 'er'." evidence=""/>
+<issue line="228" char="12" reason="Unexpected 'for'." evidence=""/>
+<issue line="228" char="50" reason="Expected '+= 1' and instead saw '++'." evidence=""/>
+<issue line="259" char="2" reason="Wrap an immediate function invocation in parentheses to assist the reader in understanding that the expression is the result of a function, and not the function itself." evidence=""/>
+<issue line="261" char="12" reason="Don't wrap function literals in parens." evidence=""/>
+<issue line="276" char="7" reason="Unexpected '.'." evidence=""/>
+<issue line="288" char="24" reason="Empty block." evidence=""/>
+<issue line="291" char="2" reason="Wrap an immediate function invocation in parentheses to assist the reader in understanding that the expression is the result of a function, and not the function itself." evidence=""/>
+<issue line="297" char="13" reason="Don't wrap function literals in parens." evidence=""/>
+<issue line="326" char="60" reason="Empty block." evidence=""/>
+<issue line="329" char="63" reason="Empty block." evidence=""/>
+<issue line="347" char="2" reason="Wrap an immediate function invocation in parentheses to assist the reader in understanding that the expression is the result of a function, and not the function itself." evidence=""/>
+<issue line="351" char="1" reason="Expected 'use strict' before 'var'." evidence=""/>
+<issue line="355" char="14" reason="The '&amp;amp;&amp;amp;' subexpression should be wrapped in parens." evidence=""/>
+<issue line="374" char="3" reason="Undeclared '_deffered'." evidence=""/>
+<issue line="402" char="20" reason="['create'] is better written in dot notation." evidence=""/>
+<issue line="402" char="46" reason="Unexpected 'arguments'." evidence=""/>
+<issue line="405" char="20" reason="['destroy'] is better written in dot notation." evidence=""/>
+<issue line="405" char="47" reason="Unexpected 'arguments'." evidence=""/>
+<issue line="408" char="20" reason="['get'] is better written in dot notation." evidence=""/>
+<issue line="408" char="43" reason="Unexpected 'arguments'." evidence=""/>
+<issue line="411" char="20" reason="['set'] is better written in dot notation." evidence=""/>
+<issue line="411" char="43" reason="Unexpected 'arguments'." evidence=""/>
+<issue line="414" char="20" reason="['exists'] is better written in dot notation." evidence=""/>
+<issue line="414" char="46" reason="Unexpected 'arguments'." evidence=""/>
+<issue line="417" char="20" reason="['bind'] is better written in dot notation." evidence=""/>
+<issue line="417" char="44" reason="Unexpected 'arguments'." evidence=""/>
+<issue line="447" char="2" reason="'EventBindings' is out of scope." evidence=""/>
+<issue line="490" char="6" reason="Unexpected 'this'." evidence=""/>
+<issue line="491" char="3" reason="Unexpected 'this'." evidence=""/>
+<issue line="493" char="2" reason="Unexpected 'this'." evidence=""/>
+<issue line="494" char="9" reason="Unexpected 'this'." evidence=""/>
+<issue line="499" char="2" reason="Unexpected 'this'." evidence=""/>
+<issue line="500" char="9" reason="Unexpected 'this'." evidence=""/>
+<issue line="504" char="14" reason="Unexpected 'this'." evidence=""/>
+<issue line="505" char="2" reason="Unexpected 'this'." evidence=""/>
+<issue line="511" char="34" reason="Unexpected 'this'." evidence=""/>
+<issue line="512" char="30" reason="Unexpected 'this'." evidence=""/>
+<issue line="513" char="36" reason="Unexpected 'this'." evidence=""/>
+<issue line="519" char="8" reason="Unexpected 'this'." evidence=""/>
+<issue line="523" char="23" reason="Unexpected 'this'." evidence=""/>
+<issue line="524" char="14" reason="Unexpected 'this'." evidence=""/>
+<issue line="538" char="1" reason="Expected 'use strict' before 'var'." evidence=""/>
+<issue line="574" char="20" reason="Undeclared 'Request'." evidence=""/>
+<issue line="576" char="20" reason="Undeclared 'fetch'." evidence=""/>
+<issue line="641" char="5" reason="Unexpected 'else'." evidence=""/>
+<issue line="654" char="17" reason="Undeclared 'Request'." evidence=""/>
+<issue line="656" char="13" reason="Undeclared 'fetch'." evidence=""/>
+<issue line="695" char="15" reason="Don't wrap function literals in parens." evidence=""/>
+<issue line="740" char="2" reason="Wrap an immediate function invocation in parentheses to assist the reader in understanding that the expression is the result of a function, and not the function itself." evidence=""/>
+<issue line="742" char="9" reason="Don't wrap function literals in parens." evidence=""/>
+<issue line="770" char="30" reason="Undeclared 'Handlebars'." evidence=""/>
+<issue line="780" char="10" reason="Undeclared 'fetch'." evidence=""/>
+<issue line="786" char="31" reason="Undeclared 'DOMParser'." evidence=""/>
+<issue line="801" char="17" reason="Undeclared 'Mustache'." evidence=""/>
+<issue line="834" char="2" reason="Wrap an immediate function invocation in parentheses to assist the reader in understanding that the expression is the result of a function, and not the function itself." evidence=""/>
+<issue line="839" char="1" reason="Expected 'use strict' before 'return'." evidence=""/>
+<issue line="847" char="10" reason="Unexpected 'this'." evidence=""/>
+<issue line="861" char="31" reason="Unexpected '++'." evidence=""/>
+<issue line="862" char="31" reason="Unexpected '++'." evidence=""/>
+<issue line="863" char="31" reason="Unexpected '++'." evidence=""/>
+<issue line="871" char="18" reason="Unexpected '='." evidence=""/>
+<issue line="876" char="23" reason="Unexpected 'this'." evidence=""/>
+<issue line="877" char="9" reason="Unexpected 'this'." evidence=""/>
+<issue line="878" char="9" reason="Unexpected 'this'." evidence=""/>
+<issue line="879" char="9" reason="Unexpected 'this'." evidence=""/>
+<issue line="895" char="12" reason="Unexpected 'this'." evidence=""/>
+<issue line="895" char="48" reason="Unexpected '++'." evidence=""/>
+<issue line="896" char="12" reason="Unexpected 'this'." evidence=""/>
+<issue line="896" char="48" reason="Unexpected '++'." evidence=""/>
+<issue line="897" char="12" reason="Unexpected 'this'." evidence=""/>
+<issue line="897" char="48" reason="Unexpected '++'." evidence=""/>
+<issue line="898" char="12" reason="Unexpected 'this'." evidence=""/>
+<issue line="898" char="48" reason="Unexpected '++'." evidence=""/>
+<issue line="951" char="35" reason="Unexpected '.'." evidence=""/>
+<issue line="952" char="5" reason="Unexpected '.'." evidence=""/>
+<issue line="952" char="18" reason="Unexpected '.'." evidence=""/>
 </file>
 </jslint>

@@ -74,21 +74,13 @@ var a7 = (function() {
         p0.then(function() {
           a7.log.trace("a7 - log init");
           a7.log.init();
-/*         })
-          .then(function() { */
             a7.log.trace("a7 - security init");
             // init user state
             a7.security.init();
-/*           })
-          .then(function() { */
             a7.log.trace("a7 - remote init");
             a7.remote.init(options.remote.modules);
-/*           })
-          .then(function() { */
             a7.log.trace("a7 - events init");
             a7.events.init();
-/*           })
-          .then(function() { */
             p1 = new Promise(function(resolve, reject) {
               a7.log.trace("a7 - layout init");
               // initialize templating engine
@@ -128,15 +120,6 @@ var a7 = (function() {
         initReject();
       });
     }
-    /*	,
-
-		deinit: function(){
-			// return state to default
-			a7.model.set( "a7.user", "" );
-			//a7.model.set( "a7.token", "" );
-			sessionStorage.removeItem( "user" );
-			sessionStorage.removeItem( "token" );
-		}	*/
   };
 })();
 
