@@ -1,0 +1,48 @@
+<!doctype html>
+<html>
+
+<head>
+	<title>alt-7</title>
+	<script src="/node_modules/modlazy/dist/modlazy.min.js"></script>
+	<script type="module">
+
+    import appInit from './app.js';
+
+		modlazy.load(["/node_modules/gadget-ui/dist/gadget-ui.js < /bower_components/velocity/velocity.js",
+			"/bower_components/mustache.js/mustache.js", "/test/styles.css", "/dist/a7.css",
+			"/node_modules/gadget-ui/dist/gadget-ui.css",
+			"/node_modules/open-iconic/font/css/open-iconic.css"
+		], function() {
+
+        var app = appInit();
+        
+		});
+	</script>
+</head>
+
+<body>
+	<div>
+
+		<h1>
+			alt-7 Test Page
+		</h1>
+	</div>
+
+	<div name="main">
+		<div name="anon" style="display:none;">
+
+		</div>
+		<div name="secure" style="display:none;">
+			<div name="header">
+
+			</div>
+			<div name="app">
+
+			</div>
+		</div>
+	</div>
+
+
+</body>
+
+</html>

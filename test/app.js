@@ -1,6 +1,6 @@
-import a7Framework from '../dist/a7.js';
+import altseven from '../dist/a7.js';
 
-var a7 = a7Framework();
+var a7 = altseven();
 
 var app = {
 	main: (function() {
