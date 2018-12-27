@@ -62,7 +62,7 @@ a7.remote = ( function(){
 
 
 					},
-					refresh: function( resolve ){
+					refresh: function( params ){
 						a7.remote.fetch( _options.refreshURL, {}, true )
 						// initial fetch needs to parse response
 						.then( function( response ){
@@ -70,8 +70,8 @@ a7.remote = ( function(){
 						})
 						.then( function( json ){
 							// then json is handled
-							if( resolve !== undefined ){
-								resolve( json.success );
+							if( params.resolve !== undefined ){
+								params.resolve( json.success );
 							}
 						});
 					}

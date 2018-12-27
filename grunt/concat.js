@@ -36,7 +36,8 @@ module.exports = {
       "src/a7.remote.js",
       "src/a7.security.js",
       "src/a7.ui.js",
-      "src/a7.util.js"
+      "src/a7.util.js",
+      "src/a7.export.js"
     ],
     dest: "dist/a7.js"
   }

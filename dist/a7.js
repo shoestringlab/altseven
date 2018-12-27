@@ -1,6 +1,5 @@
 var a7 = (function() {
   "use strict";
-
   return {
     // initialization
     // 1. sets console and templating options
@@ -372,7 +371,7 @@ a7.log = ( function(){
 			_deferred.forEach( function( item ){
 				_log( item.message, item.level );
 			});
-			_deffered = [];
+			//_deffered = [];
 			a7.log.info( "Log initializing..." );
 		},
 		error: function( message ){
@@ -599,7 +598,7 @@ a7.remote = ( function(){
 
 
 					},
-					refresh: function( resolve ){
+					refresh: function( params ){
 						a7.remote.fetch( _options.refreshURL, {}, true )
 						// initial fetch needs to parse response
 						.then( function( response ){
@@ -607,8 +606,8 @@ a7.remote = ( function(){
 						})
 						.then( function( json ){
 							// then json is handled
-							if( resolve !== undefined ){
-								resolve( json.success );
+							if( params.resolve !== undefined ){
+								params.resolve( json.success );
 							}
 						});
 					}
@@ -706,7 +705,7 @@ a7.security = (function() {
         if (timer === undefined) {
           a7.log.info("Refreshing user...");
           // if there is a valid token, check authentication state with the server
-          a7.events.publish("auth.refresh", [resolve, reject]);
+          a7.events.publish("auth.refresh", { resolve:resolve, reject: reject});
         } else {
           resolve(true);
         }
@@ -987,5 +986,10 @@ a7.util = ( function(){
 		}
 	};
 }());
+
+
+export default function(){
+  return a7;
+}
 
 //# sourceMappingURL=a7.js.map

@@ -1,6 +1,5 @@
 var a7 = (function() {
   "use strict";
-
   return {
     // initialization
     // 1. sets console and templating options

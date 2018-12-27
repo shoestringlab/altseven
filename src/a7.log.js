@@ -23,7 +23,7 @@ a7.log = ( function(){
 			_deferred.forEach( function( item ){
 				_log( item.message, item.level );
 			});
-			_deffered = [];
+			//_deffered = [];
 			a7.log.info( "Log initializing..." );
 		},
 		error: function( message ){

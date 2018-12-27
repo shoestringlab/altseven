@@ -11,7 +11,7 @@ a7.security = (function() {
         if (timer === undefined) {
           a7.log.info("Refreshing user...");
           // if there is a valid token, check authentication state with the server
-          a7.events.publish("auth.refresh", [resolve, reject]);
+          a7.events.publish("auth.refresh", { resolve:resolve, reject: reject});
         } else {
           resolve(true);
         }
