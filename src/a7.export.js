@@ -1,4 +1,2 @@
 
-export default function(){
-  return a7;
-}
+export var a7 = a7;

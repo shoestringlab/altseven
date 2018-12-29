@@ -59,8 +59,6 @@ a7.remote = ( function(){
 									params.callback( json );
 								}
 							});
-
-
 					},
 					refresh: function( params ){
 						a7.remote.fetch( _options.refreshURL, {}, true )
@@ -84,7 +82,6 @@ a7.remote = ( function(){
 			Object.keys( _modules ).forEach( function( key ){
 				_setModule( key, _modules[ key ] );
 			});
-
 		},
 
 		fetch: function( uri, params, secure ){

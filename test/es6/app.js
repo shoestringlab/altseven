@@ -1,6 +1,4 @@
-import altseven from '../dist/a7.js';
-
-var a7 = altseven();
+import {a7} from '/dist/a7.es6.min.js';
 
 var app = {
 	main: (function() {

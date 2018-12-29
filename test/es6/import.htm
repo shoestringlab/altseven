@@ -6,7 +6,7 @@
 	<script src="/node_modules/modlazy/dist/modlazy.min.js"></script>
 	<script type="module">
 
-    import appInit from './app.js';
+    import application from './app.js';
 
 		modlazy.load(["/node_modules/gadget-ui/dist/gadget-ui.js < /bower_components/velocity/velocity.js",
 			"/bower_components/mustache.js/mustache.js", "/test/styles.css", "/dist/a7.css",
@@ -14,8 +14,8 @@
 			"/node_modules/open-iconic/font/css/open-iconic.css"
 		], function() {
 
-        var app = appInit();
-        
+        var app = application();
+
 		});
 	</script>
 </head>
