@@ -38,7 +38,7 @@ a7.console = (function() {
         document.body.append(consoleDiv);
         var connection,
           fp = a7.components.Constructor(
-            gadgetui.display.FloatingPane,
+            console.container,
             [
               consoleDiv,
               {

@@ -17,7 +17,7 @@ var a7 = (function() {
           : "";
       if (options.model === "") {
         // model required
-        initReject("No model specified.");
+        initReject("A model is required, but no model was specified.");
       }
 
       pr = new Promise(function(resolve, reject) {
@@ -33,6 +33,7 @@ var a7 = (function() {
           console: {
             enabled: options.console.enabled || false,
             wsServer: options.console.wsServer || "",
+            container: options.console.container || "",
             top: options.console.top || 100,
             left: options.console.left || 100,
             width: options.console.width || 500,
@@ -162,7 +163,7 @@ a7.console = (function() {
         document.body.append(consoleDiv);
         var connection,
           fp = a7.components.Constructor(
-            gadgetui.display.FloatingPane,
+            console.container,
             [
               consoleDiv,
               {
@@ -418,21 +419,27 @@ a7.model = ( function() {
 		},
 		init: function( options, resolve ){
 			a7.log.info( "Model initializing... " );
-			switch( options.model ){
-				case "gadgetui":
-					_model = gadgetui.model;
-					// gadgetui maps directly, so we can loop on the keys
-					Object.keys( gadgetui.model ).forEach( function( key ){
-						if( key !== "BindableObject" ){
-							_methods[ key ] = gadgetui.model[ key ];
-						}
-					});
-					break;
+
+			if( typeof options.model == "string" ){
+				switch( options.model ){
+					case "gadgetui":
+						_model = gadgetui.model;
+						break;
+				}
+			}else if( typeof options.model == "object" ){
+				_model = options.model;
 			}
+			a7.log.trace( "Model set: " + _model );
+			// gadgetui maps directly, so we can loop on the keys
+			Object.keys( _model ).forEach( function( key ){
+				if( key !== "BindableObject" ){
+					_methods[ key ] = _model[ key ];
+				}
+			});
+
 			resolve();
 		}
 	};
-
 }() );
 
 a7.components = ( function() {"use strict";function Constructor( constructor, args, addBindings ) {

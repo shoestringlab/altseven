@@ -17,7 +17,7 @@ var a7 = (function() {
           : "";
       if (options.model === "") {
         // model required
-        initReject("No model specified.");
+        initReject("A model is required, but no model was specified.");
       }
 
       pr = new Promise(function(resolve, reject) {
@@ -33,6 +33,7 @@ var a7 = (function() {
           console: {
             enabled: options.console.enabled || false,
             wsServer: options.console.wsServer || "",
+            container: options.console.container || "",
             top: options.console.top || 100,
             left: options.console.left || 100,
             width: options.console.width || 500,
