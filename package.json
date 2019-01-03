@@ -7,7 +7,7 @@
     "test": "test"
   },
   "dependencies": {
-    "gadget-ui": "^5.3.2",
+    "gadget-ui": "^6.0.1",
     "handlebars": "^4.0.12",
     "modlazy": "^1.0.0",
     "npm": "^6.4.1",
