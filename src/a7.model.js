@@ -24,19 +24,25 @@ a7.model = ( function() {
 		},
 		init: function( options, resolve ){
 			a7.log.info( "Model initializing... " );
-			switch( options.model ){
-				case "gadgetui":
-					_model = gadgetui.model;
-					// gadgetui maps directly, so we can loop on the keys
-					Object.keys( gadgetui.model ).forEach( function( key ){
-						if( key !== "BindableObject" ){
-							_methods[ key ] = gadgetui.model[ key ];
-						}
-					});
-					break;
+
+			if( typeof options.model == "string" ){
+				switch( options.model ){
+					case "gadgetui":
+						_model = gadgetui.model;
+						break;
+				}
+			}else if( typeof options.model == "object" ){
+				_model = options.model;
 			}
+			a7.log.trace( "Model set: " + _model );
+			// gadgetui maps directly, so we can loop on the keys
+			Object.keys( _model ).forEach( function( key ){
+				if( key !== "BindableObject" ){
+					_methods[ key ] = _model[ key ];
+				}
+			});
+
 			resolve();
 		}
 	};
-
 }() );
