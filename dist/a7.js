@@ -775,27 +775,32 @@ a7.ui = (function() {
           break;
       }
     },
-    _loadTemplates = function(resolve) {
+    _loadTemplates = function( resolve, reject ) {
       var ot = Math.ceil(Math.random() * 500);
 
-      switch (_options.renderer) {
-        case "Mustache":
-        case "Handlebars":
-          fetch(_options.templates + "?" + ot)
-            .then(function(response) {
-              return response.text();
-            })
-            .then(function(text) {
-              a7.log.info("Loading " + _options.renderer + " templates... ");
-              var parser = new DOMParser(),
-                doc = parser.parseFromString(text, "text/html"),
-                scripts = doc.querySelectorAll("script");
-              scripts.forEach(function(script) {
-                _addTemplate(script.getAttribute("id"), script.innerHTML);
+      try{
+        switch (_options.renderer) {
+          case "Mustache":
+          case "Handlebars":
+            fetch(_options.templates + "?" + ot)
+              .then(function(response) {
+                return response.text();
+              })
+              .then(function(text) {
+                a7.log.info("Loading " + _options.renderer + " templates... ");
+                var parser = new DOMParser(),
+                  doc = parser.parseFromString(text, "text/html"),
+                  scripts = doc.querySelectorAll("script");
+                scripts.forEach(function(script) {
+                  _addTemplate(script.getAttribute("id"), script.innerHTML);
+                });
+                resolve();
               });
-              resolve();
-            });
-          break;
+            break;
+        }
+      }
+      catch( error ){
+        reject( error );
       }
     },
     _render = function(template, params, partials) {
