@@ -1,4 +1,5 @@
-import {a7} from '/dist/a7.es6.min.js';
+import {a7} from '/dist/a7.es6.js';
+import {model,floatingpane} from '/node_modules/gadget-ui/dist/gadget-ui.es6.js';
 
 var app = {
 	main: (function() {
@@ -169,9 +170,7 @@ var app = {
 	})()
 };
 
-
-
-export default function init(){
+export var application = function init(){
 
 	var options = {
 			auth: { // sessionTimeout: ( 60 * 15 * 1000 ) // default time in
@@ -179,7 +178,8 @@ export default function init(){
 			},
 			console: {
 				enabled: true,
-				wsServer: 'ws://www.altseven.home:8000',
+				wsServer: 'ws://127.0.0.1:8000',
+				container: floatingpane,
 				top: 100,
 				left: 500,
 				height: 300,
@@ -188,6 +188,8 @@ export default function init(){
 			logging: {
 				logLevel: "INFO,ERROR,FATAL,TRACE"
 			},
+			//pass in the gadgetui model directly
+			model: model,
 			remote: {
 				modules: app.remote,
 				loginURL: "/test/auth.cfc?method=login",
@@ -203,7 +205,7 @@ export default function init(){
 		});
 		p.then(function(state) {
 			app.main.init(state);
-			console.log( "App init.");
+			a7.log.info( "App init.");
 		});
 		p['catch'](function(message) {
 			console.log(message);
