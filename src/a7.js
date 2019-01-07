@@ -33,7 +33,7 @@ var a7 = (function() {
           console: {
             enabled: options.console.enabled || false,
             wsServer: options.console.wsServer || "",
-            container: options.console.container || "",
+            container: options.console.container || ( typeof gadgetui === "object" ? gadgetui.display.FloatingPane : "" ),
             top: options.console.top || 100,
             left: options.console.left || 100,
             width: options.console.width || 500,
@@ -46,16 +46,18 @@ var a7 = (function() {
           remote: {
             // modules: ( options.remote.modules | undefined ) // don't set into Model since they are being registered in Remote
             loginURL: options.remote.loginURL || "",
+            logoutURL: options.remote.logoutURL || "",
             refreshURL: options.remote.refreshURL || "",
             useTokens: options.auth.useTokens || true
           },
           ui: {
             renderer:
-              typeof Mustache === "object"
+              options.ui.renderer ||
+              ( typeof Mustache === "object"
                 ? "Mustache"
                 : typeof Handlebars === "object"
                 ? "Handlebars"
-                : "",
+                : "" ),
             templates: options.ui.templates || undefined
           },
           ready: false,

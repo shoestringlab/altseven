@@ -28,6 +28,9 @@ a7.events = (function() {
       a7.events.subscribe("auth.login", function(params) {
         a7.remote.invoke("auth.login", params);
       });
+      a7.events.subscribe("auth.logout", function(params) {
+        a7.remote.invoke("auth.logout", params);
+      });
       a7.events.subscribe("auth.refresh", function(params) {
         a7.remote.invoke("auth.refresh", params);
       });

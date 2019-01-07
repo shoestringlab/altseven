@@ -21,6 +21,11 @@ component {
 		}
 	}
 
+	remote any function logout() returnformat="json"{
+		// do logout if needed- invalidate session, etc.
+		return { "success" : true };
+	}
+
 	remote any function refresh() returnformat="json"{
 		if( len( getHTTPHeader("X-Token","") ) ){
 			var user = checkAuthToken();

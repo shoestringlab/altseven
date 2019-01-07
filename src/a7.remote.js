@@ -60,6 +60,36 @@ a7.remote = ( function(){
 								}
 							});
 					},
+					logout: function( params ){
+						var request,
+								args = { 	method: 'POST',
+										headers: {
+											"Authorization": "Basic " + a7.util.base64.encode64( params.username + ":" + params.password )
+										}
+								};
+
+						request = new Request( _options.logoutURL , args );
+
+						var promise = fetch( request );
+
+						promise
+							.then( function( response ) {
+								var token = "";
+								if( token !== undefined && token !== null ){
+									_token = token;
+									sessionStorage.token = token;
+								}
+								return response.json();
+							})
+							.then( function( json ){
+								var user = user = a7.components.Constructor(a7.components.User, [], true);
+								sessionStorage.user = JSON.stringify( user );
+								a7.model.set( "a7.user", user );
+								if( params.callback !== undefined ){
+									params.callback();
+								}
+							});
+					},
 					refresh: function( params ){
 						a7.remote.fetch( _options.refreshURL, {}, true )
 						// initial fetch needs to parse response
