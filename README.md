@@ -1,14 +1,23 @@
 altseven
-=====
+=========
 
-A JavaScript framework. Largely built as an academic exercise. Compile on CLI from root folder:
+v 1.2.0
 
-    $ grunt
+A JavaScript framework. Largely built as an academic exercise.
 
-To install dependencies from Bower and NPM (Sorry, yes you need to install dependencies from Bower):
+1.2.0 is a transitional release. UI implementation using Template Literals differs significantly from implementation using Mustache or Handlebars. The roadmap for v 2.0.0 calls for this new implementation to be ported to Mustache and Handlebars as well.
+
+Compile on CLI from root folder:
+
+    $ grunt clean
+
+To install dependencies from NPM:
+
+    $ npm install
+
+As of v 1.2.0, you do not need to install dependencies from Bower unless you wish to use Mustache for templating.
 
     $ bower install
-    $ npm install
 
 To run the example application included in the /test folder, you need a CFML engine. The easiest way to run it is to install CommandBox:
 
@@ -24,6 +33,8 @@ If you prefer to see altseven in action with a NodeJS backend, you can clone the
     $ git clone https://github.com/robertdmunn/tasklist
 
 Check the homepage/README for tasklist for directions on running it.
+
+*Updated* for version 1.20, altseven now supports ES6 Template Literals and a new, ReactJS-style implementation for UI rendering, but without JSX and without a compile step.
 
 *Updated* for version 1.1.0, there is an ES6 build that exports the framework for import using standard ES6 import statements.
 
