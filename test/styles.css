@@ -24,3 +24,8 @@ div.pane{
 .right-align{
   text-align: right;
 }
+
+a:hover{
+  text-decoration: underline;
+  cursor:default;
+}
