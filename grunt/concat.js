@@ -16,6 +16,7 @@ module.exports = {
       "src/components/util/constructor.js",
       "src/components/util/eventbindings.js",
       "src/components/user.js",
+      "src/components/view.js",
       "src/components/components.js"
     ],
     dest: "src/a7.components.js"
