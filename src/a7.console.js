@@ -28,15 +28,16 @@ a7.console = (function() {
   return {
     init: function(resolve, reject) {
       var console = a7.model.get("a7.console");
-
+      if( console.container === "" ) reject( "You must specify a container object for the console display." );
+      
       // check for console state
-      if (console.enabled) {
+      if ( console.enabled ) {
         active = true;
         consoleDiv = document.createElement("div");
         consoleDiv.setAttribute("id", "consoleDiv");
         consoleDiv.setAttribute("class", "a7-console");
         document.body.append(consoleDiv);
-        var connection,
+      var connection,
           fp = a7.components.Constructor(
             console.container,
             [
