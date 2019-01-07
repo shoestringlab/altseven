@@ -7,9 +7,9 @@ a7.components = ( function() {"use strict";function Constructor( constructor, ar
 	// EventBindings object and add them to the object being instantiated
 	if( addBindings === true ){
 		//bindings = EventBindings.getAll();
-		EventBindings.getAll().forEach( function( binding ){
+ 		EventBindings.getAll().forEach( function( binding ){
 			if( constructor.prototype[ binding ] === undefined ) {
-				constructor.prototype[ binding ] = binding.func;
+				constructor.prototype[ binding.name ] = binding.func;
 			}
 		});
 	}
@@ -90,10 +90,40 @@ User.prototype.getMemento = function(){
 	return user;
 };
 
+function View( props ){
+	this.type = 'View';
+	this.props = props;
+	if( this.props !== undefined ){
+		for( var prop in this.props ){
+			if( props[ prop ].type !== undefined && props[ prop ].type === 'View' ){
+				props[ prop ].on( "mustRender", function(){
+					this.fireEvent( "mustRender" );
+				}.bind( this ));
+			}
+		}
+	}
+
+	this.state = {};
+  this.template = "";
+}
+
+View.prototype = {
+	events : ['mustRender','rendered'],
+  setState: function( args ){
+    this.state = args;
+    // setting state requires a re-render
+		this.fireEvent( 'mustRender' );
+  },
+  render: function(){
+    return this.template;
+  }
+};
+
 return {
   Constructor: Constructor,
   EventBindings: EventBindings,
-  User: User
+  User: User,
+  View: View
 };
 }());
 //# sourceMappingURL=a7.components.js.map

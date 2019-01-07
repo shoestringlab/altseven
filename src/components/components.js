@@ -1,5 +1,6 @@
 return {
   Constructor: Constructor,
   EventBindings: EventBindings,
-  User: User
+  User: User,
+  View: View
 };

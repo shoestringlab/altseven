@@ -7,9 +7,9 @@ function Constructor( constructor, args, addBindings ) {
 	// EventBindings object and add them to the object being instantiated
 	if( addBindings === true ){
 		//bindings = EventBindings.getAll();
-		EventBindings.getAll().forEach( function( binding ){
+ 		EventBindings.getAll().forEach( function( binding ){
 			if( constructor.prototype[ binding ] === undefined ) {
-				constructor.prototype[ binding ] = binding.func;
+				constructor.prototype[ binding.name ] = binding.func;
 			}
 		});
 	}
