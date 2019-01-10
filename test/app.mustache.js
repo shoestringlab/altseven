@@ -1,4 +1,4 @@
-import {a7} from '/dist/a7.es6.js';
+import {a7} from '/dist/a7.js';
 import {model,floatingpane} from '/node_modules/gadget-ui/dist/gadget-ui.es6.js';
 
 var app = {
@@ -65,15 +65,17 @@ var app = {
         text: ""
       };
 
+      todo.template = `<div name="todoForm">
+    		<h3>TODO</h3>
+    		{{> todoList}}
+    		<form>
+    		  <input name="todoInput" value="{{text}}" data-onchange="changeTodoInput"/>
+    		  <button type="button" name="todoSubmit" data-onclick="clickSubmit">Add #{{next}}</button>
+    		</form>
+    		</div>`;
+
       todo.render = function() {
-        return `<div name="todoForm">
-				<h3>TODO</h3>
-				${todo.props.todoList.render()}
-				<form>
-					<input name="todoInput" value="${todo.state.text}" data-onchange="changeTodoInput" />
-					<button type="button" name="todoSubmit" data-onclick="clickSubmit">Add ${todo.props.todoList.state.items.length + 1}</button>
-				</form>
-				</div>`;
+        return Mustache.render( todo.template, todo.state, { todoList: todo.props.todoList.render() } );
       }
 
       todo.eventHandlers = {
@@ -103,18 +105,15 @@ var app = {
       todolist.state = {
         items: props.items
       };
-      todolist.render = TodoList.prototype.render;
+
+      todolist.template = '<ul>{{#items}}<li>{{text}}</li>{{/items}}</ul>';
+
+      todolist.render = function(){
+        return Mustache.render( todolist.template, todolist.state );
+      };
+
       return todolist;
     }
-
-    TodoList.prototype.render = function() {
-      var str = `<ul>`;
-      this.state.items.forEach(function(item) {
-        str += `<li>${item.text}</li>`;
-      });
-      str += `</ul>`;
-      return str;
-    };
 
     function LoginForm(props) {
       var loginform = a7.components.Constructor(a7.components.View, [props], true);
@@ -123,31 +122,39 @@ var app = {
         password: ""
       };
       loginform.template = `<div name="loginDiv" class="pane" style="width:370px;">
-						<div class="right-align">
-							<div class="col md right-align"><label for="username">Username</label></div>
-							<div class="col md"><input name="username" type="text" data-onchange="handleUsername"/></div>
-						</div>
-						<div class="right-align">
-							<div class="col md right-align"><label for="password">Password</label></div>
-							<div class="col md"><input name="password" type="password" data-onchange="handlePassword"/></div>
-						</div>
-						<div class="right-align">
-							<div class="col md"></div>
-							<div class="col md"><input name="login" type="button" value="Login" data-onclick="handleClick"/></div>
-						</div>
-					</div>
-					<p>
-						<h3>Instructions</h3>
-					</p>
-					<p>
-						Login using the credentials:
-					</p>
-					<p>
-						&nbsp;&nbsp;username : user
-					</p>
-					<p>
-						&nbsp;&nbsp;password: password
-					</p>`;
+      		<div class="right-align">
+      			<div class="col md right-align"><label for="username">Username</label></div>
+      			<div class="col md"><input name="username" type="text" data-onchange="handleUsername"/></div>
+      		</div>
+      		<div class="right-align">
+      			<div class="col md right-align"><label for="password">Password</label></div>
+      			<div class="col md"><input name="password" type="password" data-onchange="handlePassword"/></div>
+      		</div>
+      		<div class="right-align">
+      			<div class="col md"></div>
+      			<div class="col md"><input name="login" type="button" value="Login" data-onclick="handleClick"/></div>
+      		</div>
+      	</div>
+        <div name="instructions">
+      		<p>
+      			<h3>Instructions</h3>
+      		</p>
+      		<p>
+      			Login using the credentials:
+      		</p>
+      		<p>
+      			&nbsp;&nbsp;username : user
+      		</p>
+      		<p>
+      			&nbsp;&nbsp;password: password
+      		</p>
+      		<p>
+      		</p>
+      	</div>`;
+
+      loginform.render = function(){
+				return Mustache.render( loginform.template, loginform.state );
+			};
 
       loginform.eventHandlers = {
         handleClick: function(event) {
@@ -175,6 +182,8 @@ var app = {
         user: props.user
       };
 
+      header.template = 'Welcome, {{firstName}} <a name="signout" data-onclick="logout">[ Sign out ]</a>';
+
 			header.eventHandlers = {
 				logout: function(){
 					a7.events.publish( 'auth.logout', { callback: app.auth.authenticate }) ;
@@ -182,7 +191,7 @@ var app = {
 			};
 
       header.render = function(){
-				return `Welcome, ${header.state.user.firstName} <a name="signout" data-onclick="logout">[ Sign out ]</a>`;
+				return Mustache.render( header.template, header.state );
 			};
 
       return header;
@@ -237,9 +246,7 @@ export var application = function init() {
       refreshURL: "/test/auth.cfc?method=refresh",
       useTokens: true // defaults to true for the auth system
     },
-    ui: { // renderer: // renderer is implicitly set by existence of the templating library, currently Mustache or Handlebars
-      renderer: "templateLiterals"
-    }
+    ui: {}
   };
 
   var p = new Promise(function(resolve, reject) {
