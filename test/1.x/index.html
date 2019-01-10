@@ -5,8 +5,8 @@
 	<title>alt-7</title>
 	<script src="/node_modules/modlazy/dist/modlazy.min.js"></script>
 	<script>
-		modlazy.load(["/test/app.components.js < /test/app.remote.js < /test/app.main.js < /test/app.events.js < /dist/a7.js < /node_modules/gadget-ui/dist/gadget-ui.js < /bower_components/velocity/velocity.js",
-			"/bower_components/mustache.js/mustache.js", "/test/styles.css", "/dist/a7.css",
+		modlazy.load(["/test/1.x/app.components.js < /test/1.x/app.remote.js < /test/1.x/app.main.js < /test/1.x/app.events.js < dist/a7.js < /node_modules/gadget-ui/dist/gadget-ui.js < /bower_components/velocity/velocity.js",
+			"/bower_components/mustache.js/mustache.js", "/test/styles.css", "dist/a7.css",
 			"/node_modules/gadget-ui/dist/gadget-ui.css",
 			"/node_modules/open-iconic/font/css/open-iconic.css"
 		], function() {
@@ -34,7 +34,7 @@
 						useTokens: true // defaults to true for the auth system
 					},
 					ui: { // renderer: // renderer is implicitly set by existence of the templating library, currently Mustache or Handlebars
-						templates: "/test/templates.html"
+						templates: "/test/1.x/templates.html"
 					}
 				};
 			var p = new Promise(function(resolve,

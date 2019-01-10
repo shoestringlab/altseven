@@ -1,8 +1,6 @@
-
-export var a7 = a7;
-
 var a7 = (function() {
   "use strict";
+
   return {
     // initialization
     // 1. sets console and templating options
@@ -20,7 +18,7 @@ var a7 = (function() {
           : "";
       if (options.model === "") {
         // model required
-        initReject("A model is required, but no model was specified.");
+        initReject("No model specified.");
       }
 
       pr = new Promise(function(resolve, reject) {
@@ -36,7 +34,6 @@ var a7 = (function() {
           console: {
             enabled: options.console.enabled || false,
             wsServer: options.console.wsServer || "",
-            container: options.console.container || ( typeof gadgetui === "object" ? gadgetui.display.FloatingPane : "" ),
             top: options.console.top || 100,
             left: options.console.left || 100,
             width: options.console.width || 500,
@@ -49,18 +46,16 @@ var a7 = (function() {
           remote: {
             // modules: ( options.remote.modules | undefined ) // don't set into Model since they are being registered in Remote
             loginURL: options.remote.loginURL || "",
-            logoutURL: options.remote.logoutURL || "",
             refreshURL: options.remote.refreshURL || "",
             useTokens: options.auth.useTokens || true
           },
           ui: {
             renderer:
-              options.ui.renderer ||
-              ( typeof Mustache === "object"
+              typeof Mustache === "object"
                 ? "Mustache"
                 : typeof Handlebars === "object"
                 ? "Handlebars"
-                : "" ),
+                : "",
             templates: options.ui.templates || undefined
           },
           ready: false,
@@ -158,18 +153,17 @@ a7.console = (function() {
   return {
     init: function(resolve, reject) {
       var console = a7.model.get("a7.console");
-      if( console.container === "" ) reject( "You must specify a container object for the console display." );
-      
+
       // check for console state
-      if ( console.enabled ) {
+      if (console.enabled) {
         active = true;
         consoleDiv = document.createElement("div");
         consoleDiv.setAttribute("id", "consoleDiv");
         consoleDiv.setAttribute("class", "a7-console");
         document.body.append(consoleDiv);
-      var connection,
+        var connection,
           fp = a7.components.Constructor(
-            console.container,
+            gadgetui.display.FloatingPane,
             [
               consoleDiv,
               {
@@ -327,9 +321,6 @@ a7.events = (function() {
       a7.events.subscribe("auth.login", function(params) {
         a7.remote.invoke("auth.login", params);
       });
-      a7.events.subscribe("auth.logout", function(params) {
-        a7.remote.invoke("auth.logout", params);
-      });
       a7.events.subscribe("auth.refresh", function(params) {
         a7.remote.invoke("auth.refresh", params);
       });
@@ -381,7 +372,7 @@ a7.log = ( function(){
 			_deferred.forEach( function( item ){
 				_log( item.message, item.level );
 			});
-			//_deffered = [];
+			_deffered = [];
 			a7.log.info( "Log initializing..." );
 		},
 		error: function( message ){
@@ -428,27 +419,21 @@ a7.model = ( function() {
 		},
 		init: function( options, resolve ){
 			a7.log.info( "Model initializing... " );
-
-			if( typeof options.model == "string" ){
-				switch( options.model ){
-					case "gadgetui":
-						_model = gadgetui.model;
-						break;
-				}
-			}else if( typeof options.model == "object" ){
-				_model = options.model;
+			switch( options.model ){
+				case "gadgetui":
+					_model = gadgetui.model;
+					// gadgetui maps directly, so we can loop on the keys
+					Object.keys( gadgetui.model ).forEach( function( key ){
+						if( key !== "BindableObject" ){
+							_methods[ key ] = gadgetui.model[ key ];
+						}
+					});
+					break;
 			}
-			a7.log.trace( "Model set: " + _model );
-			// gadgetui maps directly, so we can loop on the keys
-			Object.keys( _model ).forEach( function( key ){
-				if( key !== "BindableObject" ){
-					_methods[ key ] = _model[ key ];
-				}
-			});
-
 			resolve();
 		}
 	};
+
 }() );
 
 a7.components = ( function() {"use strict";function Constructor( constructor, args, addBindings ) {
@@ -460,9 +445,9 @@ a7.components = ( function() {"use strict";function Constructor( constructor, ar
 	// EventBindings object and add them to the object being instantiated
 	if( addBindings === true ){
 		//bindings = EventBindings.getAll();
- 		EventBindings.getAll().forEach( function( binding ){
+		EventBindings.getAll().forEach( function( binding ){
 			if( constructor.prototype[ binding ] === undefined ) {
-				constructor.prototype[ binding.name ] = binding.func;
+				constructor.prototype[ binding ] = binding.func;
 			}
 		});
 	}
@@ -543,40 +528,10 @@ User.prototype.getMemento = function(){
 	return user;
 };
 
-function View( props ){
-	this.type = 'View';
-	this.props = props;
-	if( this.props !== undefined ){
-		for( var prop in this.props ){
-			if( props[ prop ].type !== undefined && props[ prop ].type === 'View' ){
-				props[ prop ].on( "mustRender", function(){
-					this.fireEvent( "mustRender" );
-				}.bind( this ));
-			}
-		}
-	}
-
-	this.state = {};
-  this.template = "";
-}
-
-View.prototype = {
-	events : ['mustRender','rendered'],
-  setState: function( args ){
-    this.state = args;
-    // setting state requires a re-render
-		this.fireEvent( 'mustRender' );
-  },
-  render: function(){
-    return this.template;
-  }
-};
-
 return {
   Constructor: Constructor,
   EventBindings: EventBindings,
-  User: User,
-  View: View
+  User: User
 };
 }());
 //
@@ -641,38 +596,10 @@ a7.remote = ( function(){
 									params.callback( json );
 								}
 							});
+
+
 					},
-					logout: function( params ){
-						var request,
-								args = { 	method: 'POST',
-										headers: {
-											"Authorization": "Basic " + a7.util.base64.encode64( params.username + ":" + params.password )
-										}
-								};
-
-						request = new Request( _options.logoutURL , args );
-
-						var promise = fetch( request );
-
-						promise
-							.then( function( response ) {
-								var token = "";
-								if( token !== undefined && token !== null ){
-									_token = token;
-									sessionStorage.token = token;
-								}
-								return response.json();
-							})
-							.then( function( json ){
-								var user = user = a7.components.Constructor(a7.components.User, [], true);
-								sessionStorage.user = JSON.stringify( user );
-								a7.model.set( "a7.user", user );
-								if( params.callback !== undefined ){
-									params.callback();
-								}
-							});
-					},
-					refresh: function( params ){
+					refresh: function( resolve ){
 						a7.remote.fetch( _options.refreshURL, {}, true )
 						// initial fetch needs to parse response
 						.then( function( response ){
@@ -680,8 +607,8 @@ a7.remote = ( function(){
 						})
 						.then( function( json ){
 							// then json is handled
-							if( params.resolve !== undefined ){
-								params.resolve( json.success );
+							if( resolve !== undefined ){
+								resolve( json.success );
 							}
 						});
 					}
@@ -694,6 +621,7 @@ a7.remote = ( function(){
 			Object.keys( _modules ).forEach( function( key ){
 				_setModule( key, _modules[ key ] );
 			});
+
 		},
 
 		fetch: function( uri, params, secure ){
@@ -778,7 +706,7 @@ a7.security = (function() {
         if (timer === undefined) {
           a7.log.info("Refreshing user...");
           // if there is a valid token, check authentication state with the server
-          a7.events.publish("auth.refresh", { resolve:resolve, reject: reject});
+          a7.events.publish("auth.refresh", [resolve, reject]);
         } else {
           resolve(true);
         }
@@ -815,171 +743,7 @@ a7.security = (function() {
 a7.ui = (function() {
   "use strict";
 
-  const resourceEvents = [
-    'cached',
-    'error',
-    'abort',
-    'load',
-    'beforeunload'
-  ];
-
-  const focusEvents = [
-    'focus',
-    'blur'
-  ];
-
-  const websocketEvents = [
-    'open',
-    'message',
-    'error',
-    'close'
-  ];
-
-  const sessionHistoryEvents = [
-    'pagehide',
-    'pageshow',
-    'popstate'
-  ];
-
-  const cssAnimationEvents = [
-    'animationstart',
-    'animationend',
-    'animationiteration'
-  ];
-
-  const cssTransitionEvents = [
-    'transitionstart',
-    'transitioncancel',
-    'transitionend',
-    'transitionrun'
-  ];
-
-  const formEvents = [
-    'reset',
-    'submit'
-  ];
-
-  const printingEvents = [
-    'beforeprint',
-    'afterprint'
-  ];
-
-  const textCompositionEvents = [
-    'compositionstart',
-    'compositionupdate',
-    'compositionend'
-  ];
-
-  const viewEvents = [
-    'fullscreenchange',
-    'fullscreenerror',
-    'resize',
-    'scroll'
-  ];
-
-  const clipboardEvents = [
-    'cut',
-    'copy',
-    'paste'
-  ];
-
-  const keyboardEvents = [
-    'keydown',
-    'keypress',
-    'keyup'
-  ];
-
-  const mouseEvents = [
-    'auxclick',
-    'click',
-    'contextmenu',
-    'dblclick',
-    'mousedown',
-    'mousenter',
-    'mouseleave',
-    'mousemove',
-    'mouseover',
-    'mouseout',
-    'mouseup',
-    'pointerlockchange',
-    'pointerlockerror',
-    'wheel'
-  ];
-
-  const dragEvents = [
-    'drag',
-    'dragend',
-    'dragstart',
-    'dragleave',
-    'dragover',
-    'drop'
-  ];
-
-  const mediaEvents = [
-    'audioprocess',
-    'canplay',
-    'canplaythrough',
-    'complete',
-    'durationchange',
-    'emptied',
-    'ended',
-    'loadeddata',
-    'loadedmetadata',
-    'pause',
-    'play',
-    'playing',
-    'ratechange',
-    'seeked',
-    'seeking',
-    'stalled',
-    'suspend',
-    'timeupdate',
-    'columechange',
-    'waiting'
-  ];
-
-  const progressEvents = [
-    // duplicates from resource events
-    /* 'abort',
-    'error',
-    'load', */
-    'loadend',
-    'loadstart',
-    'progress',
-    'timeout'
-  ];
-
-  const storageEvents = [
-    /* 'change', */
-    'storage'
-  ];
-
-  const valueChangeEvents = [
-    'broadcast',
-    'CheckBoxStateChange',
-    'hashchange',
-    'input',
-    'RadioStateChange',
-    'readystatechange',
-    'ValueChange'
-  ];
-
-  const uncategorizedEvents = [
-    'invalid',
-    'localized',
-    /* 'message',
-    'open', */
-    'show'
-  ];
-
-  const _standardEvents = resourceEvents.concat( networkEvents ).concat( focusEvents ).concat( websocketEvents ).concat( sessionHistoryEvents ).concat( cssAnimationEvents )
-            .concat( cssTransitionEvents ).concat( formEvents ).concat( printingEvents ).concat( textCompositionEvents ).concat( viewEvents ).concat( clipboardEvents )
-            .concat( keyboardEvents ).concat( mouseEvents ).concat( dragEvents ).concat( mediaEvents ).concat( progressEvents ).concat( storageEvents )
-            .concat( upadteEvents ).concat( valueChangeEvents ).concat( uncategorizedEvents );
-
-  var
-    _events = [],
-    _options = {},
+  var _options = {},
     _selectors = {},
     _templateMap = {},
     _views = [],
@@ -989,45 +753,8 @@ a7.ui = (function() {
     _getSelector = function(name){
       return _selectors[name];
     },
-    _setView = function( id, view, selector ){
-      switch( _options.renderer ){
-        case "templateLiterals":
-          _views[ id ] = { view: view,
-            selector: selector,
-            render: function(){
-              selector.innerHTML = view.render();
-
-              var eventArr = [];
-              _events.forEach( function( eve ){
-                eventArr.push("[data-on" + eve + "]");
-              });
-              var eles = selector.querySelectorAll( eventArr.toString() );
-
-              eles.forEach( function( sel ){
-                for( var ix=0; ix < sel.attributes.length; ix++ ){
-                  var attribute = sel.attributes[ix];
-                  if( attribute.name.startsWith( "data-on" ) ){
-                    var event = attribute.name.substring( 7, attribute.name.length );
-                    sel.addEventListener( event, view.eventHandlers[ sel.attributes["data-on" + event].value ] );
-                  }
-                }
-              });
-            }
-          };
-
-          // call the ui render() function when called to render
-          _views[ id ].view.on( "mustRender", function(){
-            _views[ id ].render();
-          });
-
-          _views[ id ].view.fireEvent( "mustRender" );
-          break;
-        case "Mustache":
-        case "Handlebars":
-          _views[ id ] = view;
-          break;
-      }
-
+    _setView = function( id, view ){
+      _views[ id ] = view;
     },
     _getView = function( id ){
       return _views[ id ];
@@ -1045,35 +772,27 @@ a7.ui = (function() {
           break;
       }
     },
-    _loadTemplates = function( resolve, reject ) {
+    _loadTemplates = function(resolve) {
       var ot = Math.ceil(Math.random() * 500);
 
-      try{
-        switch (_options.renderer) {
-          case "Mustache":
-          case "Handlebars":
-            fetch(_options.templates + "?" + ot)
-              .then(function(response) {
-                return response.text();
-              })
-              .then(function(text) {
-                a7.log.info("Loading " + _options.renderer + " templates... ");
-                var parser = new DOMParser(),
-                  doc = parser.parseFromString(text, "text/html"),
-                  scripts = doc.querySelectorAll("script");
-                scripts.forEach(function(script) {
-                  _addTemplate(script.getAttribute("id"), script.innerHTML);
-                });
-                resolve();
+      switch (_options.renderer) {
+        case "Mustache":
+        case "Handlebars":
+          fetch(_options.templates + "?" + ot)
+            .then(function(response) {
+              return response.text();
+            })
+            .then(function(text) {
+              a7.log.info("Loading " + _options.renderer + " templates... ");
+              var parser = new DOMParser(),
+                doc = parser.parseFromString(text, "text/html"),
+                scripts = doc.querySelectorAll("script");
+              scripts.forEach(function(script) {
+                _addTemplate(script.getAttribute("id"), script.innerHTML);
               });
-            break;
-          case "templateLiterals":
-          // nothing to do
+              resolve();
+            });
           break;
-        }
-      }
-      catch( error ){
-        reject( error );
       }
     },
     _render = function(template, params, partials) {
@@ -1094,33 +813,17 @@ a7.ui = (function() {
     setView: _setView,
     getView: _getView,
     removeView: _removeView,
-    views: _views,
     getTemplate: function(template) {
       return _templateMap[template];
     },
 
     init: function(resolve, reject) {
-      var renderers = "Handlebars,Mustaches"; //templateLiterals not a choice here
+      var renderers = "Handlebars,Mustache";
       _options = a7.model.get("a7.ui");
-
-      // set event groups to create listeners for
-      var eventGroups = ( _options.eventGroups ? _options.eventGroups : 'standard' );
-      switch "eventGroups"{
-        case "extended":
-          //not implemented yet
-        case "standard":
-          _events = _standardEvents;
-          break;
-        default:
-          _options.eventGroups.forEach( function( group ){
-            _events = _events.concat( (group) );
-          });
-      }
-
 
       a7.log.info("Layout initializing...");
       if (renderers.indexOf(_options.renderer) >= 0) {
-        a7.model.set("a7.ui.templatesLoaded", false );
+        a7.model.set("a7.ui.templatesLoaded", false);
         if (_options.templates !== undefined) {
           _loadTemplates(resolve, reject);
         }
@@ -1285,4 +988,4 @@ a7.util = ( function(){
 	};
 }());
 
-//# sourceMappingURL=a7.es6.js.map
+//# sourceMappingURL=a7.js.map
