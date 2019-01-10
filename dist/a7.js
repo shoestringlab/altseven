@@ -1,3 +1,6 @@
+
+export var a7 = a7;
+
 var a7 = (function() {
   "use strict";
   return {
@@ -14,7 +17,7 @@ var a7 = (function() {
           ? options.model
           : typeof gadgetui === "object"
           ? "gadgetui"
-          : "";
+          : "altseven";
       if (options.model === "") {
         // model required
         initReject("A model is required, but no model was specified.");
@@ -28,9 +31,9 @@ var a7 = (function() {
       pr.then(function() {
         a7.model.set("a7", {
           auth: {
-            sessionTimeout: options.auth.sessionTimeout || 60 * 15 * 1000
+            sessionTimeout: (options.auth && options.auth.sessionTimeout ? options.auth.sessionTimeout : 60 * 15 * 1000 )
           },
-          console: {
+          console: ( options.console ? {
             enabled: options.console.enabled || false,
             wsServer: options.console.wsServer || "",
             container: options.console.container || ( typeof gadgetui === "object" ? gadgetui.display.FloatingPane : "" ),
@@ -38,27 +41,27 @@ var a7 = (function() {
             left: options.console.left || 100,
             width: options.console.width || 500,
             height: options.console.height || 300
-          },
+          } : {} ),
           logging: {
-            logLevel: options.logging.logLevel || "ERROR,FATAL,INFO"
+            logLevel: ( options.logging && options.logging.logLevel ? options.logging.logLevel : "ERROR,FATAL,INFO" )
           },
           model: options.model,
-          remote: {
+          remote: ( options.remote ? {
             // modules: ( options.remote.modules | undefined ) // don't set into Model since they are being registered in Remote
             loginURL: options.remote.loginURL || "",
             logoutURL: options.remote.logoutURL || "",
             refreshURL: options.remote.refreshURL || "",
-            useTokens: options.auth.useTokens || true
-          },
+            useTokens: ( options.auth && options.auth.useTokens ? options.auth.useTokens : true )
+          } : { useTokens: true } ),
           ui: {
-            renderer:
+            renderer: ( options.ui ?
               options.ui.renderer ||
               ( typeof Mustache === "object"
                 ? "Mustache"
                 : typeof Handlebars === "object"
                 ? "Handlebars"
-                : "" ),
-            templates: options.ui.templates || undefined
+                : "templateLiterals" )
+              : "templateLiterals" )
           },
           ready: false,
           user: ""
@@ -80,7 +83,7 @@ var a7 = (function() {
             // init user state
             a7.security.init();
             a7.log.trace("a7 - remote init");
-            a7.remote.init(options.remote.modules);
+            a7.remote.init( ( options.remote ? options.remote.modules : {} ) );
             a7.log.trace("a7 - events init");
             a7.events.init();
             p1 = new Promise(function(resolve, reject) {
@@ -428,6 +431,9 @@ a7.model = ( function() {
 
 			if( typeof options.model == "string" ){
 				switch( options.model ){
+					case "altseven":
+						_model = a7.components.Model;
+						break;
 					case "gadgetui":
 						_model = gadgetui.model;
 						break;
@@ -527,6 +533,331 @@ var EventBindings = {
 	}
 };
 
+var Model = ( function() {
+	"use strict";
+
+	var _model = {};
+	function BindableObject( data, element ) {
+		this.data = data;
+		this.elements = [ ];
+		if ( element !== undefined ) {
+			this.bind( element );
+		}
+	}
+
+	BindableObject.prototype.handleEvent = function( ev ) {
+		var ix, obj;
+		switch ( ev.type ) {
+			case "change":
+				for( ix = 0; ix < this.elements.length; ix++ ){
+					obj = this.elements[ ix ];
+					if( ev.originalSource === undefined ){
+						ev.originalSource = "BindableObject.handleEvent['change']";
+					}
+					if( ev.target.name === obj.prop && ev.originalSource !== 'BindableObject.updateDomElement' ){
+						//select box binding
+						if( ev.target.type.match( /select/ ) ){
+							this.change( { 	id : ev.target.value,
+									text : ev.target.options[ev.target.selectedIndex].innerHTML
+								}, ev, obj.prop );
+						}
+						else{
+						// text input binding
+						this.change( ev.target.value, ev, obj.prop );
+						}
+					}
+				}
+
+		}
+	};
+
+	// for each bound control, update the value
+	BindableObject.prototype.change = function( value, event, property ) {
+		var ix, obj;
+		if( event.originalSource === undefined ){
+			event.originalSource = "BindableObject.change";
+		}
+		console.log( "change : Source: " + event.originalSource );
+
+		// this code changes the value of the BinableObject to the incoming value
+		if ( property === undefined ) {
+			// Directive is to replace the entire value stored in the BindableObject
+			// update the BindableObject value with the incoming value
+			// value could be anything, simple value or object, does not matter
+			this.data = value;
+		}
+		else if ( typeof this.data === 'object' ) {
+			//Directive is to replace a property of the value stored in the BindableObject
+			// verifies _this "data" is an object and not a simple value
+			// update the BindableObject's specified property with the incoming value
+			// value could be anything, simple value or object, does not matter
+
+			if( this.data[ property ] === undefined ){
+				throw( "Property '" + property + "' of object is undefined." );
+			}
+			else{
+				this.data[ property ] = value;
+			}
+			// check if we are updating only a single property or the entire object
+
+		}
+		else {
+			throw "Attempt to treat a simple value as an object with properties. Change fails.";
+		}
+
+		// check if there are other dom elements linked to the property
+		for( ix = 0; ix < this.elements.length; ix++ ){
+			obj = this.elements[ ix ];
+			if( ( property === undefined || property === obj.prop ) && ( event.target !== undefined && obj.elem != event.target ) ){
+				this.updateDomElement( event,  obj.elem, value );
+			}
+		}
+	};
+
+	BindableObject.prototype.updateDom = function( event, value, property ){
+		var ix, obj, key;
+		if( event.originalSource === undefined ){
+			event.originalSource = 'BindableObject.updateDom';
+		}
+		// this code changes the value of the DOM element to the incoming value
+		for( ix = 0; ix < this.elements.length; ix++ ){
+			obj = this.elements[ ix ];
+
+			if ( property === undefined  ){
+				if( typeof value === 'object' ){
+					for( key in value ){
+						if( this.elements[ ix ].prop === key ){
+							this.updateDomElement( event, obj.elem, value[ key ] );
+						}
+					}
+				}else{
+					// this code sets the value of each control bound to the BindableObject
+					// to the correspondingly bound property of the incoming value
+					this.updateDomElement( event, obj.elem, value );
+				}
+
+				//break;
+			}else if ( obj.prop === property ){
+				this.updateDomElement( event, obj.elem, value );
+			}
+		}
+	};
+
+	BindableObject.prototype.updateDomElement = function( event, selector, newValue ){
+		var valueElements = "INPUT";
+		var arrayElements = "OL,UL,SELECT";
+		var wrappingElements = "DIV,SPAN,H1,H2,H3,H4,H5,H6,P,TEXTAREA,LABEL,BUTTON";
+
+		var _updateOptions = function(){
+			switch( selector.tagName ){
+				case "SELECT":
+					while (selector.firstChild) {
+						selector.removeChild(selector.firstChild);
+					}
+					var idx = 0;
+					newValue.forEach( function( item ){
+						var opt = document.createElement("option");
+						if( typeof item === 'object' ){
+							opt.value = item.id;
+							opt.text = item.text;
+						}else{
+							opt.text = item;
+						}
+						selector.appendChild( opt );
+						idx++;
+					});
+				break;
+				case "UL":
+				case "OL":
+					while (selector.firstChild) {
+						selector.removeChild(selector.firstChild);
+					}
+					newValue.forEach( function( item ){
+						var opt = document.createElement("li");
+						opt.textContent = item;
+						selector.appendChild( opt );
+					});
+				break;
+			}
+		};
+
+		if( event.originalSource === undefined ){
+			event.originalSource = "BindableObject.updateDomElement";
+		}
+		//console.log( "updateDomElement : selector: { type: " + selector.nodeName + ", name: " + selector.name + " }" );
+		//console.log( "updateDomElement : Source: " + event.originalSource );
+
+		// updating the bound DOM element requires understanding what kind of DOM element is being updated
+		// and what kind of data we are dealing with
+
+		if( typeof newValue === 'object' ){
+			// select box objects are populated with { text: text, id: id }
+			if( valueElements.indexOf( selector.tagName ) >=0 ){
+				selector.value = newValue.id;
+			}else if( arrayElements.indexOf( selector.tagName ) >=0 ){
+				_updateOptions();
+			}else{
+				selector.textContent = newValue.text;
+			}
+		}else{
+			if( valueElements.indexOf( selector.tagName ) >=0 ){
+				selector.value = newValue;
+			}else if( arrayElements.indexOf( selector.tagName ) >=0 ){
+				_updateOptions();
+			}else{
+				selector.textContent = newValue;
+			}
+		}
+
+		// we have three ways to update values
+		// 1. via a change event fired from changing the DOM element
+		// 2. via model.set() which should change the model value and update the dom element(s)
+		// 3. via a second dom element, e.g. when more than one dom element is linked to the property
+		//    we need to be able to update the other dom elements without entering an infinite loop
+		if( event.originalSource !== 'model.set' ){
+			var ev = new Event( "change" );
+			ev.originalSource = 'model.updateDomElement';
+			selector.dispatchEvent( ev );
+		}
+	};
+
+	// bind an object to an HTML element
+	BindableObject.prototype.bind = function( element, property ) {
+		var e, _this = this;
+
+		if ( property === undefined ) {
+			// BindableObject holds a simple value
+			// set the DOM element value to the value of the Bindable object
+			element.value = this.data;
+			e = {
+				elem : element,
+				prop : ""
+			};
+		}
+		else {
+			// Bindable object holds an object with properties
+			// set the DOM element value to the value of the specified property in the
+			// Bindable object
+			element.value = this.data[ property ];
+			e = {
+				elem : element,
+				prop : property
+			};
+		}
+		//add an event listener so we get notified when the value of the DOM element
+		// changes
+		//element[ 0 ].addEventListener( "change", this, false );
+		//IE 8 support
+		if (element.addEventListener) {
+			element.addEventListener( "change", this, false);
+		}
+		else {
+			// IE8
+			element.attachEvent("onpropertychange", function( ev ){
+				if( ev.propertyName === 'value'){
+					var el = ev.srcElement, val = ( el.nodeName === 'SELECT' ) ? { id: el.value, text: el.options[el.selectedIndex].innerHTML } : el.value;
+					_this.change( val, { target: el }, el.name );
+				}
+			});
+		}
+		this.elements.push( e );
+	};
+
+	return {
+		BindableObject : BindableObject,
+
+		create : function( name, value, element ) {
+			if ( element !== undefined ) {
+				_model[ name ] = new BindableObject( value, element );
+			}
+			else {
+				_model[ name ] = new BindableObject( value );
+			}
+		},
+
+		destroy : function( name ) {
+			delete _model[ name ];
+		},
+
+		bind : function( name, element ) {
+			var n = name.split( "." );
+			if ( n.length === 1 ) {
+				_model[ name ].bind( element );
+			}
+			else {
+				_model[ n[ 0 ] ].bind( element, n[ 1 ] );
+			}
+		},
+
+		exists : function( name ) {
+			if ( _model.hasOwnProperty( name ) ) {
+				return true;
+			}
+
+			return false;
+		},
+		// getter - if the name of the object to get has a period, we are
+		// getting a property of the object, e.g. user.firstname
+		get : function( name ) {
+			if( name === null || name === undefined ){
+				console.log( "Expected parameter [name] is not defined." );
+				return;
+			}
+
+			var n = name.split( "." );
+			try{
+				if ( n.length === 1 ) {
+					if( _model[name] === undefined ){
+						throw "Key '" + name + "' does not exist in the model.";
+					}else{
+						return _model[ name ].data;
+					}
+				}
+				if( _model[n[0]] === undefined ){
+					throw "Key '" + n[0] + "' does not exist in the model.";
+				}
+				return _model[n[0]].data[ n[ 1 ] ];
+
+			}catch( e ){
+				console.log( e );
+				return undefined;
+			}
+		},
+
+		// setter - if the name of the object to set has a period, we are
+		// setting a property of the object, e.g. user.firstname
+		set : function( name, value ) {
+			if( name === null || name === undefined ){
+				console.log( "Expected parameter [name] is not defined." );
+				return;
+			}
+
+			var n = name.split( "." ), event = { originalSource : 'model.set'};
+			if ( this.exists( n[ 0 ] ) === false ) {
+				if ( n.length === 1 ) {
+					this.create( name, value );
+				}
+				else {
+					// don't create complex objects, only simple values
+					throw "Object " + n[ 0 ] + "is not yet initialized.";
+				}
+			}
+			else {
+				if ( n.length === 1 ) {
+					_model[ name ].change( value, event );
+					_model[ name ].updateDom( event, value );
+				}
+				else {
+					_model[ n[ 0 ] ].change( value, event, n[1] );
+					_model[ n[ 0 ] ].updateDom( event, value, n[1] );
+				}
+			}
+			//console.log( "model value set: name: " + name + ", value: " + value );
+		}
+	};
+
+}() );
+
 function User(){
 	// init User
 	return this;
@@ -541,6 +872,7 @@ User.prototype.getMemento = function(){
 };
 
 function View( props ){
+	this.renderer = a7.model.get("a7.ui").renderer;
 	this.type = 'View';
 	this.props = props;
 	if( this.props !== undefined ){
@@ -572,6 +904,7 @@ View.prototype = {
 return {
   Constructor: Constructor,
   EventBindings: EventBindings,
+  Model: Model,
   User: User,
   View: View
 };
@@ -820,6 +1153,11 @@ a7.ui = (function() {
     'beforeunload'
   ];
 
+  const networkEvents = [
+    'online',
+    'offline'
+  ];
+
   const focusEvents = [
     'focus',
     'blur'
@@ -947,8 +1285,17 @@ a7.ui = (function() {
   ];
 
   const storageEvents = [
-    /* 'change', */
+    'change',
     'storage'
+  ];
+
+  const updateEvents = [
+    'checking',
+    'downloading',
+    /* 'error', */
+    'noupdate',
+    'obsolete',
+    'updateready'
   ];
 
   const valueChangeEvents = [
@@ -972,13 +1319,13 @@ a7.ui = (function() {
   const _standardEvents = resourceEvents.concat( networkEvents ).concat( focusEvents ).concat( websocketEvents ).concat( sessionHistoryEvents ).concat( cssAnimationEvents )
             .concat( cssTransitionEvents ).concat( formEvents ).concat( printingEvents ).concat( textCompositionEvents ).concat( viewEvents ).concat( clipboardEvents )
             .concat( keyboardEvents ).concat( mouseEvents ).concat( dragEvents ).concat( mediaEvents ).concat( progressEvents ).concat( storageEvents )
-            .concat( upadteEvents ).concat( valueChangeEvents ).concat( uncategorizedEvents );
+            .concat( updateEvents ).concat( valueChangeEvents ).concat( uncategorizedEvents );
 
   var
     _events = [],
     _options = {},
     _selectors = {},
-    _templateMap = {},
+    //_templateMap = {},
     _views = [],
     _setSelector = function(name, selector) {
       _selectors[name] = selector;
@@ -988,6 +1335,8 @@ a7.ui = (function() {
     },
     _setView = function( id, view, selector ){
       switch( _options.renderer ){
+        case "Handlebars":
+        case "Mustache":
         case "templateLiterals":
           _views[ id ] = { view: view,
             selector: selector,
@@ -1019,25 +1368,20 @@ a7.ui = (function() {
 
           _views[ id ].view.fireEvent( "mustRender" );
           break;
-        case "Mustache":
-        case "Handlebars":
-          _views[ id ] = view;
-          break;
       }
-
     },
     _getView = function( id ){
       return _views[ id ];
     },
     _removeView = function( id ){
       delete _views[ id ];
-    },
-    _addTemplate = function(key, html) {
+    };
+    /* _addTemplate = function(key, html) {
       switch (_options.renderer) {
         case "Mustache":
           _templateMap[key] = html.trim();
           break;
-        case "Handlebars":
+         case "Handlebars":
           _templateMap[key] = Handlebars.compile(html.trim());
           break;
       }
@@ -1048,7 +1392,7 @@ a7.ui = (function() {
       try{
         switch (_options.renderer) {
           case "Mustache":
-          case "Handlebars":
+           case "Handlebars":
             fetch(_options.templates + "?" + ot)
               .then(function(response) {
                 return response.text();
@@ -1078,13 +1422,13 @@ a7.ui = (function() {
         case "Mustache":
           //return Mustache.to_html( _templateMap[ template ], params, _templateMap );
           return Mustache.render(_templateMap[template], params, partials);
-        case "Handlebars":
+         case "Handlebars":
           return _templateMap[template](params);
       }
-    };
+    }; */
 
   return {
-    render: _render,
+    //render: _render,
     selectors: _selectors,
     getSelector: _getSelector,
     setSelector: _setSelector,
@@ -1092,17 +1436,18 @@ a7.ui = (function() {
     getView: _getView,
     removeView: _removeView,
     views: _views,
-    getTemplate: function(template) {
+/*     getTemplate: function(template) {
       return _templateMap[template];
-    },
+    }, */
 
     init: function(resolve, reject) {
-      var renderers = "Handlebars,Mustaches"; //templateLiterals not a choice here
+      //var renderers = "Mustache,Handlebars"; //templateLiterals not a choice here
+      a7.log.info("Layout initializing...");
       _options = a7.model.get("a7.ui");
 
       // set event groups to create listeners for
       var eventGroups = ( _options.eventGroups ? _options.eventGroups : 'standard' );
-      switch "eventGroups"{
+      switch( eventGroups ){
         case "extended":
           //not implemented yet
         case "standard":
@@ -1114,8 +1459,8 @@ a7.ui = (function() {
           });
       }
 
-
-      a7.log.info("Layout initializing...");
+      resolve();
+/*
       if (renderers.indexOf(_options.renderer) >= 0) {
         a7.model.set("a7.ui.templatesLoaded", false );
         if (_options.templates !== undefined) {
@@ -1123,7 +1468,7 @@ a7.ui = (function() {
         }
       } else {
         resolve();
-      }
+      } */
     }
   };
 })();
