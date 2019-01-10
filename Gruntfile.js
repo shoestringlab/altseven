@@ -14,7 +14,7 @@ module.exports = function(grunt) {
 	    },
 	    postProcess: function(config) {}
 	});
-	grunt.registerTask("default", ["newer:concat:components", "newer:jslint:src", "newer:concat:css", "newer:concat:a7", "newer:concat:a7es6", "newer:jslint:dist"]);
-	grunt.registerTask("clean", ["concat:components", "jslint:src", "concat:css", "concat:a7", "concat:a7es6", "jslint:dist"]);
+	grunt.registerTask("default", ["newer:concat:components", "newer:jslint:src", "newer:concat:css", "newer:concat:a7", "newer:uglify:a7", "newer:jslint:dist"]);
+	grunt.registerTask("clean", ["concat:components", "jslint:src", "concat:css", "concat:a7", "jslint:dist", "uglify:a7"]);
 	grunt.registerTask("lint", ["newer:concat:components", "newer:jslint"]);
 };

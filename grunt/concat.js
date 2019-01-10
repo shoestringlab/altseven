@@ -15,6 +15,7 @@ module.exports = {
     src: [
       "src/components/util/constructor.js",
       "src/components/util/eventbindings.js",
+      "src/components/model.js",
       "src/components/user.js",
       "src/components/view.js",
       "src/components/components.js"
@@ -22,25 +23,6 @@ module.exports = {
     dest: "src/a7.components.js"
   },
   a7: {
-    options: {
-      sourceMap: true
-    },
-    src: [
-      "src/a7.js",
-      "src/a7.console.js",
-      "src/a7.error.js",
-      "src/a7.events.js",
-      "src/a7.log.js",
-      "src/a7.model.js",
-      "src/a7.components.js",
-      "src/a7.remote.js",
-      "src/a7.security.js",
-      "src/a7.ui.js",
-      "src/a7.util.js"
-    ],
-    dest: "dist/a7.js"
-  },
-  a7es6: {
     options: {
       sourceMap: true
     },
@@ -57,8 +39,7 @@ module.exports = {
       "src/a7.security.js",
       "src/a7.ui.js",
       "src/a7.util.js"
-
     ],
-    dest: "dist/a7.es6.js"
+    dest: "dist/a7.js"
   }
 };
