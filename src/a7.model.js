@@ -27,6 +27,9 @@ a7.model = ( function() {
 
 			if( typeof options.model == "string" ){
 				switch( options.model ){
+					case "altseven":
+						_model = a7.components.Model;
+						break;
 					case "gadgetui":
 						_model = gadgetui.model;
 						break;
