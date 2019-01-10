@@ -9,6 +9,11 @@ a7.ui = (function() {
     'beforeunload'
   ];
 
+  const networkEvents = [
+    'online',
+    'offline'
+  ];
+
   const focusEvents = [
     'focus',
     'blur'
@@ -136,8 +141,17 @@ a7.ui = (function() {
   ];
 
   const storageEvents = [
-    /* 'change', */
+    'change',
     'storage'
+  ];
+
+  const updateEvents = [
+    'checking',
+    'downloading',
+    /* 'error', */
+    'noupdate',
+    'obsolete',
+    'updateready'
   ];
 
   const valueChangeEvents = [
@@ -161,13 +175,13 @@ a7.ui = (function() {
   const _standardEvents = resourceEvents.concat( networkEvents ).concat( focusEvents ).concat( websocketEvents ).concat( sessionHistoryEvents ).concat( cssAnimationEvents )
             .concat( cssTransitionEvents ).concat( formEvents ).concat( printingEvents ).concat( textCompositionEvents ).concat( viewEvents ).concat( clipboardEvents )
             .concat( keyboardEvents ).concat( mouseEvents ).concat( dragEvents ).concat( mediaEvents ).concat( progressEvents ).concat( storageEvents )
-            .concat( upadteEvents ).concat( valueChangeEvents ).concat( uncategorizedEvents );
+            .concat( updateEvents ).concat( valueChangeEvents ).concat( uncategorizedEvents );
 
   var
     _events = [],
     _options = {},
     _selectors = {},
-    _templateMap = {},
+    //_templateMap = {},
     _views = [],
     _setSelector = function(name, selector) {
       _selectors[name] = selector;
@@ -177,6 +191,8 @@ a7.ui = (function() {
     },
     _setView = function( id, view, selector ){
       switch( _options.renderer ){
+        case "Handlebars":
+        case "Mustache":
         case "templateLiterals":
           _views[ id ] = { view: view,
             selector: selector,
@@ -208,25 +224,20 @@ a7.ui = (function() {
 
           _views[ id ].view.fireEvent( "mustRender" );
           break;
-        case "Mustache":
-        case "Handlebars":
-          _views[ id ] = view;
-          break;
       }
-
     },
     _getView = function( id ){
       return _views[ id ];
     },
     _removeView = function( id ){
       delete _views[ id ];
-    },
-    _addTemplate = function(key, html) {
+    };
+    /* _addTemplate = function(key, html) {
       switch (_options.renderer) {
         case "Mustache":
           _templateMap[key] = html.trim();
           break;
-        case "Handlebars":
+         case "Handlebars":
           _templateMap[key] = Handlebars.compile(html.trim());
           break;
       }
@@ -237,7 +248,7 @@ a7.ui = (function() {
       try{
         switch (_options.renderer) {
           case "Mustache":
-          case "Handlebars":
+           case "Handlebars":
             fetch(_options.templates + "?" + ot)
               .then(function(response) {
                 return response.text();
@@ -267,13 +278,13 @@ a7.ui = (function() {
         case "Mustache":
           //return Mustache.to_html( _templateMap[ template ], params, _templateMap );
           return Mustache.render(_templateMap[template], params, partials);
-        case "Handlebars":
+         case "Handlebars":
           return _templateMap[template](params);
       }
-    };
+    }; */
 
   return {
-    render: _render,
+    //render: _render,
     selectors: _selectors,
     getSelector: _getSelector,
     setSelector: _setSelector,
@@ -281,17 +292,18 @@ a7.ui = (function() {
     getView: _getView,
     removeView: _removeView,
     views: _views,
-    getTemplate: function(template) {
+/*     getTemplate: function(template) {
       return _templateMap[template];
-    },
+    }, */
 
     init: function(resolve, reject) {
-      var renderers = "Handlebars,Mustaches"; //templateLiterals not a choice here
+      //var renderers = "Mustache,Handlebars"; //templateLiterals not a choice here
+      a7.log.info("Layout initializing...");
       _options = a7.model.get("a7.ui");
 
       // set event groups to create listeners for
       var eventGroups = ( _options.eventGroups ? _options.eventGroups : 'standard' );
-      switch "eventGroups"{
+      switch( eventGroups ){
         case "extended":
           //not implemented yet
         case "standard":
@@ -303,8 +315,8 @@ a7.ui = (function() {
           });
       }
 
-
-      a7.log.info("Layout initializing...");
+      resolve();
+/*
       if (renderers.indexOf(_options.renderer) >= 0) {
         a7.model.set("a7.ui.templatesLoaded", false );
         if (_options.templates !== undefined) {
@@ -312,7 +324,7 @@ a7.ui = (function() {
         }
       } else {
         resolve();
-      }
+      } */
     }
   };
 })();
