@@ -14,7 +14,7 @@ var a7 = (function() {
           ? options.model
           : typeof gadgetui === "object"
           ? "gadgetui"
-          : "";
+          : "altseven";
       if (options.model === "") {
         // model required
         initReject("A model is required, but no model was specified.");
@@ -28,9 +28,9 @@ var a7 = (function() {
       pr.then(function() {
         a7.model.set("a7", {
           auth: {
-            sessionTimeout: options.auth.sessionTimeout || 60 * 15 * 1000
+            sessionTimeout: (options.auth && options.auth.sessionTimeout ? options.auth.sessionTimeout : 60 * 15 * 1000 )
           },
-          console: {
+          console: ( options.console ? {
             enabled: options.console.enabled || false,
             wsServer: options.console.wsServer || "",
             container: options.console.container || ( typeof gadgetui === "object" ? gadgetui.display.FloatingPane : "" ),
@@ -38,27 +38,27 @@ var a7 = (function() {
             left: options.console.left || 100,
             width: options.console.width || 500,
             height: options.console.height || 300
-          },
+          } : {} ),
           logging: {
-            logLevel: options.logging.logLevel || "ERROR,FATAL,INFO"
+            logLevel: ( options.logging && options.logging.logLevel ? options.logging.logLevel : "ERROR,FATAL,INFO" )
           },
           model: options.model,
-          remote: {
+          remote: ( options.remote ? {
             // modules: ( options.remote.modules | undefined ) // don't set into Model since they are being registered in Remote
             loginURL: options.remote.loginURL || "",
             logoutURL: options.remote.logoutURL || "",
             refreshURL: options.remote.refreshURL || "",
-            useTokens: options.auth.useTokens || true
-          },
+            useTokens: ( options.auth && options.auth.useTokens ? options.auth.useTokens : true )
+          } : { useTokens: true } ),
           ui: {
-            renderer:
+            renderer: ( options.ui ?
               options.ui.renderer ||
               ( typeof Mustache === "object"
                 ? "Mustache"
                 : typeof Handlebars === "object"
                 ? "Handlebars"
-                : "" ),
-            templates: options.ui.templates || undefined
+                : "templateLiterals" )
+              : "templateLiterals" )
           },
           ready: false,
           user: ""
@@ -80,7 +80,7 @@ var a7 = (function() {
             // init user state
             a7.security.init();
             a7.log.trace("a7 - remote init");
-            a7.remote.init(options.remote.modules);
+            a7.remote.init( ( options.remote ? options.remote.modules : {} ) );
             a7.log.trace("a7 - events init");
             a7.events.init();
             p1 = new Promise(function(resolve, reject) {
