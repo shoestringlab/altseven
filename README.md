@@ -1,23 +1,46 @@
 altseven
 =========
 
-v 1.2.0
+v 2.0.0
 
-A JavaScript framework. Largely built as an academic exercise.
+A JavaScript framework. Built as an academic exercise. May one day be suitable for use in production systems, but that day is not today. You have been warned.
 
-1.2.0 is a transitional release. UI implementation using Template Literals differs significantly from implementation using Mustache or Handlebars. The roadmap for v 2.0.0 calls for this new implementation to be ported to Mustache and Handlebars as well.
 
 Compile on CLI from root folder:
 
     $ grunt clean
 
-To install dependencies from NPM:
+To install dev dependencies from NPM:
 
     $ npm install
 
+
+***Changes***
+--------
+
+As of v 2.0.0, there are no required external dependencies for deployment. The gadget-ui model has been pulled into altseven as a component as the default model.
+
+You only need to install dependencies from npm to work on the altseven framework, or for optional modules:
+
+gadget-ui can be used for the FloatingPane as a container for the debugging console.
+
+    $ npm install gadget-ui
+
+Handlebars can be used as the templating engine.
+
+    $ npm install handlebars
+
+modlazy can be used as a module/dependency loader if you use Handlebars or Mustache for rendering
+
+    $ npm install modlazy
+
+
 As of v 1.2.0, you do not need to install dependencies from Bower unless you wish to use Mustache for templating.
 
-    $ bower install
+    $ bower install mustache.js
+
+
+***Running the Sample App***
 
 To run the example application included in the /test folder, you need a CFML engine. The easiest way to run it is to install CommandBox:
 
@@ -33,9 +56,3 @@ If you prefer to see altseven in action with a NodeJS backend, you can clone the
     $ git clone https://github.com/robertdmunn/tasklist
 
 Check the homepage/README for tasklist for directions on running it.
-
-*Updated* for version 1.20, altseven now supports ES6 Template Literals and a new, ReactJS-style implementation for UI rendering, but without JSX and without a compile step.
-
-*Updated* for version 1.1.0, there is an ES6 build that exports the framework for import using standard ES6 import statements.
-
-Check the test code in /test/es6/ for an example using the framework as an import in ES6. This code works in current Chrome and Firefox browsers without transpiling.
