@@ -9,12 +9,7 @@ var a7 = (function() {
     init: function(options, initResolve, initReject) {
       var pr, p0, p1, p2;
 
-      options.model =
-        options.model !== undefined
-          ? options.model
-          : typeof gadgetui === "object"
-          ? "gadgetui"
-          : "altseven";
+      options.model = ( options.model !== undefined ? options.model : "altseven" );
       if (options.model === "") {
         // model required
         initReject("A model is required, but no model was specified.");
@@ -35,7 +30,7 @@ var a7 = (function() {
             wsServer: options.console.wsServer || "",
             container: options.console.container || ( typeof gadgetui === "object" ? gadgetui.display.FloatingPane : "" ),
             top: options.console.top || 100,
-            left: options.console.left || 100,
+            left: options.console.left || 500,
             width: options.console.width || 500,
             height: options.console.height || 300
           } : {} ),
@@ -80,7 +75,7 @@ var a7 = (function() {
             // init user state
             a7.security.init();
             a7.log.trace("a7 - remote init");
-            a7.remote.init( ( options.remote ? options.remote.modules : {} ) );
+            a7.remote.init( ( options.remote && options.remote.modules ? options.remote.modules : {} ) );
             a7.log.trace("a7 - events init");
             a7.events.init();
             p1 = new Promise(function(resolve, reject) {
