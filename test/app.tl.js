@@ -21,7 +21,7 @@ var app = {
         // render the login form
         a7.ui.setView('loginForm', app.components.LoginForm( [] ), a7.ui.selectors['anonDiv']);
 
-				if (secure) {
+				if(secure){
           var user = a7.model.get("a7.user");
 
           a7.ui.setView('header', app.components.Header( { user: user } ), a7.ui.selectors['header']);
@@ -213,23 +213,6 @@ var app = {
 export var application = function init() {
 
   var options = {
-/*     auth: { //default :  sessionTimeout: ( 60 * 15 * 1000 ) // time in
-      //milliseconds to refresh system auth
-    },
-    // console is optional (for debugging)
-    console: {
-      enabled: true,
-      wsServer: 'ws://127.0.0.1:8000',
-      container: floatingpane,
-      top: 100,
-      left: 500,
-      height: 300,
-      width: 500
-    },
-    // logLevel defaults to "ERROR,FATAL,INFO"
-    logging: {
-      logLevel: "INFO,ERROR,FATAL,TRACE"
-    }, */
     // remote module is optional, only required if you want to use the built-in auth system / token system
     // or if you want to use the remote module for remote calls
     remote: {
@@ -239,12 +222,6 @@ export var application = function init() {
       refreshURL: "/test/auth.cfc?method=refresh",
       useTokens: true // defaults to true for the auth system
     }
-    // defaults to templateLiterals
-    /* ,
-    ui: {
-
-      renderer: "templateLiterals"
-    } */
   };
 
   var p = new Promise(function(resolve, reject) {

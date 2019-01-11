@@ -1,5 +1,5 @@
 import {a7} from '/dist/a7.js';
-import {model,floatingpane} from '/node_modules/gadget-ui/dist/gadget-ui.es6.js';
+import {floatingpane} from '/node_modules/gadget-ui/dist/gadget-ui.es6.js';
 
 var app = {
   main: (function() {
@@ -8,7 +8,6 @@ var app = {
     return {
       init: function(state) {
         // cache initial selectors from index.html
-        a7.ui.setSelector('mainDiv', document.querySelector("div[name='main']"));
         a7.ui.setSelector('anonDiv', document.querySelector("div[name='anon']"));
         a7.ui.setSelector('secureDiv', document.querySelector("div[name='secure']"));
         a7.ui.setSelector('header', document.querySelector("div[name='header']"));
@@ -205,7 +204,6 @@ var app = {
     };
 
   })(),
-  remote: {},
   ui: (function() {
     "use strict";
 
@@ -222,31 +220,16 @@ var app = {
 export var application = function init() {
 
   var options = {
-    auth: { // sessionTimeout: ( 60 * 15 * 1000 ) // default time in
-      //milliseconds to refresh system auth
-    },
     console: {
       enabled: true,
-      wsServer: 'ws://127.0.0.1:8000',
-      container: floatingpane,
-      top: 100,
-      left: 500,
-      height: 300,
-      width: 500
+      container: floatingpane
     },
-    logging: {
-      logLevel: "INFO,ERROR,FATAL,TRACE"
-    },
-    //pass in the gadgetui model directly
-    model: model,
     remote: {
-      modules: app.remote,
       loginURL: "/test/auth.cfc?method=login",
 			logoutURL: "/test/auth.cfc?method=logout",
       refreshURL: "/test/auth.cfc?method=refresh",
       useTokens: true // defaults to true for the auth system
-    },
-    ui: {}
+    }
   };
 
   var p = new Promise(function(resolve, reject) {

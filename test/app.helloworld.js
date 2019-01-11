@@ -25,12 +25,14 @@ var app = {
 
 			helloworld.eventHandlers = {
 				changeLanguage: function(){
-					helloworld.setState( { text: ( helloworld.state.text === 'Hello World!' ? '¡Hola Mundo!' : 'Hello World!' ), label: ( helloworld.state.label === 'Spanish' ? 'Inglés' : 'Spanish' ) } );
+					helloworld.setState( {  text: ( helloworld.state.text === 'Hello World!' ? '¡Hola Mundo!' : 'Hello World!' ),
+                                  label: ( helloworld.state.label === 'Spanish' ? 'Inglés' : 'Spanish' ) } );
 				}
 			};
 
       helloworld.render = function(){
-				return `${helloworld.state.text} <a name="changeLanguage" data-onclick="changeLanguage">[ ${helloworld.state.label} ]</a>`;
+				return `${helloworld.state.text}
+        <a name="changeLanguage" data-onclick="changeLanguage">[ ${helloworld.state.label} ]</a>`;
 			};
 
       return helloworld;
