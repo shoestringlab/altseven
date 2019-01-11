@@ -12,12 +12,7 @@ var a7 = (function() {
     init: function(options, initResolve, initReject) {
       var pr, p0, p1, p2;
 
-      options.model =
-        options.model !== undefined
-          ? options.model
-          : typeof gadgetui === "object"
-          ? "gadgetui"
-          : "altseven";
+      options.model = ( options.model !== undefined ? options.model : "altseven" );
       if (options.model === "") {
         // model required
         initReject("A model is required, but no model was specified.");
@@ -38,7 +33,7 @@ var a7 = (function() {
             wsServer: options.console.wsServer || "",
             container: options.console.container || ( typeof gadgetui === "object" ? gadgetui.display.FloatingPane : "" ),
             top: options.console.top || 100,
-            left: options.console.left || 100,
+            left: options.console.left || 500,
             width: options.console.width || 500,
             height: options.console.height || 300
           } : {} ),
@@ -83,7 +78,7 @@ var a7 = (function() {
             // init user state
             a7.security.init();
             a7.log.trace("a7 - remote init");
-            a7.remote.init( ( options.remote ? options.remote.modules : {} ) );
+            a7.remote.init( ( options.remote && options.remote.modules ? options.remote.modules : {} ) );
             a7.log.trace("a7 - events init");
             a7.events.init();
             p1 = new Promise(function(resolve, reject) {
@@ -128,6 +123,7 @@ var a7 = (function() {
   };
 })();
 
+
 a7.console = (function() {
   "use strict";
 
@@ -159,7 +155,7 @@ a7.console = (function() {
     init: function(resolve, reject) {
       var console = a7.model.get("a7.console");
       if( console.container === "" ) reject( "You must specify a container object for the console display." );
-      
+
       // check for console state
       if ( console.enabled ) {
         active = true;
@@ -167,7 +163,8 @@ a7.console = (function() {
         consoleDiv.setAttribute("id", "consoleDiv");
         consoleDiv.setAttribute("class", "a7-console");
         document.body.append(consoleDiv);
-      var connection,
+
+        var connection,
           fp = a7.components.Constructor(
             console.container,
             [
@@ -187,79 +184,79 @@ a7.console = (function() {
 
         fp.selector.setAttribute("right", 0);
 
-        window.WebSocket = window.WebSocket || window.MozWebSocket;
+        if( console.wsServer ){
+          window.WebSocket = window.WebSocket || window.MozWebSocket;
 
-        // if browser doesn't support WebSocket, just show some
-        // notification and exit
-        if (!window.WebSocket) {
-          consoleDiv.innerHTML("Your browser doesn't support WebSockets.");
-          return;
-        }
-
-        // open connection
-        connection = new WebSocket(console.wsServer);
-
-        connection.onopen = function() {
-          //a7.log.info( "Console initializing..." );
-        };
-
-        connection.onerror = function() {
-          var message = "Can't connect to the console socket server.";
-          if (console.enabled) {
-            // just in there were some problems with conenction...
-            _addMessage(message, new Date(), "local");
-          } else {
-            a7.log.error(message);
-          }
-        };
-
-        // most important part - incoming messages
-        connection.onmessage = function(message) {
-          var json, ix;
-          // try to parse JSON message. Because we know that the
-          // server always returns
-          // JSON this should work without any problem but we should
-          // make sure that
-          // the massage is not chunked or otherwise damaged.
-          try {
-            json = JSON.parse(message.data);
-          } catch (er) {
-            a7.log.error("This doesn't look like valid JSON: ", message.data);
+          // if browser doesn't support WebSocket, just show some
+          // notification and exit
+          if (!window.WebSocket) {
+            consoleDiv.innerHTML("Your browser doesn't support WebSockets.");
             return;
           }
 
-          if (json.type === "history") {
-            // entire message
-            // history
-            // insert every single message to the chat window
-            for (ix = 0; ix < json.data.length; ix++) {
-              _addMessage(
-                json.data[ix].text,
-                new Date(json.data[ix].time),
-                "websocket"
-              );
-            }
-          } else if (json.type === "message") {
-            // it's a single
-            // message
-            _addMessage(json.data.text, new Date(json.data.time), "websocket");
-          } else {
-            a7.log.error("This doesn't look like valid JSON: ", json);
-          }
-        };
+          // open connection
+          connection = new WebSocket(console.wsServer);
 
-        window.addEventListener("close", function() {
-          connection.close();
-        });
+          connection.onopen = function() {
+            //a7.log.info( "Console initializing..." );
+          };
+
+          connection.onerror = function() {
+            var message = "Can't connect to the console socket server.";
+            if (console.enabled) {
+              // just in there were some problems with conenction...
+              _addMessage(message, new Date(), "local");
+            } else {
+              a7.log.error(message);
+            }
+          };
+
+          // most important part - incoming messages
+          connection.onmessage = function(message) {
+            var json, ix;
+            // try to parse JSON message. Because we know that the
+            // server always returns
+            // JSON this should work without any problem but we should
+            // make sure that
+            // the massage is not chunked or otherwise damaged.
+            try {
+              json = JSON.parse(message.data);
+            } catch (er) {
+              a7.log.error("This doesn't look like valid JSON: ", message.data);
+              return;
+            }
+
+            if (json.type === "history") {
+              // entire message
+              // history
+              // insert every single message to the chat window
+              for (ix = 0; ix < json.data.length; ix++) {
+                _addMessage(
+                  json.data[ix].text,
+                  new Date(json.data[ix].time),
+                  "websocket"
+                );
+              }
+            } else if (json.type === "message") {
+              // it's a single
+              // message
+              _addMessage(json.data.text, new Date(json.data.time), "websocket");
+            } else {
+              a7.log.error("This doesn't look like valid JSON: ", json);
+            }
+          };
+
+          window.addEventListener("close", function() {
+            connection.close();
+          });
+        }
 
         a7.console.addMessage = _addMessage;
         a7.log.info("Console initializing...");
         resolve();
       } else {
         // console init should not run if console is set to false
-        reject(
-          "Console init should not be called when console option is set to false."
-        );
+        reject( "Console init should not be called when console option is set to false." );
       }
     }
   };
@@ -1376,56 +1373,6 @@ a7.ui = (function() {
     _removeView = function( id ){
       delete _views[ id ];
     };
-    /* _addTemplate = function(key, html) {
-      switch (_options.renderer) {
-        case "Mustache":
-          _templateMap[key] = html.trim();
-          break;
-         case "Handlebars":
-          _templateMap[key] = Handlebars.compile(html.trim());
-          break;
-      }
-    },
-    _loadTemplates = function( resolve, reject ) {
-      var ot = Math.ceil(Math.random() * 500);
-
-      try{
-        switch (_options.renderer) {
-          case "Mustache":
-           case "Handlebars":
-            fetch(_options.templates + "?" + ot)
-              .then(function(response) {
-                return response.text();
-              })
-              .then(function(text) {
-                a7.log.info("Loading " + _options.renderer + " templates... ");
-                var parser = new DOMParser(),
-                  doc = parser.parseFromString(text, "text/html"),
-                  scripts = doc.querySelectorAll("script");
-                scripts.forEach(function(script) {
-                  _addTemplate(script.getAttribute("id"), script.innerHTML);
-                });
-                resolve();
-              });
-            break;
-          case "templateLiterals":
-          // nothing to do
-          break;
-        }
-      }
-      catch( error ){
-        reject( error );
-      }
-    },
-    _render = function(template, params, partials) {
-      switch (_options.renderer) {
-        case "Mustache":
-          //return Mustache.to_html( _templateMap[ template ], params, _templateMap );
-          return Mustache.render(_templateMap[template], params, partials);
-         case "Handlebars":
-          return _templateMap[template](params);
-      }
-    }; */
 
   return {
     //render: _render,
@@ -1436,12 +1383,8 @@ a7.ui = (function() {
     getView: _getView,
     removeView: _removeView,
     views: _views,
-/*     getTemplate: function(template) {
-      return _templateMap[template];
-    }, */
 
     init: function(resolve, reject) {
-      //var renderers = "Mustache,Handlebars"; //templateLiterals not a choice here
       a7.log.info("Layout initializing...");
       _options = a7.model.get("a7.ui");
 
@@ -1449,7 +1392,8 @@ a7.ui = (function() {
       var eventGroups = ( _options.eventGroups ? _options.eventGroups : 'standard' );
       switch( eventGroups ){
         case "extended":
-          //not implemented yet
+          // extended events not implemented yet
+          reject( "Extended events are not implemented yet." );
         case "standard":
           _events = _standardEvents;
           break;
@@ -1460,15 +1404,6 @@ a7.ui = (function() {
       }
 
       resolve();
-/*
-      if (renderers.indexOf(_options.renderer) >= 0) {
-        a7.model.set("a7.ui.templatesLoaded", false );
-        if (_options.templates !== undefined) {
-          _loadTemplates(resolve, reject);
-        }
-      } else {
-        resolve();
-      } */
     }
   };
 })();
