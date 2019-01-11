@@ -1,7 +1,7 @@
 altseven
 =========
 
-v 2.0.0
+v 2.0.1
 
 A JavaScript framework. Built as an academic exercise. May one day be suitable for use in production systems, but that day is not today. You have been warned.
 

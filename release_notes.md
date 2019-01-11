@@ -1,3 +1,12 @@
+2.0.1
+======
+
+Minor code cleanup and a few changes to options.
+- The internal model is now the default model if none is specified.
+- Extended events config will be rejected until implemented.
+- No remote modules need be specified when providing URLs for remote auth
+- web socket server will not be configured unless a websocket url is provided in the console config options. 
+
 2.0.0
 ======
 
