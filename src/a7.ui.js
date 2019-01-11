@@ -232,56 +232,6 @@ a7.ui = (function() {
     _removeView = function( id ){
       delete _views[ id ];
     };
-    /* _addTemplate = function(key, html) {
-      switch (_options.renderer) {
-        case "Mustache":
-          _templateMap[key] = html.trim();
-          break;
-         case "Handlebars":
-          _templateMap[key] = Handlebars.compile(html.trim());
-          break;
-      }
-    },
-    _loadTemplates = function( resolve, reject ) {
-      var ot = Math.ceil(Math.random() * 500);
-
-      try{
-        switch (_options.renderer) {
-          case "Mustache":
-           case "Handlebars":
-            fetch(_options.templates + "?" + ot)
-              .then(function(response) {
-                return response.text();
-              })
-              .then(function(text) {
-                a7.log.info("Loading " + _options.renderer + " templates... ");
-                var parser = new DOMParser(),
-                  doc = parser.parseFromString(text, "text/html"),
-                  scripts = doc.querySelectorAll("script");
-                scripts.forEach(function(script) {
-                  _addTemplate(script.getAttribute("id"), script.innerHTML);
-                });
-                resolve();
-              });
-            break;
-          case "templateLiterals":
-          // nothing to do
-          break;
-        }
-      }
-      catch( error ){
-        reject( error );
-      }
-    },
-    _render = function(template, params, partials) {
-      switch (_options.renderer) {
-        case "Mustache":
-          //return Mustache.to_html( _templateMap[ template ], params, _templateMap );
-          return Mustache.render(_templateMap[template], params, partials);
-         case "Handlebars":
-          return _templateMap[template](params);
-      }
-    }; */
 
   return {
     //render: _render,
@@ -292,12 +242,8 @@ a7.ui = (function() {
     getView: _getView,
     removeView: _removeView,
     views: _views,
-/*     getTemplate: function(template) {
-      return _templateMap[template];
-    }, */
 
     init: function(resolve, reject) {
-      //var renderers = "Mustache,Handlebars"; //templateLiterals not a choice here
       a7.log.info("Layout initializing...");
       _options = a7.model.get("a7.ui");
 
@@ -305,7 +251,8 @@ a7.ui = (function() {
       var eventGroups = ( _options.eventGroups ? _options.eventGroups : 'standard' );
       switch( eventGroups ){
         case "extended":
-          //not implemented yet
+          // extended events not implemented yet
+          reject( "Extended events are not implemented yet." );
         case "standard":
           _events = _standardEvents;
           break;
@@ -316,15 +263,6 @@ a7.ui = (function() {
       }
 
       resolve();
-/*
-      if (renderers.indexOf(_options.renderer) >= 0) {
-        a7.model.set("a7.ui.templatesLoaded", false );
-        if (_options.templates !== undefined) {
-          _loadTemplates(resolve, reject);
-        }
-      } else {
-        resolve();
-      } */
     }
   };
 })();
