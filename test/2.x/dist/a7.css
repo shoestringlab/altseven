@@ -1,0 +1,26 @@
+.a7-console{
+	background: #000;
+	overflow: scroll !important;
+}
+
+.a7-console-row-websocket{
+	color: #fff;
+}
+
+div[class*='a7-console-row-']{
+	padding: .2em;
+}
+
+.a7-console-row-local{
+	color: #fff;
+}
+
+.a7-console-row-INFO{
+	color: #18a0ff;
+}
+
+.a7-console-row-ERROR{
+	color: #ff4f5b;
+}
+
+/*# sourceMappingURL=a7.css.map */
