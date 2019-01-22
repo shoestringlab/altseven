@@ -1,9 +1,9 @@
 altseven
 =========
 
-v 2.0.1
+v 3.0.0
 
-A JavaScript framework. Built as an academic exercise. May one day be suitable for use in production systems, but that day is not today. You have been warned.
+A JavaScript framework. Built as an academic exercise.
 
 
 Compile on CLI from root folder:
@@ -17,6 +17,8 @@ To install dev dependencies from NPM:
 
 ***Changes***
 --------
+
+As of v 3.0.0, the framework is complete enough to build applications that can set state and update views dynamically, work with remote services, and use the built in security framework.
 
 As of v 2.0.0, there are no required external dependencies for deployment. The gadget-ui model has been pulled into altseven as a component as the default model.
 

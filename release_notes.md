@@ -1,3 +1,27 @@
+3.0.0
+======
+
+Significant update to the framework:
+- The View component has been expanded to handle functionalty that was in a7.ui.setView
+- SetView has been replaced with a7.ui.register()
+- The Constructor component has been re-worked to guarantee that events will be available to be bound when objects are created using the Constructor.
+- EventBindings has been updated to not try to register event handlers for a given event if there are no handlers defined for it
+- The View component has been updated to use events for:
+    - registering nested components
+    - singaling a required render
+    - signaling when rendering is complete
+    - registering nested components via the data-id attribute
+    - bubbling up events to the root of the component chain
+
+- Selectors in a7.ui have been changed to refer specifically to selector strings per convention.
+- Nodes selected using selectors are now referred to in the View component as view.props.element
+- Views are now passed selector strings and elements are selected at render time using the selector string
+- a7.ui.getNode( selector ) returns an element based on the selector
+- tests have been updated to use the new framework
+- 2.x tests have been moved to /test/2.x
+- Views no longer create their own render() functions. Instead, views user view.template as either a string or a function that returns a computed string.
+- View.render() now handles rendering into a selector rather than returning the rendered HTML string.
+
 2.0.1
 ======
 
@@ -5,7 +29,7 @@ Minor code cleanup and a few changes to options.
 - The internal model is now the default model if none is specified.
 - Extended events config will be rejected until implemented.
 - No remote modules need be specified when providing URLs for remote auth
-- web socket server will not be configured unless a websocket url is provided in the console config options. 
+- web socket server will not be configured unless a websocket url is provided in the console config options.
 
 2.0.0
 ======
