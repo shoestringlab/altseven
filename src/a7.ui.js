@@ -181,6 +181,7 @@ a7.ui = (function() {
     _events = [],
     _options = {},
     _selectors = {},
+    _queue = [],
     //_templateMap = {},
     _views = [],
     _setSelector = function(name, selector) {
@@ -189,45 +190,24 @@ a7.ui = (function() {
     _getSelector = function(name){
       return _selectors[name];
     },
-    _setView = function( id, view, selector ){
+    _getView = function( id ){
+      return _views[ id ];
+    },
+    _getNode = function( selector ){
+      return document.querySelector( selector );
+    },
+    _getEvents = function(){
+      return _events;
+    },
+    _register = function(  view ){
       switch( _options.renderer ){
         case "Handlebars":
         case "Mustache":
         case "templateLiterals":
-          _views[ id ] = { view: view,
-            selector: selector,
-            render: function(){
-              selector.innerHTML = view.render();
-
-              var eventArr = [];
-              _events.forEach( function( eve ){
-                eventArr.push("[data-on" + eve + "]");
-              });
-              var eles = selector.querySelectorAll( eventArr.toString() );
-
-              eles.forEach( function( sel ){
-                for( var ix=0; ix < sel.attributes.length; ix++ ){
-                  var attribute = sel.attributes[ix];
-                  if( attribute.name.startsWith( "data-on" ) ){
-                    var event = attribute.name.substring( 7, attribute.name.length );
-                    sel.addEventListener( event, view.eventHandlers[ sel.attributes["data-on" + event].value ] );
-                  }
-                }
-              });
-            }
-          };
-
-          // call the ui render() function when called to render
-          _views[ id ].view.on( "mustRender", function(){
-            _views[ id ].render();
-          });
-
-          _views[ id ].view.fireEvent( "mustRender" );
+          _views[ view.props.id ] = view;
+          view.fireEvent( "registered" );
           break;
       }
-    },
-    _getView = function( id ){
-      return _views[ id ];
     },
     _removeView = function( id ){
       delete _views[ id ];
@@ -235,10 +215,12 @@ a7.ui = (function() {
 
   return {
     //render: _render,
+    getEvents: _getEvents,
     selectors: _selectors,
     getSelector: _getSelector,
     setSelector: _setSelector,
-    setView: _setView,
+    getNode: _getNode,
+    register: _register,
     getView: _getView,
     removeView: _removeView,
     views: _views,

@@ -16,10 +16,6 @@ function Constructor( constructor, args, addBindings ) {
 
 	// construct the object
 	obj = Object.create( constructor.prototype );
-	returnedObj = constructor.apply( obj, args );
-	if( returnedObj === undefined ){
-		returnedObj = obj;
-	}
 
 	// this section adds any events specified in the prototype as events of
 	// the object being instantiated
@@ -30,14 +26,19 @@ function Constructor( constructor, args, addBindings ) {
 	// <object>.on( eventName, function(){ })
 	if( addBindings === true ){
 		// create specified event list from prototype
-		returnedObj.events = {};
+		obj.events = {};
 		if( constructor.prototype.events !== undefined ){
 			constructor.prototype.events.forEach( function( event ){
-				returnedObj.events[ event ] = [ ];
+				obj.events[ event ] = [ ];
 			});
 		}
 	}
 
+	returnedObj = constructor.apply( obj, args );
+	if( returnedObj === undefined ){
+		returnedObj = obj;
+	}
+	//returnedObj.prototype = constructor.prototype;
 	return returnedObj;
 
 }

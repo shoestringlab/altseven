@@ -82,7 +82,7 @@ a7.remote = ( function(){
 								return response.json();
 							})
 							.then( function( json ){
-								var user = user = a7.components.Constructor(a7.components.User, [], true);
+								var user = a7.components.Constructor(a7.components.User, [], true);
 								sessionStorage.user = JSON.stringify( user );
 								a7.model.set( "a7.user", user );
 								if( params.callback !== undefined ){

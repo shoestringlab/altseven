@@ -21,9 +21,11 @@ var EventBindings = {
 
 	fireEvent : function( key, args ){
 		var _this = this;
-		this.events[ key ].forEach( function( func ){
-			func( _this, args );
-		});
+		if( this.events[ key ] !== undefined ){
+			this.events[ key ].forEach( function( func ){
+				func( _this, args );
+			});
+		}
 	},
 
 	getAll : function(){
