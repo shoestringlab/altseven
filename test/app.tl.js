@@ -1,6 +1,4 @@
 import {a7} from '/dist/a7.js';
-// you only need to import the floatingpane if you use it as the container for the console
-//import {floatingpane} from '/node_modules/gadget-ui/dist/gadget-ui.es6.js';
 
 var app = {
   main: (function() {
@@ -9,25 +7,25 @@ var app = {
     return {
       init: function(state) {
         // cache initial selectors
-        a7.ui.setSelector('anonDiv', document.querySelector("div[name='anon']"));
-        a7.ui.setSelector('secureDiv', document.querySelector("div[name='secure']"));
-        a7.ui.setSelector('header', document.querySelector("div[name='header']"));
-        a7.ui.setSelector('app', document.querySelector("div[name='app']"));
+        a7.ui.setSelector( 'anonDiv', "div[name='anon']" );
+        a7.ui.setSelector('secureDiv', "div[name='secure']");
 
         app.main.run(state.secure);
       },
 
       run: function(secure) {
         // render the login form
-        a7.ui.setView('loginForm', app.components.LoginForm( [] ), a7.ui.selectors['anonDiv']);
+        a7.ui.register( app.components.LoginForm( { id: 'loginForm', selector: "div[name='anon']" } ) );
 
-				if(secure){
-          var user = a7.model.get("a7.user");
+        var user = a7.model.get("a7.user");
 
-          a7.ui.setView('header', app.components.Header( { user: user } ), a7.ui.selectors['header']);
-					var todoList = app.components.TodoList( { items: [] } );
-          a7.ui.setView('todo', app.components.Todo( { todoList: todoList } ), a7.ui.selectors['app']);
-        }
+        a7.ui.register( app.components.Header( { id: 'header', user: user, selector: "div[name='header']" } ) );
+
+        a7.ui.register( app.components.Todo( {
+          id: 'todo',
+          todoList: app.components.TodoList( { id: 'todoList', items: [], selector: "div[data-id='todoList']" } ),
+          selector: "div[name='app']"
+        } ) );
 
         app.ui.setLayout(secure);
       }
@@ -44,16 +42,18 @@ var app = {
       });
 
       promise.then(function(secure) {
-        app.main.run(secure);
+        a7.ui.views['header'].setState( { user: a7.model.get( "a7.user" ) } );
+        app.ui.setLayout(secure);
       });
     };
 
-		var _logout
+		var _logout;
 
     return {
       authenticate: _authenticate,
       loginHandler: function(json) {
-        app.main.run(json.success);
+        a7.ui.views['header'].setState( { user: a7.model.get( "a7.user" ) } );
+        app.ui.setLayout(json.success);
       }
     };
   })(),
@@ -65,16 +65,16 @@ var app = {
         text: ""
       };
 
-      todo.render = function() {
+      todo.template = function(){
         return `<div name="todoForm">
 				<h3>TODO</h3>
-				${todo.props.todoList.render()}
+				<div data-id="todoList"></div>
 				<form>
 					<input name="todoInput" value="${todo.state.text}" data-onchange="changeTodoInput" />
 					<button type="button" name="todoSubmit" data-onclick="clickSubmit">Add ${todo.props.todoList.state.items.length + 1}</button>
 				</form>
 				</div>`;
-      }
+      };
 
       todo.eventHandlers = {
         changeTodoInput: function(event) {
@@ -103,18 +103,18 @@ var app = {
       todolist.state = {
         items: props.items
       };
-      todolist.render = TodoList.prototype.render;
+
+      todolist.template = function() {
+        var str = `<ul>`;
+        this.state.items.forEach(function(item) {
+          str += `<li>${item.text}</li>`;
+        });
+        str += `</ul>`;
+        return str;
+      };
+
       return todolist;
     }
-
-    TodoList.prototype.render = function() {
-      var str = `<ul>`;
-      this.state.items.forEach(function(item) {
-        str += `<li>${item.text}</li>`;
-      });
-      str += `</ul>`;
-      return str;
-    };
 
     function LoginForm(props) {
       var loginform = a7.components.Constructor(a7.components.View, [props], true);
@@ -122,6 +122,7 @@ var app = {
         username: "",
         password: ""
       };
+
       loginform.template = `<div name="loginDiv" class="pane" style="width:370px;">
 						<div class="right-align">
 							<div class="col md right-align"><label for="username">Username</label></div>
@@ -181,7 +182,7 @@ var app = {
 				}
 			};
 
-      header.render = function(){
+      header.template = function(){
 				return `Welcome, ${header.state.user.firstName} <a name="signout" data-onclick="logout">[ Sign out ]</a>`;
 			};
 
@@ -203,8 +204,8 @@ var app = {
     return {
       //	templates: _templates,
       setLayout: function(secure) {
-        a7.ui.selectors[(secure ? 'secureDiv' : 'anonDiv')].style.display = 'block';
-        a7.ui.selectors[(!secure ? 'secureDiv' : 'anonDiv')].style.display = 'none';
+        a7.ui.getNode( secure ? a7.ui.selectors['secureDiv'] : a7.ui.selectors['anonDiv'] ).style.display = 'block';
+        a7.ui.getNode(!secure ?  a7.ui.selectors['secureDiv'] :  a7.ui.selectors['anonDiv'] ).style.display = 'none';
       }
     };
   })()

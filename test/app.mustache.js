@@ -7,26 +7,26 @@ var app = {
 
     return {
       init: function(state) {
-        // cache initial selectors from index.html
-        a7.ui.setSelector('anonDiv', document.querySelector("div[name='anon']"));
-        a7.ui.setSelector('secureDiv', document.querySelector("div[name='secure']"));
-        a7.ui.setSelector('header', document.querySelector("div[name='header']"));
-        a7.ui.setSelector('app', document.querySelector("div[name='app']"));
+        // cache initial selectors
+        a7.ui.setSelector( 'anonDiv', "div[name='anon']" );
+        a7.ui.setSelector('secureDiv', "div[name='secure']");
 
         app.main.run(state.secure);
       },
 
       run: function(secure) {
         // render the login form
-        a7.ui.setView('loginForm', app.components.LoginForm( [] ), a7.ui.selectors['anonDiv']);
+        a7.ui.register( app.components.LoginForm( { id: 'loginForm', selector: "div[name='anon']" } ) );
 
-				if (secure) {
-          var user = a7.model.get("a7.user");
+        var user = a7.model.get("a7.user");
 
-          a7.ui.setView('header', app.components.Header( { user: user } ), a7.ui.selectors['header']);
-					var todoList = app.components.TodoList( { items: [] } );
-          a7.ui.setView('todo', app.components.Todo( { todoList: todoList } ), a7.ui.selectors['app']);
-        }
+        a7.ui.register( app.components.Header( { id: 'header', user: user, selector: "div[name='header']" } ) );
+
+        a7.ui.register( app.components.Todo( {
+          id: 'todo',
+          todoList: app.components.TodoList( { id: 'todoList', items: [], selector: "div[data-id='todoList']" } ),
+          selector: "div[name='app']"
+        } ) );
 
         app.ui.setLayout(secure);
       }
@@ -43,7 +43,8 @@ var app = {
       });
 
       promise.then(function(secure) {
-        app.main.run(secure);
+        a7.ui.views['header'].setState( { user: a7.model.get( "a7.user" ) } );
+        app.ui.setLayout(secure);
       });
     };
 
@@ -52,7 +53,8 @@ var app = {
     return {
       authenticate: _authenticate,
       loginHandler: function(json) {
-        app.main.run(json.success);
+        a7.ui.views['header'].setState( { user: a7.model.get( "a7.user" ) } );
+        app.ui.setLayout(json.success);
       }
     };
   })(),
@@ -64,17 +66,17 @@ var app = {
         text: ""
       };
 
-      todo.template = `<div name="todoForm">
-    		<h3>TODO</h3>
-    		{{> todoList}}
-    		<form>
-    		  <input name="todoInput" value="{{text}}" data-onchange="changeTodoInput"/>
-    		  <button type="button" name="todoSubmit" data-onclick="clickSubmit">Add #{{next}}</button>
-    		</form>
-    		</div>`;
+      todo.template = function() {
+        var templ = `<div name="todoForm">
+      		<h3>TODO</h3>
+      		<div data-id="todoList"></div>
+      		<form>
+      		  <input name="todoInput" value="{{text}}" data-onchange="changeTodoInput"/>
+      		  <button type="button" name="todoSubmit" data-onclick="clickSubmit">Add #{{next}}</button>
+      		</form>
+      		</div>`;
 
-      todo.render = function() {
-        return Mustache.render( todo.template, todo.state, { todoList: todo.props.todoList.render() } );
+        return Mustache.render( templ, { text: todo.state.text, next: todo.props.todoList.state.items.length + 1 } );
       }
 
       todo.eventHandlers = {
@@ -105,10 +107,8 @@ var app = {
         items: props.items
       };
 
-      todolist.template = '<ul>{{#items}}<li>{{text}}</li>{{/items}}</ul>';
-
-      todolist.render = function(){
-        return Mustache.render( todolist.template, todolist.state );
+      todolist.template = function(){
+        return Mustache.render( '<ul>{{#items}}<li>{{text}}</li>{{/items}}</ul>', todolist.state );
       };
 
       return todolist;
@@ -120,39 +120,40 @@ var app = {
         username: "",
         password: ""
       };
-      loginform.template = `<div name="loginDiv" class="pane" style="width:370px;">
-      		<div class="right-align">
-      			<div class="col md right-align"><label for="username">Username</label></div>
-      			<div class="col md"><input name="username" type="text" data-onchange="handleUsername"/></div>
-      		</div>
-      		<div class="right-align">
-      			<div class="col md right-align"><label for="password">Password</label></div>
-      			<div class="col md"><input name="password" type="password" data-onchange="handlePassword"/></div>
-      		</div>
-      		<div class="right-align">
-      			<div class="col md"></div>
-      			<div class="col md"><input name="login" type="button" value="Login" data-onclick="handleClick"/></div>
-      		</div>
-      	</div>
-        <div name="instructions">
-      		<p>
-      			<h3>Instructions</h3>
-      		</p>
-      		<p>
-      			Login using the credentials:
-      		</p>
-      		<p>
-      			&nbsp;&nbsp;username : user
-      		</p>
-      		<p>
-      			&nbsp;&nbsp;password: password
-      		</p>
-      		<p>
-      		</p>
-      	</div>`;
 
-      loginform.render = function(){
-				return Mustache.render( loginform.template, loginform.state );
+      loginform.template = function(){
+        var templ = `<div name="loginDiv" class="pane" style="width:370px;">
+        		<div class="right-align">
+        			<div class="col md right-align"><label for="username">Username</label></div>
+        			<div class="col md"><input name="username" type="text" data-onchange="handleUsername"/></div>
+        		</div>
+        		<div class="right-align">
+        			<div class="col md right-align"><label for="password">Password</label></div>
+        			<div class="col md"><input name="password" type="password" data-onchange="handlePassword"/></div>
+        		</div>
+        		<div class="right-align">
+        			<div class="col md"></div>
+        			<div class="col md"><input name="login" type="button" value="Login" data-onclick="handleClick"/></div>
+        		</div>
+        	</div>
+          <div name="instructions">
+        		<p>
+        			<h3>Instructions</h3>
+        		</p>
+        		<p>
+        			Login using the credentials:
+        		</p>
+        		<p>
+        			&nbsp;&nbsp;username : user
+        		</p>
+        		<p>
+        			&nbsp;&nbsp;password: password
+        		</p>
+        		<p>
+        		</p>
+        	</div>`;
+
+				return Mustache.render( templ, loginform.state );
 			};
 
       loginform.eventHandlers = {
@@ -181,16 +182,15 @@ var app = {
         user: props.user
       };
 
-      header.template = 'Welcome, {{firstName}} <a name="signout" data-onclick="logout">[ Sign out ]</a>';
-
 			header.eventHandlers = {
 				logout: function(){
 					a7.events.publish( 'auth.logout', { callback: app.auth.authenticate }) ;
 				}
 			};
 
-      header.render = function(){
-				return Mustache.render( header.template, header.state );
+      header.template = function(){
+        var templ = 'Welcome, {{firstName}} <a name="signout" data-onclick="logout">[ Sign out ]</a>';
+				return Mustache.render( templ, header.state.user );
 			};
 
       return header;
@@ -208,10 +208,9 @@ var app = {
     "use strict";
 
     return {
-      //	templates: _templates,
       setLayout: function(secure) {
-        a7.ui.selectors[(secure ? 'secureDiv' : 'anonDiv')].style.display = 'block';
-        a7.ui.selectors[(!secure ? 'secureDiv' : 'anonDiv')].style.display = 'none';
+        a7.ui.getNode( secure ? a7.ui.selectors['secureDiv'] : a7.ui.selectors['anonDiv'] ).style.display = 'block';
+        a7.ui.getNode(!secure ?  a7.ui.selectors['secureDiv'] :  a7.ui.selectors['anonDiv'] ).style.display = 'none';
       }
     };
   })()

@@ -7,26 +7,26 @@ var app = {
 
     return {
       init: function(state) {
-        // cache initial selectors from index.html
-        a7.ui.setSelector('anonDiv', document.querySelector("div[name='anon']"));
-        a7.ui.setSelector('secureDiv', document.querySelector("div[name='secure']"));
-        a7.ui.setSelector('header', document.querySelector("div[name='header']"));
-        a7.ui.setSelector('app', document.querySelector("div[name='app']"));
+        // cache initial selectors
+        a7.ui.setSelector( 'anonDiv', "div[name='anon']" );
+        a7.ui.setSelector('secureDiv', "div[name='secure']");
 
         app.main.run(state.secure);
       },
 
       run: function(secure) {
         // render the login form
-        a7.ui.setView('loginForm', app.components.LoginForm( [] ), a7.ui.selectors['anonDiv']);
+        a7.ui.register( app.components.LoginForm( { id: 'loginForm', selector: "div[name='anon']" } ) );
 
-				if (secure) {
-          var user = a7.model.get("a7.user");
+        var user = a7.model.get("a7.user");
 
-          a7.ui.setView('header', app.components.Header( { user: user } ), a7.ui.selectors['header']);
-					var todoList = app.components.TodoList( { items: [] } );
-          a7.ui.setView('todo', app.components.Todo( { todoList: todoList } ), a7.ui.selectors['app']);
-        }
+        a7.ui.register( app.components.Header( { id: 'header', user: user, selector: "div[name='header']" } ) );
+
+        a7.ui.register( app.components.Todo( {
+          id: 'todo',
+          todoList: app.components.TodoList( { id: 'todoList', items: [], selector: "div[data-id='todoList']" } ),
+          selector: "div[name='app']"
+        } ) );
 
         app.ui.setLayout(secure);
       }
@@ -43,16 +43,18 @@ var app = {
       });
 
       promise.then(function(secure) {
-        app.main.run(secure);
+        a7.ui.views['header'].setState( { user: a7.model.get( "a7.user" ) } );
+        app.ui.setLayout(secure);
       });
     };
 
-		var _logout
+		var _logout;
 
     return {
       authenticate: _authenticate,
       loginHandler: function(json) {
-        app.main.run(json.success);
+        a7.ui.views['header'].setState( { user: a7.model.get( "a7.user" ) } );
+        app.ui.setLayout(json.success);
       }
     };
   })(),
@@ -64,18 +66,19 @@ var app = {
         text: ""
       };
 
-      todo.template = Handlebars.compile(`<div name="todoForm">
+      todo.template = function(){
+
+      var templ = Handlebars.compile(`<div name="todoForm">
     		<h3>TODO</h3>
-    		{{> todoList}}
+    		<div data-id="todoList"></div>
     		<form>
     		  <input name="todoInput" value="{{text}}" data-onchange="changeTodoInput"/>
     		  <button type="button" name="todoSubmit" data-onclick="clickSubmit">Add #{{next}}</button>
     		</form>
     		</div>`);
 
-      todo.render = function() {
-        return todo.template( { text: todo.state.text, next: todo.props.todoList.state.items.length + 1 }, { partials: { todoList: todo.props.todoList.render() } } );
-      }
+        return templ( { text: todo.state.text, next: todo.props.todoList.state.items.length + 1 } );
+      };
 
       todo.eventHandlers = {
         changeTodoInput: function(event) {
@@ -105,10 +108,9 @@ var app = {
         items: props.items
       };
 
-      todolist.template = Handlebars.compile('<ul>{{#items}}<li>{{text}}</li>{{/items}}</ul>');
-
-      todolist.render = function(){
-        return todolist.template( todolist.state );
+      todolist.template = function(){
+        var templ = Handlebars.compile('<ul>{{#items}}<li>{{text}}</li>{{/items}}</ul>');
+        return templ( todolist.state );
       };
 
       return todolist;
@@ -120,7 +122,8 @@ var app = {
         username: "",
         password: ""
       };
-      loginform.template = Handlebars.compile(`<div name="loginDiv" class="pane" style="width:370px;">
+      loginform.template = function(){
+        var templ = Handlebars.compile(`<div name="loginDiv" class="pane" style="width:370px;">
       		<div class="right-align">
       			<div class="col md right-align"><label for="username">Username</label></div>
       			<div class="col md"><input name="username" type="text" data-onchange="handleUsername"/></div>
@@ -151,8 +154,7 @@ var app = {
       		</p>
       	</div>`);
 
-      loginform.render = function(){
-				return loginform.template( loginform.state );
+				return templ( loginform.state );
 			};
 
       loginform.eventHandlers = {
@@ -181,16 +183,15 @@ var app = {
         user: props.user
       };
 
-      header.template = Handlebars.compile( 'Welcome, {{firstName}} <a name="signout" data-onclick="logout">[ Sign out ]</a>' );
+      header.template = function(){
+        var templ = Handlebars.compile( 'Welcome, {{firstName}} <a name="signout" data-onclick="logout">[ Sign out ]</a>' );
+        return templ( header.state.user );
+      };
 
 			header.eventHandlers = {
 				logout: function(){
 					a7.events.publish( 'auth.logout', { callback: app.auth.authenticate }) ;
 				}
-			};
-
-      header.render = function(){
-				return header.template( header.state );
 			};
 
       return header;
@@ -208,10 +209,9 @@ var app = {
     "use strict";
 
     return {
-      //	templates: _templates,
       setLayout: function(secure) {
-        a7.ui.selectors[(secure ? 'secureDiv' : 'anonDiv')].style.display = 'block';
-        a7.ui.selectors[(!secure ? 'secureDiv' : 'anonDiv')].style.display = 'none';
+        a7.ui.getNode( secure ? a7.ui.selectors['secureDiv'] : a7.ui.selectors['anonDiv'] ).style.display = 'block';
+        a7.ui.getNode(!secure ?  a7.ui.selectors['secureDiv'] :  a7.ui.selectors['anonDiv'] ).style.display = 'none';
       }
     };
   })()
