@@ -1,7 +1,7 @@
 altseven
 =========
 
-v 3.0.0
+v 3.1.0
 
 A JavaScript framework. Built as an academic exercise.
 
@@ -17,6 +17,8 @@ To install dev dependencies from NPM:
 
 ***Changes***
 --------
+
+As of 3.1.0, altseven contains a rendering queue that manages the rendering pipeline for views. It also contains a deferred pipeline that fills once the existing queue starts rendering and becomes the new queue once the existing queue renders.
 
 As of v 3.0.0, the framework is complete enough to build applications that can set state and update views dynamically, work with remote services, and use the built in security framework.
 

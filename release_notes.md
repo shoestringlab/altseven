@@ -1,3 +1,10 @@
+3.1.0
+======
+
+Added a rendering queue to improve performance of view rendering. The queue is very rough at this point with minimal performance optimization.
+- In the View component, mustRender no longer bubbles up to a given root component, since the queue now handles this functionality.
+- The queue has a deferred queue that fills once the queue starts to process. The deferred queue becomes the new queue once the existing queue is processed.
+
 3.0.0
 ======
 
