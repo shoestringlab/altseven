@@ -10,16 +10,14 @@ function View( props ){
 View.prototype = {
 	config: function(){
 
-		this.on( "mustRegister", function( parent ){
+		this.on( "mustRegister", function( component, parent ){
+			a7.log.trace( 'mustRegister: ' + this.props.id + ', parent: ' + parent.props.id );
 			this.props.parentID = parent.props.id;
 			a7.ui.register( this );
 		}.bind( this ) );
 
 		this.on( "mustRender", function(){
-			// only render root views from here, children will be rendered by parents through bubbling of events
-			if( this.props.parentID === undefined ){
-				this.render();
-			}
+			a7.ui.enqueueForRender( this.props.id );
 		}.bind( this ));
 
 		this.on( "rendered", function(){
@@ -32,7 +30,8 @@ View.prototype = {
 				for( var prop in this.props ){
 					if( this.props[ prop ] !== null && this.props[ prop ].type !== undefined && this.props[ prop ].type === "View" ){
 						if( a7.ui.getView( this.props[ prop ].props.id ) === undefined ){
-							this.props[ prop ].fireEvent( "mustRegister", this);
+							a7.log.trace( 'parent: ' + this.props.id + ', register child: ' + this.props[ prop ].props.id );
+							this.props[ prop ].fireEvent( "mustRegister", Object.assign( this ) );
 						}
 					}
 				}
@@ -44,7 +43,7 @@ View.prototype = {
 		}.bind( this ));
 
 		// bubble up event
-		if( this.props !== undefined ){
+		/* if( this.props !== undefined ){
 			for( var prop in this.props ){
 				if( this.props[ prop ].type !== undefined && this.props[ prop ].type === 'View' ){
 					this.props[ prop ].on( "mustRender", function(){
@@ -52,20 +51,22 @@ View.prototype = {
 					}.bind( this ));
 				}
 			}
-		}
+		} */
+
 	},
-	events : ['mustRender','rendered', 'mustRegister', 'initialRender', 'registered'],
+	events : ['mustRender','rendered', 'mustRegister', 'registered'],
   setState: function( args ){
     this.state = args;
     // setting state requires a re-render
 		this.fireEvent( 'mustRender' );
-  },
-  render: function(){
+	},
+	render: function(){
+		a7.log.info( 'render: ' + this.props.id );
 		if( this.props.element === undefined || this.props.element === null ){
 			this.props.element = document.querySelector( this.props.selector );
 		}
 		if( !this.props.element ) throw( "You must define a selector for the view." );
-    this.props.element.innerHTML = ( typeof this.template == "function" ? this.template() : this.template );
+		this.props.element.innerHTML = ( typeof this.template == "function" ? this.template() : this.template );
 
 		var eventArr = [];
 		a7.ui.getEvents().forEach( function( eve ){
@@ -84,7 +85,7 @@ View.prototype = {
 		}.bind( this ));
 
 		this.fireEvent( "rendered" );
-  },
+	},
 	onRendered: function(){
 		if( this.props !== undefined ){
 			for( var prop in this.props ){

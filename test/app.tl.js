@@ -1,4 +1,5 @@
 import {a7} from '/dist/a7.js';
+import {floatingpane} from '/node_modules/gadget-ui/dist/gadget-ui.es6.js';
 
 var app = {
   main: (function() {
@@ -87,7 +88,7 @@ var app = {
             id: Date.now()
           };
 
-          todo.state.text = '';
+          todo.setState( { text: '' } );
           var items = todo.props.todoList.state.items.concat(newItem);
           todo.props.todoList.setState({
             items: items
@@ -214,6 +215,13 @@ var app = {
 export var application = function init() {
 
   var options = {
+    console: {
+      enabled: true,
+      container: floatingpane
+    },
+    logging: {
+      logLevel: "INFO,ERROR,FATAL,TRACE"
+    },
     // remote module is optional, only required if you want to use the built-in auth system / token system
     // or if you want to use the remote module for remote calls
     remote: {

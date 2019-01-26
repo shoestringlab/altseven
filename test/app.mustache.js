@@ -90,7 +90,7 @@ var app = {
             id: Date.now()
           };
 
-          todo.state.text = '';
+          todo.setState( { text : '' } );
           var items = todo.props.todoList.state.items.concat(newItem);
           todo.props.todoList.setState({
             items: items

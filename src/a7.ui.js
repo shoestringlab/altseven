@@ -182,6 +182,8 @@ a7.ui = (function() {
     _options = {},
     _selectors = {},
     _queue = [],
+    _deferred = [],
+    _stateTransition = false,
     //_templateMap = {},
     _views = [],
     _setSelector = function(name, selector) {
@@ -209,6 +211,93 @@ a7.ui = (function() {
           break;
       }
     },
+
+    _getParentViewIds = function( id ){
+      let parentIds = [];
+      let view = _views[ id ];
+      while( view.props.parentID !== undefined ){
+        parentIds.unshift( view.props.parentID );
+        view = _views[ view.props.parentID ];
+      }
+      return parentIds;
+      // parentids returned in highest to lowest order
+    },
+
+     _getChildViewIds = function( id ){
+      let childIds = [];
+      let view = _views[ id ];
+      let prop = '';
+      let props = view.props;
+      if( props !== undefined ){
+        for( prop in props ){
+          if( props[ prop ] !== null && props[ prop ].type !== undefined && props[ prop ].type === "View"){
+            childIds.push( props[ prop ].props.id );
+            childIds.concat( _getChildViewIds( props[ prop ].props.id ) );
+          }
+        }
+      }
+      // returned in highest to lowest order
+      return childIds;
+    },
+
+    _enqueueForRender = function( id ){
+      if( ! _stateTransition ){
+        a7.log.info( 'enqueue: ' + id );
+        if( ! _queue.length ){
+          a7.log.trace( 'add first view to queue: ' + id );
+          _queue.push( id );
+          // wait for other possible updates and then process the queue
+          setTimeout( _processRenderQueue, 18 );
+        }else{
+          if( _views[ id ].props.parentID === undefined ){
+            // if the view is a root view, it should be pushed to the front of the stack
+            a7.log.trace( 'add to front of queue: ' + id );
+            _queue.unshift( id );
+          }else{
+            let parentIds = _getParentViewIds( id );
+            let childIds = _getChildViewIds( id );
+            let highParent = undefined;
+            if( parentIds.length ){
+              highParent = parentIds.find( function( parentId ){
+                return _queue.indexOf( parentId ) >= 0;
+              });
+            }
+
+            // only add if there is no parent in the queue, since parents will render children
+            if( highParent === undefined ){
+              a7.log.trace( 'add to end of queue: ' + id );
+              _queue.push( id );
+            }
+
+            // remove child views from the queue, they will be rendered by the parents
+            childIds.forEach( function( childId ){
+              if( _queue.indexOf( childId ) >= 0 ){
+                a7.log.trace( 'remove child from queue: ' + childId );
+                _queue.splice( _queue.indexOf( childId ), 1 );
+              }
+            });
+          }
+        }
+      }else{
+        _deferred.push( id );
+      }
+    },
+
+    _processRenderQueue = function(){
+      a7.log.trace( 'processing the queue' );
+      _stateTransition = true;
+
+      _queue.forEach( function( id ){
+          _views[ id ].render();
+      });
+      _queue = [];
+      _stateTransition = false;
+      _deferred.forEach( function( id ){
+        _enqueueForRender( id );
+      });
+      _deferred = [];
+    },
+
     _removeView = function( id ){
       delete _views[ id ];
     };
@@ -222,6 +311,7 @@ a7.ui = (function() {
     getNode: _getNode,
     register: _register,
     getView: _getView,
+    enqueueForRender: _enqueueForRender,
     removeView: _removeView,
     views: _views,
 

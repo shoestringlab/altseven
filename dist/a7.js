@@ -883,16 +883,14 @@ function View( props ){
 View.prototype = {
 	config: function(){
 
-		this.on( "mustRegister", function( parent ){
+		this.on( "mustRegister", function( component, parent ){
+			a7.log.trace( 'mustRegister: ' + this.props.id + ', parent: ' + parent.props.id );
 			this.props.parentID = parent.props.id;
 			a7.ui.register( this );
 		}.bind( this ) );
 
 		this.on( "mustRender", function(){
-			// only render root views from here, children will be rendered by parents through bubbling of events
-			if( this.props.parentID === undefined ){
-				this.render();
-			}
+			a7.ui.enqueueForRender( this.props.id );
 		}.bind( this ));
 
 		this.on( "rendered", function(){
@@ -905,7 +903,8 @@ View.prototype = {
 				for( var prop in this.props ){
 					if( this.props[ prop ] !== null && this.props[ prop ].type !== undefined && this.props[ prop ].type === "View" ){
 						if( a7.ui.getView( this.props[ prop ].props.id ) === undefined ){
-							this.props[ prop ].fireEvent( "mustRegister", this);
+							a7.log.trace( 'parent: ' + this.props.id + ', register child: ' + this.props[ prop ].props.id );
+							this.props[ prop ].fireEvent( "mustRegister", Object.assign( this ) );
 						}
 					}
 				}
@@ -917,7 +916,7 @@ View.prototype = {
 		}.bind( this ));
 
 		// bubble up event
-		if( this.props !== undefined ){
+		/* if( this.props !== undefined ){
 			for( var prop in this.props ){
 				if( this.props[ prop ].type !== undefined && this.props[ prop ].type === 'View' ){
 					this.props[ prop ].on( "mustRender", function(){
@@ -925,20 +924,22 @@ View.prototype = {
 					}.bind( this ));
 				}
 			}
-		}
+		} */
+
 	},
-	events : ['mustRender','rendered', 'mustRegister', 'initialRender', 'registered'],
+	events : ['mustRender','rendered', 'mustRegister', 'registered'],
   setState: function( args ){
     this.state = args;
     // setting state requires a re-render
 		this.fireEvent( 'mustRender' );
-  },
-  render: function(){
+	},
+	render: function(){
+		a7.log.info( 'render: ' + this.props.id );
 		if( this.props.element === undefined || this.props.element === null ){
 			this.props.element = document.querySelector( this.props.selector );
 		}
 		if( !this.props.element ) throw( "You must define a selector for the view." );
-    this.props.element.innerHTML = ( typeof this.template == "function" ? this.template() : this.template );
+		this.props.element.innerHTML = ( typeof this.template == "function" ? this.template() : this.template );
 
 		var eventArr = [];
 		a7.ui.getEvents().forEach( function( eve ){
@@ -957,7 +958,7 @@ View.prototype = {
 		}.bind( this ));
 
 		this.fireEvent( "rendered" );
-  },
+	},
 	onRendered: function(){
 		if( this.props !== undefined ){
 			for( var prop in this.props ){
@@ -1395,6 +1396,8 @@ a7.ui = (function() {
     _options = {},
     _selectors = {},
     _queue = [],
+    _deferred = [],
+    _stateTransition = false,
     //_templateMap = {},
     _views = [],
     _setSelector = function(name, selector) {
@@ -1422,6 +1425,93 @@ a7.ui = (function() {
           break;
       }
     },
+
+    _getParentViewIds = function( id ){
+      let parentIds = [];
+      let view = _views[ id ];
+      while( view.props.parentID !== undefined ){
+        parentIds.unshift( view.props.parentID );
+        view = _views[ view.props.parentID ];
+      }
+      return parentIds;
+      // parentids returned in highest to lowest order
+    },
+
+     _getChildViewIds = function( id ){
+      let childIds = [];
+      let view = _views[ id ];
+      let prop = '';
+      let props = view.props;
+      if( props !== undefined ){
+        for( prop in props ){
+          if( props[ prop ] !== null && props[ prop ].type !== undefined && props[ prop ].type === "View"){
+            childIds.push( props[ prop ].props.id );
+            childIds.concat( _getChildViewIds( props[ prop ].props.id ) );
+          }
+        }
+      }
+      // returned in highest to lowest order
+      return childIds;
+    },
+
+    _enqueueForRender = function( id ){
+      if( ! _stateTransition ){
+        a7.log.info( 'enqueue: ' + id );
+        if( ! _queue.length ){
+          a7.log.trace( 'add first view to queue: ' + id );
+          _queue.push( id );
+          // wait for other possible updates and then process the queue
+          setTimeout( _processRenderQueue, 18 );
+        }else{
+          if( _views[ id ].props.parentID === undefined ){
+            // if the view is a root view, it should be pushed to the front of the stack
+            a7.log.trace( 'add to front of queue: ' + id );
+            _queue.unshift( id );
+          }else{
+            let parentIds = _getParentViewIds( id );
+            let childIds = _getChildViewIds( id );
+            let highParent = undefined;
+            if( parentIds.length ){
+              highParent = parentIds.find( function( parentId ){
+                return _queue.indexOf( parentId ) >= 0;
+              });
+            }
+
+            // only add if there is no parent in the queue, since parents will render children
+            if( highParent === undefined ){
+              a7.log.trace( 'add to end of queue: ' + id );
+              _queue.push( id );
+            }
+
+            // remove child views from the queue, they will be rendered by the parents
+            childIds.forEach( function( childId ){
+              if( _queue.indexOf( childId ) >= 0 ){
+                a7.log.trace( 'remove child from queue: ' + childId );
+                _queue.splice( _queue.indexOf( childId ), 1 );
+              }
+            });
+          }
+        }
+      }else{
+        _deferred.push( id );
+      }
+    },
+
+    _processRenderQueue = function(){
+      a7.log.trace( 'processing the queue' );
+      _stateTransition = true;
+
+      _queue.forEach( function( id ){
+          _views[ id ].render();
+      });
+      _queue = [];
+      _stateTransition = false;
+      _deferred.forEach( function( id ){
+        _enqueueForRender( id );
+      });
+      _deferred = [];
+    },
+
     _removeView = function( id ){
       delete _views[ id ];
     };
@@ -1435,6 +1525,7 @@ a7.ui = (function() {
     getNode: _getNode,
     register: _register,
     getView: _getView,
+    enqueueForRender: _enqueueForRender,
     removeView: _removeView,
     views: _views,
 
