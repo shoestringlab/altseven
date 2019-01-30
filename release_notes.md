@@ -1,3 +1,13 @@
+3.2.0
+======
+
+The model has been updated to work specifically with altseven. 
+- strip binding code from model
+- update model to make it free of side effects - all data passed in and out is deep copied
+- model no longer supports holding functions inside objects since all objects are copied using JSON.parse(JSON.stringify( data ))
+- nested references are no longer supported in the model, so if you want to access a7.console in the model, you have to model.get("a7").console
+- the model now also has a history stack and  rewind, fast forward, undo and redo functions for use in undo/redo/replay functionality to be added later
+
 3.1.0
 ======
 
