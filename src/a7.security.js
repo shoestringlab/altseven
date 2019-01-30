@@ -3,7 +3,7 @@ a7.security = (function() {
 
   var _isAuthenticated = function(resolve, reject) {
     a7.log.info("Checking authenticated state.. ");
-    if (a7.model.get("a7.remote.useTokens")) {
+    if (a7.model.get("a7").remote.useTokens) {
       var token = a7.remote.getToken();
       if (token !== undefined && token !== null && token.length > 0) {
         var timer = a7.remote.getSessionTimer();
@@ -24,7 +24,7 @@ a7.security = (function() {
   return {
     isAuthenticated: _isAuthenticated,
     // initialization
-    // 1. creates a new a7.User object
+    // 1. creates a new user object
     // 2. checks sessionStorage for user string
     // 3. populates User object with stored user information in case of
     // 	  browser refresh
@@ -40,7 +40,7 @@ a7.security = (function() {
           user[key] = suser[key];
         });
       }
-      a7.model.set("a7.user", user);
+      a7.model.set("user", user);
     }
   };
 })();

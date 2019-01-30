@@ -317,7 +317,7 @@ a7.ui = (function() {
 
     init: function(resolve, reject) {
       a7.log.info("Layout initializing...");
-      _options = a7.model.get("a7.ui");
+      _options = a7.model.get("a7").ui;
 
       // set event groups to create listeners for
       var eventGroups = ( _options.eventGroups ? _options.eventGroups : 'standard' );

@@ -15,54 +15,56 @@ var a7 = (function() {
         initReject("A model is required, but no model was specified.");
       }
 
+      var theOptions = {
+        auth: {
+          sessionTimeout: (options.auth && options.auth.sessionTimeout ? options.auth.sessionTimeout : 60 * 15 * 1000 )
+        },
+        console: ( options.console ? {
+          enabled: options.console.enabled || false,
+          wsServer: options.console.wsServer || "",
+          container: options.console.container || ( typeof gadgetui === "object" ? gadgetui.display.FloatingPane : "" ),
+          top: options.console.top || 100,
+          left: options.console.left || 500,
+          width: options.console.width || 500,
+          height: options.console.height || 300
+        } : {} ),
+        logging: {
+          logLevel: ( options.logging && options.logging.logLevel ? options.logging.logLevel : "ERROR,FATAL,INFO" )
+        },
+        model: options.model,
+        remote: ( options.remote ? {
+          // modules: ( options.remote.modules | undefined ) // don't set into Model since they are being registered in Remote
+          loginURL: options.remote.loginURL || "",
+          logoutURL: options.remote.logoutURL || "",
+          refreshURL: options.remote.refreshURL || "",
+          useTokens: ( options.auth && options.auth.useTokens ? options.auth.useTokens : true )
+        } : { useTokens: true } ),
+        ui: {
+          renderer: ( options.ui ?
+            options.ui.renderer ||
+            ( typeof Mustache === "object"
+              ? "Mustache"
+              : typeof Handlebars === "object"
+              ? "Handlebars"
+              : "templateLiterals" )
+            : "templateLiterals" )
+        },
+        ready: false,
+        user: ""
+      };
+
       pr = new Promise(function(resolve, reject) {
         a7.log.trace("a7 - model init");
-        a7.model.init(options, resolve, reject);
+        a7.model.init( theOptions, resolve, reject );
       });
 
       pr.then(function() {
-        a7.model.set("a7", {
-          auth: {
-            sessionTimeout: (options.auth && options.auth.sessionTimeout ? options.auth.sessionTimeout : 60 * 15 * 1000 )
-          },
-          console: ( options.console ? {
-            enabled: options.console.enabled || false,
-            wsServer: options.console.wsServer || "",
-            container: options.console.container || ( typeof gadgetui === "object" ? gadgetui.display.FloatingPane : "" ),
-            top: options.console.top || 100,
-            left: options.console.left || 500,
-            width: options.console.width || 500,
-            height: options.console.height || 300
-          } : {} ),
-          logging: {
-            logLevel: ( options.logging && options.logging.logLevel ? options.logging.logLevel : "ERROR,FATAL,INFO" )
-          },
-          model: options.model,
-          remote: ( options.remote ? {
-            // modules: ( options.remote.modules | undefined ) // don't set into Model since they are being registered in Remote
-            loginURL: options.remote.loginURL || "",
-            logoutURL: options.remote.logoutURL || "",
-            refreshURL: options.remote.refreshURL || "",
-            useTokens: ( options.auth && options.auth.useTokens ? options.auth.useTokens : true )
-          } : { useTokens: true } ),
-          ui: {
-            renderer: ( options.ui ?
-              options.ui.renderer ||
-              ( typeof Mustache === "object"
-                ? "Mustache"
-                : typeof Handlebars === "object"
-                ? "Handlebars"
-                : "templateLiterals" )
-              : "templateLiterals" )
-          },
-          ready: false,
-          user: ""
-        });
+        a7.model.set("a7", theOptions );
       }).then(function() {
         p0 = new Promise(function(resolve, reject) {
-          if (a7.model.get("a7.console").enabled) {
+          if (a7.model.get("a7").console.enabled) {
             a7.log.trace("a7 - console init");
-            a7.console.init(resolve, reject);
+            a7.console.init( theOptions, resolve, reject);
           } else {
             resolve();
           }
@@ -75,7 +77,7 @@ var a7 = (function() {
             // init user state
             a7.security.init();
             a7.log.trace("a7 - remote init");
-            a7.remote.init( ( options.remote && options.remote.modules ? options.remote.modules : {} ) );
+            a7.remote.init( ( theOptions.remote && theOptions.remote.modules ? theOptions.remote.modules : {} ) );
             a7.log.trace("a7 - events init");
             a7.events.init();
             p1 = new Promise(function(resolve, reject) {

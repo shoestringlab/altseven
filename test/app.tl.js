@@ -18,7 +18,7 @@ var app = {
         // render the login form
         a7.ui.register( app.components.LoginForm( { id: 'loginForm', selector: "div[name='anon']" } ) );
 
-        var user = a7.model.get("a7.user");
+        var user = a7.model.get("user");
 
         a7.ui.register( app.components.Header( { id: 'header', user: user, selector: "div[name='header']" } ) );
 
@@ -43,7 +43,7 @@ var app = {
       });
 
       promise.then(function(secure) {
-        a7.ui.views['header'].setState( { user: a7.model.get( "a7.user" ) } );
+        a7.ui.views['header'].setState( { user: a7.model.get( "user" ) } );
         app.ui.setLayout(secure);
       });
     };
@@ -53,7 +53,7 @@ var app = {
     return {
       authenticate: _authenticate,
       loginHandler: function(json) {
-        a7.ui.views['header'].setState( { user: a7.model.get( "a7.user" ) } );
+        a7.ui.views['header'].setState( { user: a7.model.get( "user" ) } );
         app.ui.setLayout(json.success);
       }
     };

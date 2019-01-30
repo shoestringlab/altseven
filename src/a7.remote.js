@@ -19,8 +19,8 @@ a7.remote = ( function(){
 		},
 
 		init: function( _modules ){
-			_options = a7.model.get( "a7.remote" );
-			_options.sessionTimeout = a7.model.get( "a7.auth" ).sessionTimeout;
+			_options = a7.model.get( "a7" ).remote;
+			_options.sessionTimeout = a7.model.get( "a7" ).auth.sessionTimeout;
 			// set token if valid
 			if( _options.useTokens && sessionStorage.token && sessionStorage.token !== '' ) {
 				_token = sessionStorage.token;
@@ -49,12 +49,12 @@ a7.remote = ( function(){
 								return response.json();
 							})
 							.then( function( json ){
-								var user = a7.model.get( "a7.user" );
+								var user = a7.model.get( "user" );
 								Object.keys( json.user ).map( function( key ) {
 									user[ key ] = json.user[ key ];
 								});
 								sessionStorage.user = JSON.stringify( user );
-								a7.model.set( "a7.user", user );
+								a7.model.set( "user", user );
 								if( params.callback !== undefined ){
 									params.callback( json );
 								}
@@ -84,7 +84,7 @@ a7.remote = ( function(){
 							.then( function( json ){
 								var user = a7.components.Constructor(a7.components.User, [], true);
 								sessionStorage.user = JSON.stringify( user );
-								a7.model.set( "a7.user", user );
+								a7.model.set( "user", user );
 								if( params.callback !== undefined ){
 									params.callback();
 								}

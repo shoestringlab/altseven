@@ -1,5 +1,5 @@
 function View( props ){
-	this.renderer = a7.model.get("a7.ui").renderer;
+	this.renderer = a7.model.get("a7").ui.renderer;
 	this.type = 'View';
 	this.props = props;
 	this.state = {};

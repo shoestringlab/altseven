@@ -27,8 +27,8 @@ a7.console = (function() {
     };
 
   return {
-    init: function(resolve, reject) {
-      var console = a7.model.get("a7.console");
+    init: function( options, resolve, reject) {
+      var console = options.console;
       if( console.container === "" ) reject( "You must specify a container object for the console display." );
 
       // check for console state

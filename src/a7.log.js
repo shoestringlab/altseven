@@ -6,7 +6,7 @@ a7.log = ( function(){
 		_log = function( message, level ){
 			if( _ready && _logLevel.indexOf( level ) >=0 || _logLevel.indexOf( "ALL" ) >=0 ){
 				//console.log( message );
-				if( a7.model.get( "a7.console" ).enabled ){
+				if( a7.model.get( "a7" ).console.enabled ){
 					a7.console.addMessage( message, new Date(), "local", level );
 				}
 			} else if( ! _ready ){
@@ -18,7 +18,7 @@ a7.log = ( function(){
 	return{
 		init: function(){
 
-			_logLevel = a7.model.get( "a7.logging" ).logLevel;
+			_logLevel = a7.model.get( "a7" ).logging.logLevel;
 			_ready = true;
 			_deferred.forEach( function( item ){
 				_log( item.message, item.level );

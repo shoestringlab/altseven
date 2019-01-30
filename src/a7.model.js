@@ -4,9 +4,7 @@ a7.model = ( function() {
 		_methods = {};
 
 	return {
-		create : function(){
-			return _methods[ "create" ].apply( _model, arguments );
-		},
+
 		destroy : function(){
 			return _methods[ "destroy" ].apply( _model, arguments );
 		},
@@ -19,9 +17,6 @@ a7.model = ( function() {
 		exists : function(){
 			return _methods[ "exists" ].apply( _model, arguments );
 		},
-		bind : function(){
-			return _methods[ "bind" ].apply( _model, arguments );
-		},
 		init: function( options, resolve ){
 			a7.log.info( "Model initializing... " );
 
@@ -29,6 +24,7 @@ a7.model = ( function() {
 				switch( options.model ){
 					case "altseven":
 						_model = a7.components.Model;
+						_model.init( options );
 						break;
 					case "gadgetui":
 						_model = gadgetui.model;
@@ -40,9 +36,7 @@ a7.model = ( function() {
 			a7.log.trace( "Model set: " + _model );
 			// gadgetui maps directly, so we can loop on the keys
 			Object.keys( _model ).forEach( function( key ){
-				if( key !== "BindableObject" ){
-					_methods[ key ] = _model[ key ];
-				}
+				_methods[ key ] = _model[ key ];
 			});
 
 			resolve();
