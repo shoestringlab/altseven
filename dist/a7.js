@@ -80,7 +80,7 @@ var a7 = (function() {
             // init user state
             a7.security.init();
             a7.log.trace("a7 - remote init");
-            a7.remote.init( ( theOptions.remote && theOptions.remote.modules ? theOptions.remote.modules : {} ) );
+            a7.remote.init( ( options.remote && options.remote.modules ? options.remote.modules : {} ) );
             a7.log.trace("a7 - events init");
             a7.events.init();
             p1 = new Promise(function(resolve, reject) {
@@ -788,9 +788,10 @@ a7.remote = ( function(){
 				return _sessionTimer;
 		},
 
-		init: function( _modules ){
+		init: function( modules ){
 			_options = a7.model.get( "a7" ).remote;
-			_options.sessionTimeout = a7.model.get( "a7" ).auth.sessionTimeout;
+			
+			_options.sessionTimeout = options.auth.sessionTimeout;
 			// set token if valid
 			if( _options.useTokens && sessionStorage.token && sessionStorage.token !== '' ) {
 				_token = sessionStorage.token;
@@ -879,8 +880,8 @@ a7.remote = ( function(){
 			_setModule( "auth", authModule );
 
 			// add application modules
-			Object.keys( _modules ).forEach( function( key ){
-				_setModule( key, _modules[ key ] );
+			Object.keys( modules ).forEach( function( key ){
+				_setModule( key, modules[ key ] );
 			});
 		},
 
