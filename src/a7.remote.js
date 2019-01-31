@@ -19,9 +19,10 @@ a7.remote = ( function(){
 		},
 
 		init: function( modules ){
+			var auth = a7.model.get( "a7" ).auth;
 			_options = a7.model.get( "a7" ).remote;
-			
-			_options.sessionTimeout = options.auth.sessionTimeout;
+
+			_options.sessionTimeout = auth.sessionTimeout;
 			// set token if valid
 			if( _options.useTokens && sessionStorage.token && sessionStorage.token !== '' ) {
 				_token = sessionStorage.token;
