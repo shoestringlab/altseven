@@ -1217,6 +1217,7 @@ a7.ui = (function() {
     },
 
     _getParentViewIds = function( id ){
+      a7.log.trace( "Find parents of " + id );
       let parentIds = [];
       let view = _views[ id ];
       while( view.props.parentID !== undefined ){
@@ -1228,6 +1229,7 @@ a7.ui = (function() {
     },
 
      _getChildViewIds = function( id ){
+      a7.log.trace( "Find children of " + id );
       let childIds = [];
       let view = _views[ id ];
       let prop = '';
@@ -1253,13 +1255,14 @@ a7.ui = (function() {
           // wait for other possible updates and then process the queue
           setTimeout( _processRenderQueue, 18 );
         }else{
+          let childIds = _getChildViewIds( id );
           if( _views[ id ].props.parentID === undefined ){
             // if the view is a root view, it should be pushed to the front of the stack
             a7.log.trace( 'add to front of queue: ' + id );
             _queue.unshift( id );
           }else{
             let parentIds = _getParentViewIds( id );
-            let childIds = _getChildViewIds( id );
+
             let highParent = undefined;
             if( parentIds.length ){
               highParent = parentIds.find( function( parentId ){
@@ -1272,15 +1275,15 @@ a7.ui = (function() {
               a7.log.trace( 'add to end of queue: ' + id );
               _queue.push( id );
             }
-
-            // remove child views from the queue, they will be rendered by the parents
-            childIds.forEach( function( childId ){
-              if( _queue.indexOf( childId ) >= 0 ){
-                a7.log.trace( 'remove child from queue: ' + childId );
-                _queue.splice( _queue.indexOf( childId ), 1 );
-              }
-            });
           }
+
+          // remove child views from the queue, they will be rendered by the parents
+          childIds.forEach( function( childId ){
+            if( _queue.indexOf( childId ) >= 0 ){
+              a7.log.trace( 'remove child from queue: ' + childId );
+              _queue.splice( _queue.indexOf( childId ), 1 );
+            }
+          });
         }
       }else{
         _deferred.push( id );
