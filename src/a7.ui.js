@@ -268,6 +268,7 @@ a7.ui = (function() {
 
             // only add if there is no parent in the queue, since parents will render children
             if( highParent === undefined ){
+
               a7.log.trace( 'add to end of queue: ' + id );
               _queue.push( id );
             }
@@ -285,6 +286,7 @@ a7.ui = (function() {
         _deferred.push( id );
       }
     },
+
 
     _processRenderQueue = function(){
       a7.log.trace( 'processing the queue' );

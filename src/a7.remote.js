@@ -30,6 +30,7 @@ a7.remote = ( function(){
 
 			var authModule = {
 					login: function( params ){
+						a7.log.trace( "remote call: auth.login" );
 						var request,
 								args = { 	method: 'POST',
 										headers: {
@@ -63,6 +64,7 @@ a7.remote = ( function(){
 							});
 					},
 					logout: function( params ){
+						a7.log.trace( "remote call: auth.logout" );
 						var request,
 								args = { 	method: 'POST',
 										headers: {
