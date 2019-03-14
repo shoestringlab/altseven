@@ -253,18 +253,6 @@ View.prototype = {
 				this.fireEvent( "mustRender" );
 			}
 		}.bind( this ));
-
-		// bubble up event
-		/* if( this.props !== undefined ){
-			for( var prop in this.props ){
-				if( this.props[ prop ].type !== undefined && this.props[ prop ].type === 'View' ){
-					this.props[ prop ].on( "mustRender", function(){
-						this.fireEvent( "mustRender" );
-					}.bind( this ));
-				}
-			}
-		} */
-
 	},
 	events : ['mustRender','rendered', 'mustRegister', 'registered'],
   setState: function( args ){

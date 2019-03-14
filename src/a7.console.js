@@ -26,6 +26,28 @@ a7.console = (function() {
       consoleDiv.appendChild(div);
     };
 
+  var _handleMessage = function( message, json ){
+    var ix = 0;
+		if (json.type === "history") {
+			// entire message
+			// history
+			// insert every single message to the chat window
+			for (ix = 0; ix < json.data.length; ix++) {
+				_addMessage(
+					json.data[ix].text,
+					new Date(json.data[ix].time),
+					"websocket"
+				);
+			}
+		} else if (json.type === "message") {
+			// it's a single
+			// message
+			_addMessage(json.data.text, new Date(json.data.time), "websocket");
+		} else {
+			a7.log.error("This doesn't look like valid JSON: ", json);
+		}
+  }
+
   return {
     init: function( options, resolve, reject) {
       var console = options.console;
@@ -39,8 +61,7 @@ a7.console = (function() {
         consoleDiv.setAttribute("class", "a7-console");
         document.body.append(consoleDiv);
 
-        var connection,
-          fp = a7.components.Constructor(
+        var fp = a7.components.Constructor(
             console.container,
             [
               consoleDiv,
@@ -60,70 +81,7 @@ a7.console = (function() {
         fp.selector.setAttribute("right", 0);
 
         if( console.wsServer ){
-          window.WebSocket = window.WebSocket || window.MozWebSocket;
-
-          // if browser doesn't support WebSocket, just show some
-          // notification and exit
-          if (!window.WebSocket) {
-            consoleDiv.innerHTML("Your browser doesn't support WebSockets.");
-            return;
-          }
-
-          // open connection
-          connection = new WebSocket(console.wsServer);
-
-          connection.onopen = function() {
-            //a7.log.info( "Console initializing..." );
-          };
-
-          connection.onerror = function() {
-            var message = "Can't connect to the console socket server.";
-            if (console.enabled) {
-              // just in there were some problems with conenction...
-              _addMessage(message, new Date(), "local");
-            } else {
-              a7.log.error(message);
-            }
-          };
-
-          // most important part - incoming messages
-          connection.onmessage = function(message) {
-            var json, ix;
-            // try to parse JSON message. Because we know that the
-            // server always returns
-            // JSON this should work without any problem but we should
-            // make sure that
-            // the massage is not chunked or otherwise damaged.
-            try {
-              json = JSON.parse(message.data);
-            } catch (er) {
-              a7.log.error("This doesn't look like valid JSON: ", message.data);
-              return;
-            }
-
-            if (json.type === "history") {
-              // entire message
-              // history
-              // insert every single message to the chat window
-              for (ix = 0; ix < json.data.length; ix++) {
-                _addMessage(
-                  json.data[ix].text,
-                  new Date(json.data[ix].time),
-                  "websocket"
-                );
-              }
-            } else if (json.type === "message") {
-              // it's a single
-              // message
-              _addMessage(json.data.text, new Date(json.data.time), "websocket");
-            } else {
-              a7.log.error("This doesn't look like valid JSON: ", json);
-            }
-          };
-
-          window.addEventListener("close", function() {
-            connection.close();
-          });
+          var connection = a7.remote.webSocket( console.wsServer, _handleMessage );
         }
 
         a7.console.addMessage = _addMessage;

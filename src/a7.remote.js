@@ -9,7 +9,62 @@ a7.remote = ( function(){
 			_modules[ key ] = module;
 		};
 
+	var _webSocket = function( wsServer, messageHandler, isJSON ){
+		if( wsServer ){
+			window.WebSocket = window.WebSocket || window.MozWebSocket;
+
+			// if browser doesn't support WebSocket, just show some
+			// notification and exit
+			if (!window.WebSocket) {
+				a7.log.error( "Your browser doesn't support WebSockets." );
+				return;
+			}
+
+			// open connection
+			let connection = new WebSocket( wsServer );
+
+			connection.onopen = function() {
+				a7.log.info( "Connecting to the socket server at " + wsServer );
+			};
+
+			connection.onerror = function() {
+				var message = "Can't connect to the socket server at " + wsServer;
+				a7.log.error( message );
+			};
+
+			// most important part - incoming messages
+			connection.onmessage = function( message ) {
+				if( isJSON ){
+					var json;
+					// try to parse JSON message. Because we know that the
+					// server always returns
+					// JSON this should work without any problem but we should
+					// make sure that
+					// the message is not chunked or otherwise damaged.
+					try {
+						json = JSON.parse( message.data );
+					} catch (er) {
+						a7.log.error( "This doesn't look like valid JSON: ", message.data );
+						return;
+					}
+					messageHandler( message, json );
+				} else{
+					messageHandler( message );
+				}
+
+			};
+
+			window.addEventListener("close", function() {
+				connection.close();
+			});
+
+			return connection;
+		}
+	}
+
 	return{
+
+		webSocket : _webSocket,
 		getToken : function(){
 			return _token;
 		},

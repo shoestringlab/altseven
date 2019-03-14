@@ -94,6 +94,7 @@ var a7 = (function() {
               });
 
               p2.then(function(secure) {
+                a7.error.init();
                 a7.log.info("Authenticated: " + secure + "...");
                 a7.log.info("Init complete...");
                 initResolve({

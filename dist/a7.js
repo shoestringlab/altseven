@@ -97,6 +97,7 @@ var a7 = (function() {
               });
 
               p2.then(function(secure) {
+                a7.error.init();
                 a7.log.info("Authenticated: " + secure + "...");
                 a7.log.info("Init complete...");
                 initResolve({
@@ -153,6 +154,28 @@ a7.console = (function() {
       consoleDiv.appendChild(div);
     };
 
+  var _handleMessage = function( message, json ){
+    var ix = 0;
+		if (json.type === "history") {
+			// entire message
+			// history
+			// insert every single message to the chat window
+			for (ix = 0; ix < json.data.length; ix++) {
+				_addMessage(
+					json.data[ix].text,
+					new Date(json.data[ix].time),
+					"websocket"
+				);
+			}
+		} else if (json.type === "message") {
+			// it's a single
+			// message
+			_addMessage(json.data.text, new Date(json.data.time), "websocket");
+		} else {
+			a7.log.error("This doesn't look like valid JSON: ", json);
+		}
+  }
+
   return {
     init: function( options, resolve, reject) {
       var console = options.console;
@@ -166,8 +189,7 @@ a7.console = (function() {
         consoleDiv.setAttribute("class", "a7-console");
         document.body.append(consoleDiv);
 
-        var connection,
-          fp = a7.components.Constructor(
+        var fp = a7.components.Constructor(
             console.container,
             [
               consoleDiv,
@@ -187,70 +209,7 @@ a7.console = (function() {
         fp.selector.setAttribute("right", 0);
 
         if( console.wsServer ){
-          window.WebSocket = window.WebSocket || window.MozWebSocket;
-
-          // if browser doesn't support WebSocket, just show some
-          // notification and exit
-          if (!window.WebSocket) {
-            consoleDiv.innerHTML("Your browser doesn't support WebSockets.");
-            return;
-          }
-
-          // open connection
-          connection = new WebSocket(console.wsServer);
-
-          connection.onopen = function() {
-            //a7.log.info( "Console initializing..." );
-          };
-
-          connection.onerror = function() {
-            var message = "Can't connect to the console socket server.";
-            if (console.enabled) {
-              // just in there were some problems with conenction...
-              _addMessage(message, new Date(), "local");
-            } else {
-              a7.log.error(message);
-            }
-          };
-
-          // most important part - incoming messages
-          connection.onmessage = function(message) {
-            var json, ix;
-            // try to parse JSON message. Because we know that the
-            // server always returns
-            // JSON this should work without any problem but we should
-            // make sure that
-            // the massage is not chunked or otherwise damaged.
-            try {
-              json = JSON.parse(message.data);
-            } catch (er) {
-              a7.log.error("This doesn't look like valid JSON: ", message.data);
-              return;
-            }
-
-            if (json.type === "history") {
-              // entire message
-              // history
-              // insert every single message to the chat window
-              for (ix = 0; ix < json.data.length; ix++) {
-                _addMessage(
-                  json.data[ix].text,
-                  new Date(json.data[ix].time),
-                  "websocket"
-                );
-              }
-            } else if (json.type === "message") {
-              // it's a single
-              // message
-              _addMessage(json.data.text, new Date(json.data.time), "websocket");
-            } else {
-              a7.log.error("This doesn't look like valid JSON: ", json);
-            }
-          };
-
-          window.addEventListener("close", function() {
-            connection.close();
-          });
+          var connection = a7.remote.webSocket( console.wsServer, _handleMessage );
         }
 
         a7.console.addMessage = _addMessage;
@@ -267,6 +226,11 @@ a7.console = (function() {
 a7.error = (function() {
   "use strict";
 
+  // add event bindings so devs can listen for window script errors
+  var _bindings = {};
+
+  var events = { onScriptError : [] };
+
   var _captureError = function(msg, url, lineNo, columnNo, error) {
     var string = msg.toLowerCase();
     var substring = "script error";
@@ -281,6 +245,7 @@ a7.error = (function() {
         "Error object: " + JSON.stringify(error)
       ].join(" - ");
 
+      a7.error.fireEvent( "onScriptError", [msg, url, lineNo, columnNo, error] );
       a7.log.error(message);
     }
   };
@@ -291,8 +256,22 @@ a7.error = (function() {
   };
 
   return {
+    events: events,
+/*     on: _bindings.on,
+    off: _bindings.off,
+    fireEvent: _bindings.fireEvent, */
     capture: function() {},
-    captureError: _captureError
+    captureError: _captureError,
+    init: function(){
+      a7.components.EventBindings.getAll().forEach( function( binding ){
+        if( _bindings[ binding ] === undefined ) {
+          _bindings[ binding.name ] = binding.func;
+        }
+        a7.error.on = _bindings.on;
+        a7.error.off = _bindings.off;
+        a7.error.fireEvent = _bindings.fireEvent;
+      });
+    }
   };
 })();
 
@@ -702,18 +681,6 @@ View.prototype = {
 				this.fireEvent( "mustRender" );
 			}
 		}.bind( this ));
-
-		// bubble up event
-		/* if( this.props !== undefined ){
-			for( var prop in this.props ){
-				if( this.props[ prop ].type !== undefined && this.props[ prop ].type === 'View' ){
-					this.props[ prop ].on( "mustRender", function(){
-						this.fireEvent( "mustRender" );
-					}.bind( this ));
-				}
-			}
-		} */
-
 	},
 	events : ['mustRender','rendered', 'mustRegister', 'registered'],
   setState: function( args ){
@@ -779,7 +746,62 @@ a7.remote = ( function(){
 			_modules[ key ] = module;
 		};
 
+	var _webSocket = function( wsServer, messageHandler, isJSON ){
+		if( wsServer ){
+			window.WebSocket = window.WebSocket || window.MozWebSocket;
+
+			// if browser doesn't support WebSocket, just show some
+			// notification and exit
+			if (!window.WebSocket) {
+				a7.log.error( "Your browser doesn't support WebSockets." );
+				return;
+			}
+
+			// open connection
+			let connection = new WebSocket( wsServer );
+
+			connection.onopen = function() {
+				a7.log.info( "Connecting to the socket server at " + wsServer );
+			};
+
+			connection.onerror = function() {
+				var message = "Can't connect to the socket server at " + wsServer;
+				a7.log.error( message );
+			};
+
+			// most important part - incoming messages
+			connection.onmessage = function( message ) {
+				if( isJSON ){
+					var json;
+					// try to parse JSON message. Because we know that the
+					// server always returns
+					// JSON this should work without any problem but we should
+					// make sure that
+					// the message is not chunked or otherwise damaged.
+					try {
+						json = JSON.parse( message.data );
+					} catch (er) {
+						a7.log.error( "This doesn't look like valid JSON: ", message.data );
+						return;
+					}
+					messageHandler( message, json );
+				} else{
+					messageHandler( message );
+				}
+
+			};
+
+			window.addEventListener("close", function() {
+				connection.close();
+			});
+
+			return connection;
+		}
+	}
+
 	return{
+
+		webSocket : _webSocket,
 		getToken : function(){
 			return _token;
 		},
