@@ -229,7 +229,7 @@ a7.error = (function() {
   // add event bindings so devs can listen for window script errors
   var _bindings = {};
 
-  var events = { onScriptError : [] };
+  var events = { scriptError : [] };
 
   var _captureError = function(msg, url, lineNo, columnNo, error) {
     var string = msg.toLowerCase();
@@ -245,7 +245,7 @@ a7.error = (function() {
         "Error object: " + JSON.stringify(error)
       ].join(" - ");
 
-      a7.error.fireEvent( "onScriptError", [msg, url, lineNo, columnNo, error] );
+      a7.error.fireEvent( "scriptError", [msg, url, lineNo, columnNo, error] );
       a7.log.error(message);
     }
   };
@@ -257,9 +257,6 @@ a7.error = (function() {
 
   return {
     events: events,
-/*     on: _bindings.on,
-    off: _bindings.off,
-    fireEvent: _bindings.fireEvent, */
     capture: function() {},
     captureError: _captureError,
     init: function(){
