@@ -1,7 +1,21 @@
+3.4.0
+======
+
+Added option to push a7.log messages to the browser console.
+
+3.3.0
+======
+
+Updates for this version:
+- Added websocket method to the remote module that handles creating websockets
+- Moved the console websocket creation to the remote module
+- Added event bindings to the error module
+- Added scriptError event to the error module
+
 3.2.0
 ======
 
-The model has been updated to work specifically with altseven. 
+The model has been updated to work specifically with altseven.
 - strip binding code from model
 - update model to make it free of side effects - all data passed in and out is deep copied
 - model no longer supports holding functions inside objects since all objects are copied using JSON.parse(JSON.stringify( data ))

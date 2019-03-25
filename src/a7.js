@@ -29,7 +29,8 @@ var a7 = (function() {
           height: options.console.height || 300
         } : {} ),
         logging: {
-          logLevel: ( options.logging && options.logging.logLevel ? options.logging.logLevel : "ERROR,FATAL,INFO" )
+          logLevel: ( options.logging && options.logging.logLevel ? options.logging.logLevel : "ERROR,FATAL,INFO" ),
+          toBrowserConsole: (  options.logging && options.logging.toBrowserConsole ? options.logging.toBrowserConsole  : false )
         },
         model: options.model,
         remote: ( options.remote ? {

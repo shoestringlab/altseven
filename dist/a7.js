@@ -32,7 +32,8 @@ var a7 = (function() {
           height: options.console.height || 300
         } : {} ),
         logging: {
-          logLevel: ( options.logging && options.logging.logLevel ? options.logging.logLevel : "ERROR,FATAL,INFO" )
+          logLevel: ( options.logging && options.logging.logLevel ? options.logging.logLevel : "ERROR,FATAL,INFO" ),
+          toBrowserConsole: (  options.logging && options.logging.toBrowserConsole ? options.logging.toBrowserConsole  : false )
         },
         model: options.model,
         remote: ( options.remote ? {
@@ -334,13 +335,17 @@ a7.events = (function() {
 a7.log = ( function(){
 	// logging levels ALL < TRACE < INFO < WARN < ERROR < FATAL < OFF
 	var _ready = false,
+		_toBrowserConsole = false,
+		_consoleEnabled = false,
 		_deferred = [],
 		_logLevel = "ERROR,FATAL,INFO",
 		_log = function( message, level ){
 			if( _ready && _logLevel.indexOf( level ) >=0 || _logLevel.indexOf( "ALL" ) >=0 ){
-				//console.log( message );
-				if( a7.model.get( "a7" ).console.enabled ){
+				if( _consoleEnabled ){
 					a7.console.addMessage( message, new Date(), "local", level );
+				}
+				if( _toBrowserConsole ){
+					console.log( message );
 				}
 			} else if( ! _ready ){
 				// store log messages before init so they can be logged after init
@@ -350,8 +355,9 @@ a7.log = ( function(){
 
 	return{
 		init: function(){
-
 			_logLevel = a7.model.get( "a7" ).logging.logLevel;
+			_toBrowserConsole = a7.model.get( "a7" ).logging.toBrowserConsole;
+			_consoleEnabled = a7.model.get( "a7" ).console.enabled;
 			_ready = true;
 			_deferred.forEach( function( item ){
 				_log( item.message, item.level );
