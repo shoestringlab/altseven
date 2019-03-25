@@ -18,13 +18,13 @@ var app = {
         // render the login form
         a7.ui.register( app.components.LoginForm( { id: 'loginForm', selector: "div[name='anon']" } ) );
 
-        var user = a7.model.get("a7.user");
+        var user = a7.model.get("a7").user;
 
         a7.ui.register( app.components.Header( { id: 'header', user: user, selector: "div[name='header']" } ) );
 
         a7.ui.register( app.components.Todo( {
           id: 'todo',
-          todoList: app.components.TodoList( { id: 'todoList', items: [], selector: "div[data-id='todoList']" } ),
+          children: { todoList: app.components.TodoList( { id: 'todoList', items: [], selector: "div[data-id='todoList']" } ) },
           selector: "div[name='app']"
         } ) );
 
@@ -43,7 +43,7 @@ var app = {
       });
 
       promise.then(function(secure) {
-        a7.ui.views['header'].setState( { user: a7.model.get( "a7.user" ) } );
+        a7.ui.views['header'].setState( { user: a7.model.get( "a7" ).user } );
         app.ui.setLayout(secure);
       });
     };
@@ -53,7 +53,7 @@ var app = {
     return {
       authenticate: _authenticate,
       loginHandler: function(json) {
-        a7.ui.views['header'].setState( { user: a7.model.get( "a7.user" ) } );
+        a7.ui.views['header'].setState( { user: a7.model.get( "a7" ).user } );
         app.ui.setLayout(json.success);
       }
     };
@@ -76,7 +76,7 @@ var app = {
       		</form>
       		</div>`;
 
-        return Mustache.render( templ, { text: todo.state.text, next: todo.props.todoList.state.items.length + 1 } );
+        return Mustache.render( templ, { text: todo.state.text, next: todo.props.children.todoList.state.items.length + 1 } );
       }
 
       todo.eventHandlers = {
@@ -91,8 +91,8 @@ var app = {
           };
 
           todo.setState( { text : '' } );
-          var items = todo.props.todoList.state.items.concat(newItem);
-          todo.props.todoList.setState({
+          var items = todo.props.children.todoList.state.items.concat(newItem);
+          todo.props.children.todoList.setState({
             items: items
           });
         }

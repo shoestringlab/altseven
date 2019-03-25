@@ -669,13 +669,11 @@ View.prototype = {
 
 		this.on( "registered", function(){
 			// register children
-			if( this.props !== undefined ){
-				for( var prop in this.props ){
-					if( this.props[ prop ] !== null && this.props[ prop ].type !== undefined && this.props[ prop ].type === "View" ){
-						if( a7.ui.getView( this.props[ prop ].props.id ) === undefined ){
-							a7.log.trace( 'parent: ' + this.props.id + ', register child: ' + this.props[ prop ].props.id );
-							this.props[ prop ].fireEvent( "mustRegister", Object.assign( this ) );
-						}
+			if( this.props !== undefined && this.props.children !== undefined && this.props.children !== null ){
+				for( var child in this.props.children ){
+					if( a7.ui.getView( this.props.children[ child ].props.id ) === undefined ){
+						a7.log.trace( 'parent: ' + this.props.id + ', register child: ' + this.props.children[ child ].props.id );
+						this.props.children[ child ].fireEvent( "mustRegister", Object.assign( this ) );
 					}
 				}
 			}
@@ -718,12 +716,10 @@ View.prototype = {
 		this.fireEvent( "rendered" );
 	},
 	onRendered: function(){
-		if( this.props !== undefined ){
-			for( var prop in this.props ){
-				if( this.props[ prop ].type !== undefined && this.props[ prop ].type === "View" ){
-					this.props[ prop ].props.element = document.querySelector( this.props[ prop ].props.selector );
-					this.props[ prop ].render();
-				}
+		if( this.props !== undefined && this.props.children !== undefined && this.props.children !== null ){
+			for( var child in this.props.children ){
+				this.props.children[ child ].props.element = document.querySelector( this.props.children[ child ].props.selector );
+				this.props.children[ child ].render();
 			}
 		}
 	}
@@ -1261,12 +1257,10 @@ a7.ui = (function() {
       let view = _views[ id ];
       let prop = '';
       let props = view.props;
-      if( props !== undefined ){
-        for( prop in props ){
-          if( props[ prop ] !== null && props[ prop ].type !== undefined && props[ prop ].type === "View"){
-            childIds.push( props[ prop ].props.id );
-            childIds.concat( _getChildViewIds( props[ prop ].props.id ) );
-          }
+      if( props !== undefined && props.children !== undefined && props.children !== null ){
+        for( var child in props.children ){
+          childIds.push( props.children[ child ].props.id );
+          childIds.concat( _getChildViewIds( props.children[ child ].props.id ) );
         }
       }
       // returned in highest to lowest order

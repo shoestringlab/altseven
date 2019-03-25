@@ -24,7 +24,7 @@ var app = {
 
         a7.ui.register( app.components.Todo( {
           id: 'todo',
-          todoList: app.components.TodoList( { id: 'todoList', items: [], selector: "div[data-id='todoList']" } ),
+          children: { todoList: app.components.TodoList( { id: 'todoList', items: [], selector: "div[data-id='todoList']" } ) },
           selector: "div[name='app']"
         } ) );
 
@@ -72,7 +72,7 @@ var app = {
 				<div data-id="todoList"></div>
 				<form>
 					<input name="todoInput" value="${todo.state.text}" data-onchange="changeTodoInput" />
-					<button type="button" name="todoSubmit" data-onclick="clickSubmit">Add ${todo.props.todoList.state.items.length + 1}</button>
+					<button type="button" name="todoSubmit" data-onclick="clickSubmit">Add ${todo.props.children.todoList.state.items.length + 1}</button>
 				</form>
 				</div>`;
       };
@@ -89,8 +89,8 @@ var app = {
           };
 
           todo.setState( { text: '' } );
-          var items = todo.props.todoList.state.items.concat(newItem);
-          todo.props.todoList.setState({
+          var items = todo.props.children.todoList.state.items.concat(newItem);
+          todo.props.children.todoList.setState({
             items: items
           });
         }

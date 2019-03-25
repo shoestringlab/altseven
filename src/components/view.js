@@ -26,13 +26,11 @@ View.prototype = {
 
 		this.on( "registered", function(){
 			// register children
-			if( this.props !== undefined ){
-				for( var prop in this.props ){
-					if( this.props[ prop ] !== null && this.props[ prop ].type !== undefined && this.props[ prop ].type === "View" ){
-						if( a7.ui.getView( this.props[ prop ].props.id ) === undefined ){
-							a7.log.trace( 'parent: ' + this.props.id + ', register child: ' + this.props[ prop ].props.id );
-							this.props[ prop ].fireEvent( "mustRegister", Object.assign( this ) );
-						}
+			if( this.props !== undefined && this.props.children !== undefined && this.props.children !== null ){
+				for( var child in this.props.children ){
+					if( a7.ui.getView( this.props.children[ child ].props.id ) === undefined ){
+						a7.log.trace( 'parent: ' + this.props.id + ', register child: ' + this.props.children[ child ].props.id );
+						this.props.children[ child ].fireEvent( "mustRegister", Object.assign( this ) );
 					}
 				}
 			}
@@ -75,12 +73,10 @@ View.prototype = {
 		this.fireEvent( "rendered" );
 	},
 	onRendered: function(){
-		if( this.props !== undefined ){
-			for( var prop in this.props ){
-				if( this.props[ prop ].type !== undefined && this.props[ prop ].type === "View" ){
-					this.props[ prop ].props.element = document.querySelector( this.props[ prop ].props.selector );
-					this.props[ prop ].render();
-				}
+		if( this.props !== undefined && this.props.children !== undefined && this.props.children !== null ){
+			for( var child in this.props.children ){
+				this.props.children[ child ].props.element = document.querySelector( this.props.children[ child ].props.selector );
+				this.props.children[ child ].render();
 			}
 		}
 	}

@@ -230,12 +230,10 @@ a7.ui = (function() {
       let view = _views[ id ];
       let prop = '';
       let props = view.props;
-      if( props !== undefined ){
-        for( prop in props ){
-          if( props[ prop ] !== null && props[ prop ].type !== undefined && props[ prop ].type === "View"){
-            childIds.push( props[ prop ].props.id );
-            childIds.concat( _getChildViewIds( props[ prop ].props.id ) );
-          }
+      if( props !== undefined && props.children !== undefined && props.children !== null ){
+        for( var child in props.children ){
+          childIds.push( props.children[ child ].props.id );
+          childIds.concat( _getChildViewIds( props.children[ child ].props.id ) );
         }
       }
       // returned in highest to lowest order
