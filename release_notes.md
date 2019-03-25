@@ -1,3 +1,9 @@
+4.0.0
+======
+
+- Add props.children to views to hold child views of a given view
+- update test code
+
 3.4.0
 ======
 
