@@ -35,10 +35,10 @@ a7.events = (function() {
         a7.remote.invoke("auth.refresh", params);
       });
       a7.events.subscribe("auth.sessionTimeout", function() {
-        //	a7.remote.invoke( "auth.sessionTimeout" );
+        a7.security.invalidateSession();
       });
       a7.events.subscribe("auth.invalidateSession", function() {
-        //	a7.remote.invoke( "auth.sessionTimeout" );
+        a7.security.invalidateSession();
       });
     },
     publish: function(topic, info) {

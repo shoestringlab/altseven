@@ -310,10 +310,10 @@ a7.events = (function() {
         a7.remote.invoke("auth.refresh", params);
       });
       a7.events.subscribe("auth.sessionTimeout", function() {
-        //	a7.remote.invoke( "auth.sessionTimeout" );
+        a7.security.invalidateSession();
       });
       a7.events.subscribe("auth.invalidateSession", function() {
-        //	a7.remote.invoke( "auth.sessionTimeout" );
+        a7.security.invalidateSession();
       });
     },
     publish: function(topic, info) {
@@ -646,7 +646,7 @@ function View( props ){
 	this.type = 'View';
 	this.props = props;
 	this.state = {};
-
+	this.mustRender = false;
 	this.config();
 }
 
@@ -664,6 +664,7 @@ View.prototype = {
 		}.bind( this ));
 
 		this.on( "rendered", function(){
+			this.mustRender = false;
 			this.onRendered();
 		}.bind( this ));
 
@@ -677,7 +678,7 @@ View.prototype = {
 					}
 				}
 			}
-			if( this.props.parentID === undefined ){
+			if( this.props.parentID === undefined || this.mustRender ){
 				// only fire render event for root views, children will render in the chain
 				this.fireEvent( "mustRender" );
 			}
@@ -796,7 +797,27 @@ a7.remote = ( function(){
 
 			return connection;
 		}
-	}
+	},
+
+	_refreshClientSession = function(){
+		var promise = new Promise( function( resolve, reject ){
+			a7.remote.invoke( "auth.refresh", { resolve: resolve, reject: reject } );
+		});
+
+		promise
+			.then( function( active ){
+				// session is still active, no need to do anything else
+				a7.log.trace( 'Still logged in.' );
+			})
+			.error( function( error ){
+				a7.events.publish( "auth.sessionTimeout" );
+			});
+
+	},
+	_setToken = function( token ){
+		sessionStorage.token = token;
+		_token = token;
+	};
 
 	return{
 
@@ -804,7 +825,9 @@ a7.remote = ( function(){
 		getToken : function(){
 			return _token;
 		},
-
+		invalidateToken : function(){
+			_setToken( '' );
+		},
 		getSessionTimer : function(){
 				return _sessionTimer;
 		},
@@ -869,23 +892,18 @@ a7.remote = ( function(){
 
 						promise
 							.then( function( response ) {
-								var token = "";
-								if( token !== undefined && token !== null ){
-									_token = token;
-									sessionStorage.token = token;
-								}
 								return response.json();
 							})
 							.then( function( json ){
-								var user = a7.components.Constructor(a7.components.User, [], true);
-								sessionStorage.user = JSON.stringify( user );
-								a7.model.set( "user", user );
+								a7.security.invalidateSession();
+								
 								if( params.callback !== undefined ){
 									params.callback();
 								}
 							});
 					},
 					refresh: function( params ){
+						// refresh keeps the client session alive
 						a7.remote.fetch( _options.refreshURL, {}, true )
 						// initial fetch needs to parse response
 						.then( function( response ){
@@ -946,13 +964,12 @@ a7.remote = ( function(){
 					if( secure && _options.useTokens ){
 						var token = response.headers.get( "X-Token" );
 						if( token !== undefined && token !== null ){
-							_token = token;
-							sessionStorage.token = token;
+							_setToken( token );
 
 							if( _sessionTimer !== undefined ){
 								clearTimeout( _sessionTimer );
 							}
-							_sessionTimer =	setTimeout( function(){ a7.remote.invoke( "auth.refresh" ); }, _options.sessionTimeout );
+							_sessionTimer =	setTimeout( _refreshClientSession, _options.sessionTimeout );
 
 						} else{
 							a7.events.publish( "auth.sessionTimeout" );
@@ -999,9 +1016,17 @@ a7.security = (function() {
         resolve(false);
       }
     }
+  },
+  _invalidateSession = function(){
+		clearTimeout( a7.remote.getSessionTimer() );
+    a7.remote.invalidateToken();
+		var user = a7.components.Constructor(a7.components.User, [], true);
+		sessionStorage.user = JSON.stringify( user );
+		a7.model.set( "user", user );
   };
 
   return {
+    invalidateSession: _invalidateSession,
     isAuthenticated: _isAuthenticated,
     // initialization
     // 1. creates a new user object

@@ -19,9 +19,17 @@ a7.security = (function() {
         resolve(false);
       }
     }
+  },
+  _invalidateSession = function(){
+		clearTimeout( a7.remote.getSessionTimer() );
+    a7.remote.invalidateToken();
+		var user = a7.components.Constructor(a7.components.User, [], true);
+		sessionStorage.user = JSON.stringify( user );
+		a7.model.set( "user", user );
   };
 
   return {
+    invalidateSession: _invalidateSession,
     isAuthenticated: _isAuthenticated,
     // initialization
     // 1. creates a new user object

@@ -1,3 +1,10 @@
+4.1.0
+======
+
+- Added View.mustRender boolean to force rendering of a child component that otherwise may not render
+- Added to and enhanced code for refreshing session with remote refresh call
+- Added a7.security.invalidateSession and associated code to enable invalidating a session
+
 4.0.0
 ======
 

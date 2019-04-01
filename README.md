@@ -1,7 +1,7 @@
 altseven
 =========
 
-v 4.0.0
+v 4.1.0
 
 A JavaScript framework. Built as an academic exercise.
 

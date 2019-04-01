@@ -60,7 +60,27 @@ a7.remote = ( function(){
 
 			return connection;
 		}
-	}
+	},
+
+	_refreshClientSession = function(){
+		var promise = new Promise( function( resolve, reject ){
+			a7.remote.invoke( "auth.refresh", { resolve: resolve, reject: reject } );
+		});
+
+		promise
+			.then( function( active ){
+				// session is still active, no need to do anything else
+				a7.log.trace( 'Still logged in.' );
+			})
+			.error( function( error ){
+				a7.events.publish( "auth.sessionTimeout" );
+			});
+
+	},
+	_setToken = function( token ){
+		sessionStorage.token = token;
+		_token = token;
+	};
 
 	return{
 
@@ -68,7 +88,9 @@ a7.remote = ( function(){
 		getToken : function(){
 			return _token;
 		},
-
+		invalidateToken : function(){
+			_setToken( '' );
+		},
 		getSessionTimer : function(){
 				return _sessionTimer;
 		},
@@ -133,23 +155,18 @@ a7.remote = ( function(){
 
 						promise
 							.then( function( response ) {
-								var token = "";
-								if( token !== undefined && token !== null ){
-									_token = token;
-									sessionStorage.token = token;
-								}
 								return response.json();
 							})
 							.then( function( json ){
-								var user = a7.components.Constructor(a7.components.User, [], true);
-								sessionStorage.user = JSON.stringify( user );
-								a7.model.set( "user", user );
+								a7.security.invalidateSession();
+								
 								if( params.callback !== undefined ){
 									params.callback();
 								}
 							});
 					},
 					refresh: function( params ){
+						// refresh keeps the client session alive
 						a7.remote.fetch( _options.refreshURL, {}, true )
 						// initial fetch needs to parse response
 						.then( function( response ){
@@ -210,13 +227,12 @@ a7.remote = ( function(){
 					if( secure && _options.useTokens ){
 						var token = response.headers.get( "X-Token" );
 						if( token !== undefined && token !== null ){
-							_token = token;
-							sessionStorage.token = token;
+							_setToken( token );
 
 							if( _sessionTimer !== undefined ){
 								clearTimeout( _sessionTimer );
 							}
-							_sessionTimer =	setTimeout( function(){ a7.remote.invoke( "auth.refresh" ); }, _options.sessionTimeout );
+							_sessionTimer =	setTimeout( _refreshClientSession, _options.sessionTimeout );
 
 						} else{
 							a7.events.publish( "auth.sessionTimeout" );

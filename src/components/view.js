@@ -3,7 +3,7 @@ function View( props ){
 	this.type = 'View';
 	this.props = props;
 	this.state = {};
-
+	this.mustRender = false;
 	this.config();
 }
 
@@ -21,6 +21,7 @@ View.prototype = {
 		}.bind( this ));
 
 		this.on( "rendered", function(){
+			this.mustRender = false;
 			this.onRendered();
 		}.bind( this ));
 
@@ -34,7 +35,7 @@ View.prototype = {
 					}
 				}
 			}
-			if( this.props.parentID === undefined ){
+			if( this.props.parentID === undefined || this.mustRender ){
 				// only fire render event for root views, children will render in the chain
 				this.fireEvent( "mustRender" );
 			}
