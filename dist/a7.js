@@ -51,7 +51,8 @@ var a7 = (function() {
               : typeof Handlebars === "object"
               ? "Handlebars"
               : "templateLiterals" )
-            : "templateLiterals" )
+            : "templateLiterals" ),
+            timeout : ( options.ui && options.ui.timeout ? options.ui.timeout : 600000 ) // default 10 minute check for registered views
         },
         ready: false,
         user: ""
@@ -644,6 +645,9 @@ User.prototype.getMemento = function(){
 function View( props ){
 	this.renderer = a7.model.get("a7").ui.renderer;
 	this.type = 'View';
+	this.timeout;
+	this.timer;
+	this.element;
 	this.props = props;
 	this.state = {};
 	this.mustRender = false;
@@ -664,6 +668,11 @@ View.prototype = {
 		}.bind( this ));
 
 		this.on( "rendered", function(){
+			// set the timeout
+			if( this.timer !== undefined ){
+				clearTimeout( this.timer );
+			}
+			this.timer = setTimeout( this.checkRenderStatus.bind( this ), a7.model.get( "a7" ).ui.timeout );
 			this.mustRender = false;
 			this.onRendered();
 		}.bind( this ));
@@ -692,17 +701,17 @@ View.prototype = {
 	},
 	render: function(){
 		a7.log.info( 'render: ' + this.props.id );
-		if( this.props.element === undefined || this.props.element === null ){
-			this.props.element = document.querySelector( this.props.selector );
+		if( this.element === undefined || this.element === null ){
+			this.element = document.querySelector( this.props.selector );
 		}
-		if( !this.props.element ) throw( "You must define a selector for the view." );
-		this.props.element.innerHTML = ( typeof this.template == "function" ? this.template() : this.template );
+		if( !this.element ) throw( "You must define a selector for the view." );
+		this.element.innerHTML = ( typeof this.template == "function" ? this.template() : this.template );
 
 		var eventArr = [];
 		a7.ui.getEvents().forEach( function( eve ){
 			eventArr.push("[data-on" + eve + "]");
 		});
-		var eles = this.props.element.querySelectorAll( eventArr.toString() );
+		var eles = this.element.querySelectorAll( eventArr.toString() );
 
 		eles.forEach( function( sel ){
 			for( var ix=0; ix < sel.attributes.length; ix++ ){
@@ -719,9 +728,16 @@ View.prototype = {
 	onRendered: function(){
 		if( this.props !== undefined && this.props.children !== undefined && this.props.children !== null ){
 			for( var child in this.props.children ){
-				this.props.children[ child ].props.element = document.querySelector( this.props.children[ child ].props.selector );
+				this.props.children[ child ].element = document.querySelector( this.props.children[ child ].props.selector );
 				this.props.children[ child ].render();
 			}
+		}
+	},
+	checkRenderStatus: function(){
+		if( document.querySelector( this.props.selector ) === null ){
+			a7.ui.unregister( this.id );
+		}else{
+			this.timer = setTimeout( this.checkRenderStatus.bind( this ), a7.model.get( "a7" ).ui.timeout );
 		}
 	}
 };
@@ -809,7 +825,7 @@ a7.remote = ( function(){
 				// session is still active, no need to do anything else
 				a7.log.trace( 'Still logged in.' );
 			})
-			.error( function( error ){
+			.catch( function( error ){
 				a7.events.publish( "auth.sessionTimeout" );
 			});
 
@@ -866,12 +882,14 @@ a7.remote = ( function(){
 								return response.json();
 							})
 							.then( function( json ){
-								var user = a7.model.get( "user" );
-								Object.keys( json.user ).map( function( key ) {
-									user[ key ] = json.user[ key ];
-								});
-								sessionStorage.user = JSON.stringify( user );
-								a7.model.set( "user", user );
+								if( json.success ){
+									var user = a7.model.get( "user" );
+									Object.keys( json.user ).map( function( key ) {
+										user[ key ] = json.user[ key ];
+									});
+									sessionStorage.user = JSON.stringify( user );
+									a7.model.set( "user", user );
+								}
 								if( params.callback !== undefined ){
 									params.callback( json );
 								}
@@ -896,7 +914,7 @@ a7.remote = ( function(){
 							})
 							.then( function( json ){
 								a7.security.invalidateSession();
-								
+
 								if( params.callback !== undefined ){
 									params.callback();
 								}
@@ -1264,6 +1282,10 @@ a7.ui = (function() {
       }
     },
 
+    _unregister = function( id ){
+      delete _views[ id ];
+    },
+
     _getParentViewIds = function( id ){
       a7.log.trace( "Find parents of " + id );
       let parentIds = [];
@@ -1365,6 +1387,7 @@ a7.ui = (function() {
     setSelector: _setSelector,
     getNode: _getNode,
     register: _register,
+    unregister: _unregister,
     getView: _getView,
     enqueueForRender: _enqueueForRender,
     removeView: _removeView,

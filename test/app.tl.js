@@ -53,7 +53,9 @@ var app = {
     return {
       authenticate: _authenticate,
       loginHandler: function(json) {
-        a7.ui.views['header'].setState( { user: a7.model.get( "user" ) } );
+        if( json.success ){
+          a7.ui.views['header'].setState( { user: a7.model.get( "user" ) } );
+        }
         app.ui.setLayout(json.success);
       }
     };
@@ -230,6 +232,9 @@ export var application = function init() {
 			logoutURL: "/test/auth.cfc?method=logout",
       refreshURL: "/test/auth.cfc?method=refresh",
       useTokens: true // defaults to true for the auth system
+    },
+    ui: {
+      timeout: 30000
     }
   };
 

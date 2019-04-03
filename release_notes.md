@@ -1,3 +1,13 @@
+4.2.0
+======
+
+- added unregister method to a7.ui to delete stale views
+- added timer to view to check for stale views and remove them
+- moved View.props.element to View.element
+- fixed error checker in a7.remote code
+- fixed login not authorized handling in a7.remote
+- added ui.timeout for stale view checking to global options
+
 4.1.0
 ======
 

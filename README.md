@@ -18,6 +18,8 @@ To install dev dependencies from NPM:
 ***Changes***
 --------
 
+As of 4.1.0, there are significant additions and changes to the codebase. See the release_notes.md file for details.
+
 As of v 3.2.0, the altseven model has been modified to suit the needs of the framework. Binding code has been stripped from it, get and set have been modified to deep copy objects so no variables are shared outside the model, a history stack and functions to operate on it have been added to enable framework undo and redo functionality to be added later.
 
 As of 3.1.0, altseven contains a rendering queue that manages the rendering pipeline for views. It also contains a deferred pipeline that fills once the existing queue starts rendering and becomes the new queue once the existing queue renders.

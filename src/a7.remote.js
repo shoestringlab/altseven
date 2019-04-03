@@ -72,7 +72,7 @@ a7.remote = ( function(){
 				// session is still active, no need to do anything else
 				a7.log.trace( 'Still logged in.' );
 			})
-			.error( function( error ){
+			.catch( function( error ){
 				a7.events.publish( "auth.sessionTimeout" );
 			});
 
@@ -129,12 +129,14 @@ a7.remote = ( function(){
 								return response.json();
 							})
 							.then( function( json ){
-								var user = a7.model.get( "user" );
-								Object.keys( json.user ).map( function( key ) {
-									user[ key ] = json.user[ key ];
-								});
-								sessionStorage.user = JSON.stringify( user );
-								a7.model.set( "user", user );
+								if( json.success ){
+									var user = a7.model.get( "user" );
+									Object.keys( json.user ).map( function( key ) {
+										user[ key ] = json.user[ key ];
+									});
+									sessionStorage.user = JSON.stringify( user );
+									a7.model.set( "user", user );
+								}
 								if( params.callback !== undefined ){
 									params.callback( json );
 								}
@@ -159,7 +161,7 @@ a7.remote = ( function(){
 							})
 							.then( function( json ){
 								a7.security.invalidateSession();
-								
+
 								if( params.callback !== undefined ){
 									params.callback();
 								}

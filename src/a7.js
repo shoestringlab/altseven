@@ -48,7 +48,8 @@ var a7 = (function() {
               : typeof Handlebars === "object"
               ? "Handlebars"
               : "templateLiterals" )
-            : "templateLiterals" )
+            : "templateLiterals" ),
+            timeout : ( options.ui && options.ui.timeout ? options.ui.timeout : 600000 ) // default 10 minute check for registered views
         },
         ready: false,
         user: ""

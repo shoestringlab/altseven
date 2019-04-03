@@ -53,7 +53,9 @@ var app = {
     return {
       authenticate: _authenticate,
       loginHandler: function(json) {
-        a7.ui.views['header'].setState( { user: a7.model.get( "a7" ).user } );
+        if( json.success ){
+          a7.ui.views['header'].setState( { user: a7.model.get( "user" ) } );
+        }
         app.ui.setLayout(json.success);
       }
     };

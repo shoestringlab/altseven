@@ -212,6 +212,10 @@ a7.ui = (function() {
       }
     },
 
+    _unregister = function( id ){
+      delete _views[ id ];
+    },
+
     _getParentViewIds = function( id ){
       a7.log.trace( "Find parents of " + id );
       let parentIds = [];
@@ -313,6 +317,7 @@ a7.ui = (function() {
     setSelector: _setSelector,
     getNode: _getNode,
     register: _register,
+    unregister: _unregister,
     getView: _getView,
     enqueueForRender: _enqueueForRender,
     removeView: _removeView,
