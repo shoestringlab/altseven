@@ -1,3 +1,18 @@
+5.0.0
+======
+
+Major update for the framework.
+- Registration of components is now automatic.
+- view.js -
+  - Addition of methods - addChild, removeChild, clearChildren, getParent
+  - make props immutable
+  - move parentID to props and specify in instantiation
+  - move children to this scope from props
+  - add mustUnregister event
+  - automatically remove child when its element does not exist
+  - automatically un-register component when its DOM element does not exist 
+- update a7.ui - getChildViewIds
+
 4.2.0
 ======
 

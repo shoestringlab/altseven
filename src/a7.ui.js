@@ -232,14 +232,15 @@ a7.ui = (function() {
       a7.log.trace( "Find children of " + id );
       let childIds = [];
       let view = _views[ id ];
-      let prop = '';
-      let props = view.props;
-      if( props !== undefined && props.children !== undefined && props.children !== null ){
-        for( var child in props.children ){
-          childIds.push( props.children[ child ].props.id );
-          childIds.concat( _getChildViewIds( props.children[ child ].props.id ) );
+
+      for( var child in view.children ){
+        let childId = view.children[ child ].props.id;
+        if( _getView( childId ) !== undefined ){
+          childIds.push( childId );
+          childIds.concat( _getChildViewIds( childId ) );
         }
       }
+
       // returned in highest to lowest order
       return childIds;
     },

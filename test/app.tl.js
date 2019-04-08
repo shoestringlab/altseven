@@ -16,17 +16,16 @@ var app = {
 
       run: function(secure) {
         // render the login form
-        a7.ui.register( app.components.LoginForm( { id: 'loginForm', selector: "div[name='anon']" } ) );
+        app.components.LoginForm( { id: 'loginForm', selector: "div[name='anon']" } );
 
         var user = a7.model.get("user");
 
-        a7.ui.register( app.components.Header( { id: 'header', user: user, selector: "div[name='header']" } ) );
+        app.components.Header( { id: 'header', user: user, selector: "div[name='header']" } );
 
-        a7.ui.register( app.components.Todo( {
+        app.components.Todo( {
           id: 'todo',
-          children: { todoList: app.components.TodoList( { id: 'todoList', items: [], selector: "div[data-id='todoList']" } ) },
           selector: "div[name='app']"
-        } ) );
+        } );
 
         app.ui.setLayout(secure);
       }
@@ -64,9 +63,12 @@ var app = {
 
     function Todo(props) {
       var todo = a7.components.Constructor(a7.components.View, [props], true);
+
       todo.state = {
         text: ""
       };
+
+      app.components.TodoList( { id: 'todoList', parentID: 'todo', items: [], selector: "div[data-id='todoList']" } );
 
       todo.template = function(){
         return `<div name="todoForm">
@@ -74,7 +76,7 @@ var app = {
 				<div data-id="todoList"></div>
 				<form>
 					<input name="todoInput" value="${todo.state.text}" data-onchange="changeTodoInput" />
-					<button type="button" name="todoSubmit" data-onclick="clickSubmit">Add ${todo.props.children.todoList.state.items.length + 1}</button>
+					<button type="button" name="todoSubmit" data-onclick="clickSubmit">Add ${todo.children.todoList.state.items.length + 1}</button>
 				</form>
 				</div>`;
       };
@@ -91,8 +93,8 @@ var app = {
           };
 
           todo.setState( { text: '' } );
-          var items = todo.props.children.todoList.state.items.concat(newItem);
-          todo.props.children.todoList.setState({
+          var items = todo.children.todoList.state.items.concat(newItem);
+          todo.children.todoList.setState({
             items: items
           });
         }

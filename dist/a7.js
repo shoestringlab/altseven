@@ -651,16 +651,20 @@ function View( props ){
 	this.props = props;
 	this.state = {};
 	this.mustRender = false;
+	this.children = {};
 	this.config();
+	this.fireEvent( "mustRegister" );
 }
 
 View.prototype = {
 	config: function(){
 
-		this.on( "mustRegister", function( component, parent ){
-			a7.log.trace( 'mustRegister: ' + this.props.id + ', parent: ' + parent.props.id );
-			this.props.parentID = parent.props.id;
+		this.on( "mustRegister", function(){
+			a7.log.trace( 'mustRegister: ' + this.props.id );
 			a7.ui.register( this );
+			if( a7.ui.getView( this.props.parentID ) ){
+				a7.ui.getView( this.props.parentID ).addChild( this );
+			}
 		}.bind( this ) );
 
 		this.on( "mustRender", function(){
@@ -678,33 +682,52 @@ View.prototype = {
 		}.bind( this ));
 
 		this.on( "registered", function(){
-			// register children
-			if( this.props !== undefined && this.props.children !== undefined && this.props.children !== null ){
-				for( var child in this.props.children ){
-					if( a7.ui.getView( this.props.children[ child ].props.id ) === undefined ){
-						a7.log.trace( 'parent: ' + this.props.id + ', register child: ' + this.props.children[ child ].props.id );
-						this.props.children[ child ].fireEvent( "mustRegister", Object.assign( this ) );
-					}
-				}
-			}
 			if( this.props.parentID === undefined || this.mustRender ){
 				// only fire render event for root views, children will render in the chain
 				this.fireEvent( "mustRender" );
 			}
 		}.bind( this ));
+
+		this.on( "mustUnregister", function(){
+			a7.ui.unregister( this.props.id );
+		}.bind( this ));
 	},
-	events : ['mustRender','rendered', 'mustRegister', 'registered'],
+	events : ['mustRender','rendered', 'mustRegister', 'registered', 'mustUnregister'],
   setState: function( args ){
     this.state = args;
     // setting state requires a re-render
 		this.fireEvent( 'mustRender' );
+	},
+	addChild: function( view ){
+		this.children[ view.props.id ] = view;
+		// force a render for children added
+		this.children[ view.props.id ].mustRender = true;
+	},
+	removeChild: function( view ){
+		delete this.children[ view.props.id ];
+	},
+	clearChildren: function(){
+		this.children = {};
+	},
+	getParent: function(){
+		return ( this.props.parentID ? a7.ui.getView( this.props.parentID ) : undefined );
 	},
 	render: function(){
 		a7.log.info( 'render: ' + this.props.id );
 		if( this.element === undefined || this.element === null ){
 			this.element = document.querySelector( this.props.selector );
 		}
-		if( !this.element ) throw( "You must define a selector for the view." );
+		if( !this.element ){
+			a7.log.error( "The DOM element for view " + this.props.id + " was not found. The view will be removed and unregistered." );
+			// if the component has a parent, remove the component from the parent's children
+			if( this.props.parentID !== undefined ){
+				a7.ui.getView( this.props.parentID ).removeChild( this );
+			}
+			// if the selector isn't in the DOM, skip rendering and unregister the view
+			this.fireEvent( 'mustUnregister' );
+			return;
+		}
+		//throw( "You must define a selector for the view." );
 		this.element.innerHTML = ( typeof this.template == "function" ? this.template() : this.template );
 
 		var eventArr = [];
@@ -726,11 +749,9 @@ View.prototype = {
 		this.fireEvent( "rendered" );
 	},
 	onRendered: function(){
-		if( this.props !== undefined && this.props.children !== undefined && this.props.children !== null ){
-			for( var child in this.props.children ){
-				this.props.children[ child ].element = document.querySelector( this.props.children[ child ].props.selector );
-				this.props.children[ child ].render();
-			}
+		for( var child in this.children ){
+			this.children[ child ].element = document.querySelector( this.children[ child ].props.selector );
+			this.children[ child ].render();
 		}
 	},
 	checkRenderStatus: function(){
@@ -1302,14 +1323,15 @@ a7.ui = (function() {
       a7.log.trace( "Find children of " + id );
       let childIds = [];
       let view = _views[ id ];
-      let prop = '';
-      let props = view.props;
-      if( props !== undefined && props.children !== undefined && props.children !== null ){
-        for( var child in props.children ){
-          childIds.push( props.children[ child ].props.id );
-          childIds.concat( _getChildViewIds( props.children[ child ].props.id ) );
+
+      for( var child in view.children ){
+        let childId = view.children[ child ].props.id;
+        if( _getView( childId ) !== undefined ){
+          childIds.push( childId );
+          childIds.concat( _getChildViewIds( childId ) );
         }
       }
+
       // returned in highest to lowest order
       return childIds;
     },
