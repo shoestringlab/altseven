@@ -1,3 +1,8 @@
+5.0.1
+======
+
+- Fix Handlebars and Mustaches test apps
+
 5.0.0
 ======
 
@@ -10,7 +15,7 @@ Major update for the framework.
   - move children to this scope from props
   - add mustUnregister event
   - automatically remove child when its element does not exist
-  - automatically un-register component when its DOM element does not exist 
+  - automatically un-register component when its DOM element does not exist
 - update a7.ui - getChildViewIds
 
 4.2.0

@@ -16,17 +16,16 @@ var app = {
 
       run: function(secure) {
         // render the login form
-        a7.ui.register( app.components.LoginForm( { id: 'loginForm', selector: "div[name='anon']" } ) );
+        app.components.LoginForm( { id: 'loginForm', selector: "div[name='anon']" } );
 
         var user = a7.model.get("a7").user;
 
-        a7.ui.register( app.components.Header( { id: 'header', user: user, selector: "div[name='header']" } ) );
+        app.components.Header( { id: 'header', user: user, selector: "div[name='header']" } );
 
-        a7.ui.register( app.components.Todo( {
+        app.components.Todo( {
           id: 'todo',
-          children: { todoList: app.components.TodoList( { id: 'todoList', items: [], selector: "div[data-id='todoList']" } ) },
           selector: "div[name='app']"
-        } ) );
+        } );
 
         app.ui.setLayout(secure);
       }
@@ -68,6 +67,8 @@ var app = {
         text: ""
       };
 
+      app.components.TodoList( { id: 'todoList', parentID: 'todo', items: [], selector: "div[data-id='todoList']" } );
+
       todo.template = function() {
         var templ = `<div name="todoForm">
       		<h3>TODO</h3>
@@ -78,7 +79,7 @@ var app = {
       		</form>
       		</div>`;
 
-        return Mustache.render( templ, { text: todo.state.text, next: todo.props.children.todoList.state.items.length + 1 } );
+        return Mustache.render( templ, { text: todo.state.text, next: todo.children.todoList.state.items.length + 1 } );
       }
 
       todo.eventHandlers = {
@@ -93,8 +94,8 @@ var app = {
           };
 
           todo.setState( { text : '' } );
-          var items = todo.props.children.todoList.state.items.concat(newItem);
-          todo.props.children.todoList.setState({
+          var items = todo.children.todoList.state.items.concat(newItem);
+          todo.children.todoList.setState({
             items: items
           });
         }
@@ -114,7 +115,7 @@ var app = {
       };
 
       return todolist;
-    }
+    } 
 
     function LoginForm(props) {
       var loginform = a7.components.Constructor(a7.components.View, [props], true);
