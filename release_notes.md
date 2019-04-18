@@ -1,3 +1,11 @@
+5.1.0
+======
+
+- add getState to view.js
+- remove mustRender from addChild
+- modeo.get- return undefined if model element does not exist
+
+
 5.0.1
 ======
 
