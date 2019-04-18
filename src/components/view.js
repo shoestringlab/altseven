@@ -54,10 +54,13 @@ View.prototype = {
     // setting state requires a re-render
 		this.fireEvent( 'mustRender' );
 	},
+	getState: function(){
+		return Object.assign( this.state );
+	},
 	addChild: function( view ){
 		this.children[ view.props.id ] = view;
 		// force a render for children added
-		this.children[ view.props.id ].mustRender = true;
+		//this.children[ view.props.id ].mustRender = true;
 	},
 	removeChild: function( view ){
 		delete this.children[ view.props.id ];

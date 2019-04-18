@@ -101,11 +101,15 @@ var Model = ( function() {
 			return _keyExists( _model, name );
 		},
 		get: function( name ) {
-			try{
-				return JSON.parse( JSON.stringify( _model[ name ] ) );
-			}catch( e ){
-				a7.log.error( e );
-				throw( e );
+			if( _model[ name ] === undefined ){
+				return;
+			}else{
+				try{
+					return JSON.parse( JSON.stringify( _model[ name ] ) );
+				}catch( e ){
+					a7.log.error( e );
+					throw( e );
+				}
 			}
 		},
 		set: function( name, value ){

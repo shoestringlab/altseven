@@ -615,11 +615,15 @@ var Model = ( function() {
 			return _keyExists( _model, name );
 		},
 		get: function( name ) {
-			try{
-				return JSON.parse( JSON.stringify( _model[ name ] ) );
-			}catch( e ){
-				a7.log.error( e );
-				throw( e );
+			if( _model[ name ] === undefined ){
+				return;
+			}else{
+				try{
+					return JSON.parse( JSON.stringify( _model[ name ] ) );
+				}catch( e ){
+					a7.log.error( e );
+					throw( e );
+				}
 			}
 		},
 		set: function( name, value ){
@@ -698,10 +702,13 @@ View.prototype = {
     // setting state requires a re-render
 		this.fireEvent( 'mustRender' );
 	},
+	getState: function(){
+		return Object.assign( this.state );
+	},
 	addChild: function( view ){
 		this.children[ view.props.id ] = view;
 		// force a render for children added
-		this.children[ view.props.id ].mustRender = true;
+		//this.children[ view.props.id ].mustRender = true;
 	},
 	removeChild: function( view ){
 		delete this.children[ view.props.id ];
@@ -1343,7 +1350,7 @@ a7.ui = (function() {
           a7.log.trace( 'add first view to queue: ' + id );
           _queue.push( id );
           // wait for other possible updates and then process the queue
-          setTimeout( _processRenderQueue, 18 );
+          setTimeout( _processRenderQueue, 100 );
         }else{
           let childIds = _getChildViewIds( id );
           if( _views[ id ].props.parentID === undefined ){
