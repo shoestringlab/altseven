@@ -5,6 +5,7 @@ function View( props ){
 	this.timer;
 	this.element;
 	this.props = props;
+	this.isTransient = props.isTransient || false;
 	this.state = {};
 	this.mustRender = false;
 	this.children = {};
@@ -24,15 +25,18 @@ View.prototype = {
 		}.bind( this ) );
 
 		this.on( "mustRender", function(){
+			a7.log.trace( 'mustRender: ' + this.props.id );
 			a7.ui.enqueueForRender( this.props.id );
 		}.bind( this ));
 
 		this.on( "rendered", function(){
-			// set the timeout
-			if( this.timer !== undefined ){
-				clearTimeout( this.timer );
+			if( this.isTransient ){
+				// set the timeout
+				if( this.timer !== undefined ){
+					clearTimeout( this.timer );
+				}
+				this.timer = setTimeout( this.checkRenderStatus.bind( this ), a7.model.get( "a7" ).ui.timeout );
 			}
-			this.timer = setTimeout( this.checkRenderStatus.bind( this ), a7.model.get( "a7" ).ui.timeout );
 			this.mustRender = false;
 			this.onRendered();
 		}.bind( this ));
@@ -107,17 +111,21 @@ View.prototype = {
 
 		this.fireEvent( "rendered" );
 	},
+	// after rendering, render all the children of the view
 	onRendered: function(){
 		for( var child in this.children ){
 			this.children[ child ].element = document.querySelector( this.children[ child ].props.selector );
 			this.children[ child ].render();
 		}
 	},
+	// need to add props.isTransient (default false) to make views permanent by default
 	checkRenderStatus: function(){
 		if( document.querySelector( this.props.selector ) === null ){
 			a7.ui.unregister( this.id );
 		}else{
-			this.timer = setTimeout( this.checkRenderStatus.bind( this ), a7.model.get( "a7" ).ui.timeout );
+			if( this.isTransient ){
+				this.timer = setTimeout( this.checkRenderStatus.bind( this ), a7.model.get( "a7" ).ui.timeout );
+			}
 		}
 	}
 };

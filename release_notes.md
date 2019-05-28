@@ -1,9 +1,15 @@
+5.2.0
+======
+
+- add return to a7.remote.invoke to enable promises to be returned to calling function
+- add isTransient to view to limit view timeout to transient components
+
 5.1.0
 ======
 
 - add getState to view.js
 - remove mustRender from addChild
-- modeo.get- return undefined if model element does not exist
+- model.get- return undefined if model element does not exist
 
 
 5.0.1
