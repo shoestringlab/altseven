@@ -1,24 +1,22 @@
 {
   "name": "altseven",
-  "version": "5.2.0",
+  "version": "5.2.1",
   "description": "JavaScript framework",
   "main": "a7.js",
   "directories": {
     "test": "test"
   },
-  "dependencies": {
-
-  },
+  "dependencies": {},
   "devDependencies": {
     "eslint": "^4.2.0",
-    "grunt": "^1.0.3",
+    "grunt": "^1.0.4",
     "grunt-closure-tools": "^1.0.0",
     "grunt-contrib-concat": "^0.5.0",
     "grunt-contrib-uglify-es": "git://github.com/gruntjs/grunt-contrib-uglify.git#harmony",
     "grunt-contrib-watch": "^1.1.0",
     "grunt-jslint": "^1.1.12",
     "grunt-newer": "^1.1.0",
-    "load-grunt-config": "*",
+    "load-grunt-config": "^3.0.1",
     "load-grunt-tasks": "^3.1.0"
   },
   "scripts": {
