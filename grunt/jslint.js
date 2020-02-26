@@ -9,6 +9,7 @@ module.exports = {
 					'src/a7.model.js',
 					'src/a7.components.js',
 					'src/a7.remote.js',
+					"src/a7.router.js",
 					'src/a7.ui.js',
 					'src/a7.util.js'
 
