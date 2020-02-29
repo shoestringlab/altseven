@@ -136,11 +136,30 @@ a7.remote = ( function(){
 									});
 									sessionStorage.user = JSON.stringify( user );
 									a7.model.set( "user", user );
+
+									if( params.success !== undefined ){
+										if( typeof params.success === 'function' ){
+											params.success( json );
+										}else if( a7.model.get("a7").router ){
+											a7.router.open( params.success, json );
+										}else{
+											a7.events.publish( params.success, json );
+										}
+									}
+								}else if( params.failure !== undefined ){
+									// if login failed
+									if( typeof params.failure === 'function' ){
+										params.failure( json );
+									}else if( a7.model.get("a7").router ){
+										a7.router.open( params.failure, json );
+									}else{
+										a7.events.publish( params.failure, json );
+									}
 								}
 								if( params.callback !== undefined ){
 									params.callback( json );
 								}
-							});
+								});
 					},
 					logout: function( params ){
 						a7.log.trace( "remote call: auth.logout" );
@@ -160,7 +179,27 @@ a7.remote = ( function(){
 								return response.json();
 							})
 							.then( function( json ){
-								a7.security.invalidateSession();
+								if( json.success ){
+									a7.security.invalidateSession();
+									if( params.success !== undefined ){
+										if( typeof params.success === 'function' ){
+											params.success( json );
+										}else if( a7.model.get("a7").router ){
+											a7.router.open( params.success, json );
+										}else{
+											a7.events.publish( params.success, json );
+										}
+									}
+								}else if( params.failure !== undefined ){
+									// if logout failed
+									if( typeof params.failure === 'function' ){
+										params.failure( json );
+									}else if( a7.model.get("a7").router ){
+										a7.router.open( params.failure, json );
+									}else{
+										a7.events.publish( params.failure, json );
+									}
+								}
 
 								if( params.callback !== undefined ){
 									params.callback();

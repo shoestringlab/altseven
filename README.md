@@ -1,9 +1,9 @@
 altseven
 =========
 
-v 5.2.0
+v 6.0.0-beta
 
-A JavaScript framework. Built as an academic exercise.
+A JavaScript framework. Originally built as an exploration into reactive programming with JavaScript. Now a full-fledged Web framework.
 
 
 Compile on CLI from root folder:
@@ -13,6 +13,12 @@ Compile on CLI from root folder:
 To install dev dependencies from NPM:
 
     $ npm install
+
+
+Current Release - 6.0.0-beta
+--------
+
+6.0.0 is an exciting release as it adds a significant new capability to the framework with built-in client-side URL routing. See the release notes for more details.
 
 
 ***Changes***
@@ -50,6 +56,10 @@ As of v 1.2.0, you do not need to install dependencies from Bower unless you wis
 
 ***Running the Sample App***
 
+As of 6.0.0-beta, a CFML engine is no longer required to run the sample apps. You can now run $ node index.js from the root of the project and access the sample apps at 127.0.0.1:8800/test/index.htm. As of the beta, only the Template Literals sample app has been tested with this release.
+
+----
+
 To run the example application included in the /test folder, you need a CFML engine. The easiest way to run it is to install CommandBox:
 
 https://www.ortussolutions.com/products/commandbox
@@ -64,3 +74,5 @@ If you prefer to see altseven in action with a NodeJS backend, you can clone the
     $ git clone https://github.com/robertdmunn/tasklist
 
 Check the homepage/README for tasklist for directions on running it.
+
+This project is licensed under the Mozilla Public License 2.0, except where noted otherwise.

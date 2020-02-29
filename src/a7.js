@@ -40,6 +40,10 @@ var a7 = (function() {
           refreshURL: options.remote.refreshURL || "",
           useTokens: ( options.auth && options.auth.useTokens ? options.auth.useTokens : true )
         } : { useTokens: true } ),
+        router: ( options.router ? {
+          options: { useEvents: options.router.useEvents || true },
+          routes: options.router.routes || undefined
+        } : undefined ),
         ui: {
           renderer: ( options.ui ?
             options.ui.renderer ||
@@ -82,6 +86,10 @@ var a7 = (function() {
             a7.remote.init( ( options.remote && options.remote.modules ? options.remote.modules : {} ) );
             a7.log.trace("a7 - events init");
             a7.events.init();
+            if( theOptions.router ){
+              a7.log.trace("a7 - router init");
+              a7.router.init( theOptions.router.options, theOptions.router.routes );
+            }
             p1 = new Promise(function(resolve, reject) {
               a7.log.trace("a7 - layout init");
               // initialize templating engine

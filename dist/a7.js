@@ -43,6 +43,10 @@ var a7 = (function() {
           refreshURL: options.remote.refreshURL || "",
           useTokens: ( options.auth && options.auth.useTokens ? options.auth.useTokens : true )
         } : { useTokens: true } ),
+        router: ( options.router ? {
+          options: { useEvents: options.router.useEvents || true },
+          routes: options.router.routes || undefined
+        } : undefined ),
         ui: {
           renderer: ( options.ui ?
             options.ui.renderer ||
@@ -85,6 +89,10 @@ var a7 = (function() {
             a7.remote.init( ( options.remote && options.remote.modules ? options.remote.modules : {} ) );
             a7.log.trace("a7 - events init");
             a7.events.init();
+            if( theOptions.router ){
+              a7.log.trace("a7 - router init");
+              a7.router.init( theOptions.router.options, theOptions.router.routes );
+            }
             p1 = new Promise(function(resolve, reject) {
               a7.log.trace("a7 - layout init");
               // initialize templating engine
@@ -925,11 +933,30 @@ a7.remote = ( function(){
 									});
 									sessionStorage.user = JSON.stringify( user );
 									a7.model.set( "user", user );
+
+									if( params.success !== undefined ){
+										if( typeof params.success === 'function' ){
+											params.success( json );
+										}else if( a7.model.get("a7").router ){
+											a7.router.open( params.success, json );
+										}else{
+											a7.events.publish( params.success, json );
+										}
+									}
+								}else if( params.failure !== undefined ){
+									// if login failed
+									if( typeof params.failure === 'function' ){
+										params.failure( json );
+									}else if( a7.model.get("a7").router ){
+										a7.router.open( params.failure, json );
+									}else{
+										a7.events.publish( params.failure, json );
+									}
 								}
 								if( params.callback !== undefined ){
 									params.callback( json );
 								}
-							});
+								});
 					},
 					logout: function( params ){
 						a7.log.trace( "remote call: auth.logout" );
@@ -949,7 +976,27 @@ a7.remote = ( function(){
 								return response.json();
 							})
 							.then( function( json ){
-								a7.security.invalidateSession();
+								if( json.success ){
+									a7.security.invalidateSession();
+									if( params.success !== undefined ){
+										if( typeof params.success === 'function' ){
+											params.success( json );
+										}else if( a7.model.get("a7").router ){
+											a7.router.open( params.success, json );
+										}else{
+											a7.events.publish( params.success, json );
+										}
+									}
+								}else if( params.failure !== undefined ){
+									// if logout failed
+									if( typeof params.failure === 'function' ){
+										params.failure( json );
+									}else if( a7.model.get("a7").router ){
+										a7.router.open( params.failure, json );
+									}else{
+										a7.events.publish( params.failure, json );
+									}
+								}
 
 								if( params.callback !== undefined ){
 									params.callback();
@@ -1051,6 +1098,19 @@ a7.remote = ( function(){
 
 a7.router = (function() {
   "use strict";
+
+  // url-router code from here courtesy Jiang Fengming
+  // https://github.com/jiangfengming/url-router
+
+  /*
+  Copyright 2015-2019 Jiang Fengming
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+  */
 
   var REGEX_PARAM_DEFAULT = /^[^/]+/;
   var REGEX_START_WITH_PARAM = /^(:\w|\()/;
@@ -1198,6 +1258,8 @@ a7.router = (function() {
     return null;
   };
 
+// end url-router code
+
   var _options, _router,
   _add = function( path, handler ){
     _router.add( path, handler );
@@ -1207,12 +1269,13 @@ a7.router = (function() {
   },
   _open = function( path, params ){
     let result = _find( path );
-    history.pushState( params, '', path );
-    let combinedParams = Object.assign( params, result.params );
-    if( _options.useEvents ){
-      a7.events.publish( result.handler, combinedParams );
+    let handler = result.handler;
+    history.pushState( JSON.parse( JSON.stringify( params ) ), '', path );
+    let combinedParams = Object.assign( params || {}, result.params || {} );
+    if( _options.useEvents && typeof handler === 'string' ){
+      a7.events.publish( handler, combinedParams );
     }else{
-      result.handler( combinedParams );
+      handler( combinedParams );
     }
   };
 
@@ -1221,7 +1284,7 @@ a7.router = (function() {
     add: _add,
     init: function( options, routes ){
       _router = new Router( routes );
-      _options = options.router;
+      _options = options;
       _options.useEvents = ( _options.useEvents ? true : false );
       window.onpopstate = function( event ){
         //a7.log.trace( 'state: ' + JSON.stringify( event.state ) );

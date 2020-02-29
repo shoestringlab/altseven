@@ -7,14 +7,11 @@ var app = {
 
     return {
       init: function(state) {
+
         // cache initial selectors
         a7.ui.setSelector( 'anonDiv', "div[name='anon']" );
         a7.ui.setSelector('secureDiv', "div[name='secure']");
 
-        app.main.run(state.secure);
-      },
-
-      run: function(secure) {
         // render the login form
         app.components.LoginForm( { id: 'loginForm', selector: "div[name='anon']" } );
 
@@ -27,7 +24,7 @@ var app = {
           selector: "div[name='app']"
         } );
 
-        app.ui.setLayout(secure);
+        a7.events.publish( "app.init", { secure: state.secure });
       }
     };
   })(),
@@ -50,13 +47,7 @@ var app = {
 		var _logout;
 
     return {
-      authenticate: _authenticate,
-      loginHandler: function(json) {
-        if( json.success ){
-          a7.ui.views['header'].setState( { user: a7.model.get( "user" ) } );
-        }
-        app.ui.setLayout(json.success);
-      }
+      authenticate: _authenticate
     };
   })(),
   components: (function() {
@@ -157,10 +148,11 @@ var app = {
 
       loginform.eventHandlers = {
         handleClick: function(event) {
-          a7.events.publish('auth.login', {
+
+          a7.router.open( '/auth/login', {
             username: loginform.state.username,
             password: loginform.state.password,
-            callback: app.auth.loginHandler
+            success: '/test/app'
           });
         },
         handleUsername: function(event) {
@@ -176,14 +168,14 @@ var app = {
 
     function Header(props) {
       var header = a7.components.Constructor(a7.components.View, [props], true);
-
+        
       header.state = {
         user: props.user
       };
 
 			header.eventHandlers = {
 				logout: function(){
-					a7.events.publish( 'auth.logout', { callback: app.auth.authenticate }) ;
+					a7.router.open( '/auth/logout', { success: '/test/tl.htm' }) ;
 				}
 			};
 
@@ -201,6 +193,17 @@ var app = {
       Header: Header
     };
 
+  })(),
+
+  events: (function() {
+    a7.events.subscribe( "app.show", function( obj ){
+      a7.ui.views['header'].setState( { user: a7.model.get( "user" ) } );
+      app.ui.setLayout(true);
+    });
+
+    a7.events.subscribe( "app.init", function( obj ){
+      app.auth.authenticate();
+    });
   })(),
   remote: {},
   ui: (function() {
@@ -230,10 +233,21 @@ export var application = function init() {
     // or if you want to use the remote module for remote calls
     remote: {
       modules: {},
-      loginURL: "/test/auth.cfc?method=login",
-			logoutURL: "/test/auth.cfc?method=logout",
-      refreshURL: "/test/auth.cfc?method=refresh",
+      loginURL: "/api/auth/login",
+			logoutURL: "/api/auth/logout",
+      refreshURL: "/api/auth/refresh",
       useTokens: true // defaults to true for the auth system
+    },
+    // router is optional. If you leave out the router options, it will not be initialized on app init.
+    // you can manually init the router later if you choose, e.g. a7.router.init( options, [routes] );
+    router: {
+      options: { useEvents: true },
+      routes: [
+        [ '/auth/login', 'auth.login' ],
+        [ '/auth/logout', 'auth.logout' ],
+        [ '/test/app', 'app.show' ],
+        [ '/test/tl.htm', 'app.init' ]
+      ]
     },
     ui: {
       timeout: 30000

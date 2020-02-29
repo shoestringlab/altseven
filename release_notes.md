@@ -1,3 +1,18 @@
+6.0.0-beta
+===========
+
+- Adds a new client-side URL router module, a7.router.
+  - Module is based on url-router, a Trie-based router by Jiang Fengmeng, https://github.com/jiangfengming/url-router
+  - Allows for bookmarking, back button functionality
+- a7.remote login and logout built-in methods now accept success and failure parameters which may be functions, router paths, or event names.
+
+- Addition of test package in NodeJS to obviate the need for a CFML engine to run example apps. This feature is very much a hack as of now and only the Template Literals example app has been tested.
+- Router functionality is demonstrated in the Template Literals example app.
+
+- Release is considered initial beta and may change in functionality.
+
+
+
 5.2.0
 ======
 

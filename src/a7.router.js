@@ -1,6 +1,19 @@
 a7.router = (function() {
   "use strict";
 
+  // url-router code from here courtesy Jiang Fengming
+  // https://github.com/jiangfengming/url-router
+
+  /*
+  Copyright 2015-2019 Jiang Fengming
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+  */
+
   var REGEX_PARAM_DEFAULT = /^[^/]+/;
   var REGEX_START_WITH_PARAM = /^(:\w|\()/;
   var REGEX_INCLUDE_PARAM = /:\w|\(/;
@@ -147,6 +160,8 @@ a7.router = (function() {
     return null;
   };
 
+// end url-router code
+
   var _options, _router,
   _add = function( path, handler ){
     _router.add( path, handler );
@@ -156,12 +171,13 @@ a7.router = (function() {
   },
   _open = function( path, params ){
     let result = _find( path );
-    history.pushState( params, '', path );
-    let combinedParams = Object.assign( params, result.params );
-    if( _options.useEvents ){
-      a7.events.publish( result.handler, combinedParams );
+    let handler = result.handler;
+    history.pushState( JSON.parse( JSON.stringify( params ) ), '', path );
+    let combinedParams = Object.assign( params || {}, result.params || {} );
+    if( _options.useEvents && typeof handler === 'string' ){
+      a7.events.publish( handler, combinedParams );
     }else{
-      result.handler( combinedParams );
+      handler( combinedParams );
     }
   };
 
@@ -170,7 +186,7 @@ a7.router = (function() {
     add: _add,
     init: function( options, routes ){
       _router = new Router( routes );
-      _options = options.router;
+      _options = options;
       _options.useEvents = ( _options.useEvents ? true : false );
       window.onpopstate = function( event ){
         //a7.log.trace( 'state: ' + JSON.stringify( event.state ) );
