@@ -1,3 +1,9 @@
+6.0.0-beta-2
+============
+
+- Add default for params in a7.router.open( path, params )
+
+
 6.0.0-beta
 ===========
 

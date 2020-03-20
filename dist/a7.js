@@ -1267,7 +1267,7 @@ a7.router = (function() {
   _find = function( path ){
     return _router.find( path );
   },
-  _open = function( path, params ){
+  _open = function( path, params = {} ){
     let result = _find( path );
     let handler = result.handler;
     history.pushState( JSON.parse( JSON.stringify( params ) ), '', path );
