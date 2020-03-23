@@ -179,23 +179,27 @@ a7.router = (function() {
     }else{
       handler( combinedParams );
     }
+  },
+  _match = function( path ){
+    let result = _router.find( path );
+    if( _options.useEvents ){
+      a7.events.publish( result.handler, result.params );
+    }else{
+      result.handler( result.params );
+    }
   };
 
   return {
     open: _open,
     add: _add,
+    match: _match,
     init: function( options, routes ){
       _router = new Router( routes );
       _options = options;
       _options.useEvents = ( _options.useEvents ? true : false );
       window.onpopstate = function( event ){
         //a7.log.trace( 'state: ' + JSON.stringify( event.state ) );
-        let result = _router.find( document.location.pathname + document.location.search );
-        if( _options.useEvents ){
-          a7.events.publish( result.handler, result.params );
-        }else{
-          result.handler( result.params );
-        }
+        _match( document.location.pathname + document.location.search );
       }
     }
   };

@@ -1,3 +1,8 @@
+6.0.0-beta-3
+============
+
+- add a7.router.match(path) function
+
 6.0.0-beta-2
 ============
 
