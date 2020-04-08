@@ -1,6 +1,6 @@
 {
   "name": "altseven",
-  "version": "6.0.0-beta-3",
+  "version": "6.0.0-beta-5",
   "description": "JavaScript framework",
   "main": "./dist/a7.js",
   "files": [
@@ -28,7 +28,7 @@
     "test": "/test/index.htm"
   },
   "bugs": {
-    "url": "https://github.com/robertdmunn/altseven/issues"
+    "url": "https://github.com/shoestringlab/altseven/issues"
   },
   "homepage": "https://github.com/shoestringlab/altseven#readme",
   "keywords": [
