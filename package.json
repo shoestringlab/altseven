@@ -6,9 +6,6 @@
   "files": [
     "dist"
   ],
-  "directories": {
-    "test": "test"
-  },
   "dependencies": {},
   "devDependencies": {
     "eslint": "^4.2.0",
@@ -30,10 +27,14 @@
   "scripts": {
     "test": "/test/index.htm"
   },
+  "bugs": {
+    "url": "https://github.com/robertdmunn/altseven/issues"
+  },
+  "homepage": "https://github.com/shoestringlab/altseven#readme",
   "keywords": [
     "JavaScript",
     "framework"
   ],
   "author": "Robert Munn <robertdmunn@gmail.com>",
-  "license": "MPL"
+  "license": "MPL-2.0"
 }
