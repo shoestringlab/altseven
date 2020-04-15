@@ -1,7 +1,7 @@
 altseven
 =========
 
-v 6.0.0-beta-6
+v 6.0.0-beta-7
 
 A JavaScript framework. Originally built as an exploration into reactive programming with JavaScript. Now a full-fledged Web framework.
 

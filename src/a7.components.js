@@ -246,6 +246,8 @@ View.prototype = {
 				a7.ui.enqueueForRender( this.props.id );
 			}else{
 				a7.log.trace( 'Render cancelled: ' + this.props.id );
+				// undo skip, it must be explicitly set each time
+				this.skipRender = false;
 			}
 		}.bind( this ));
 
@@ -257,7 +259,6 @@ View.prototype = {
 				}
 				this.timer = setTimeout( this.checkRenderStatus.bind( this ), a7.model.get( "a7" ).ui.timeout );
 			}
-			this.skipRender = false;
 			this.onRendered();
 		}.bind( this ));
 

@@ -1,6 +1,11 @@
 6.0.0-beta-6
 ============
 
+- Move this.skipRender = false to mustRender function
+
+6.0.0-beta-6
+============
+
 - Add skipRender boolean and and shouldRender function to enable skipping rendering when appropriate
 
 6.0.0-beta-3
