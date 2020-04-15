@@ -1,3 +1,8 @@
+6.0.0-beta-6
+============
+
+- Add skipRender boolean and and shouldRender function to enable skipping rendering when appropriate
+
 6.0.0-beta-3
 ============
 
@@ -21,8 +26,6 @@
 - Router functionality is demonstrated in the Template Literals example app.
 
 - Release is considered initial beta and may change in functionality.
-
-
 
 5.2.0
 ======

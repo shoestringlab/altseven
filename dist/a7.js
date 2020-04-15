@@ -663,7 +663,7 @@ function View( props ){
 	this.props = props;
 	this.isTransient = props.isTransient || false;
 	this.state = {};
-	this.mustRender = false;
+	this.skipRender = false;
 	this.children = {};
 	this.config();
 	this.fireEvent( "mustRegister" );
@@ -682,7 +682,11 @@ View.prototype = {
 
 		this.on( "mustRender", function(){
 			a7.log.trace( 'mustRender: ' + this.props.id );
-			a7.ui.enqueueForRender( this.props.id );
+			if( this.shouldRender() ){
+				a7.ui.enqueueForRender( this.props.id );
+			}else{
+				a7.log.trace( 'Render cancelled: ' + this.props.id );
+			}
 		}.bind( this ));
 
 		this.on( "rendered", function(){
@@ -693,7 +697,7 @@ View.prototype = {
 				}
 				this.timer = setTimeout( this.checkRenderStatus.bind( this ), a7.model.get( "a7" ).ui.timeout );
 			}
-			this.mustRender = false;
+			this.skipRender = false;
 			this.onRendered();
 		}.bind( this ));
 
@@ -766,6 +770,13 @@ View.prototype = {
 		}.bind( this ));
 
 		this.fireEvent( "rendered" );
+	},
+	shouldRender: function(){
+    if( this.skipRender ){
+      return false;
+    }else{
+      return true;
+    }
 	},
 	// after rendering, render all the children of the view
 	onRendered: function(){
