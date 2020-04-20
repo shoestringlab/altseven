@@ -219,12 +219,13 @@ function View( props ){
 	this.type = 'View';
 	this.timeout;
 	this.timer;
-	this.element;
+	this.element; // html element the view renders into
 	this.props = props;
 	this.isTransient = props.isTransient || false;
 	this.state = {};
 	this.skipRender = false;
-	this.children = {};
+	this.children = {}; // child views
+	this.components = {}; // register objects external to the framework so we can address them later
 	this.config();
 	this.fireEvent( "mustRegister" );
 }
