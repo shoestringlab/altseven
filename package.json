@@ -11,7 +11,7 @@
     "eslint": "^4.2.0",
     "express": "^4.17.1",
     "gadget-ui": "^7.1.1",
-    "grunt": "^1.1.0",
+    "grunt": "^1.5.2",
     "grunt-closure-tools": "^1.0.0",
     "grunt-contrib-concat": "^0.5.0",
     "grunt-contrib-uglify-es": "git://github.com/gruntjs/grunt-contrib-uglify.git#harmony",
