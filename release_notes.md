@@ -1,6 +1,11 @@
 6.0.0-beta-8
 ============
 
+- Updated dependencies to fix potential vulnerabilities.
+
+6.0.0-beta-8
+============
+
 - Add view.components to register external components in the view so they can be addresed
 
 6.0.0-beta-7

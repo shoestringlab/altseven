@@ -7,4 +7,4 @@ config
 wirebox
 models
 grunt/jslint
-
+.vscode/
