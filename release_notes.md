@@ -1,7 +1,8 @@
-6.0.0-beta-8
+6.0.1
 ============
 
 - Updated dependencies to fix potential vulnerabilities.
+- Updated semver for release on npm.
 
 6.0.0-beta-8
 ============
