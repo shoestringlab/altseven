@@ -1,7 +1,7 @@
 altseven
 =========
 
-v 6.0.1
+v 6.0.2
 
 A JavaScript framework. Originally built as an exploration into reactive programming with JavaScript. Now a full-fledged Web framework.
 
@@ -15,7 +15,13 @@ To install dev dependencies from NPM:
     $ npm install
 
 
-Current Release - 6.0.0-beta
+Current Release - 6.0.2
+--------
+
+A documentation site has been added at https://altseven.shoestringlab.com. The documentation is itself hosted on Github and anyone can offer updates and fixes.
+
+
+6.0.0
 --------
 
 6.0.0 is an exciting release as it adds a significant new capability to the framework with built-in client-side URL routing. See the release notes for more details.

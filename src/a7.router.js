@@ -192,6 +192,7 @@ a7.router = (function() {
   return {
     open: _open,
     add: _add,
+    find: _find,
     match: _match,
     init: function( options, routes ){
       _router = new Router( routes );

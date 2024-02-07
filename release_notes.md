@@ -1,3 +1,10 @@
+6.0.2
+============
+
+- Documentation site added at https://altseven.shoestringlab.com
+- Simply app example added.
+- a7.route.find method added.
+
 6.0.1
 ============
 
@@ -7,7 +14,7 @@
 6.0.0-beta-8
 ============
 
-- Add view.components to register external components in the view so they can be addresed
+- Add view.components to register external components in the view so they can be addressed
 
 6.0.0-beta-7
 ============
