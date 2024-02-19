@@ -29,6 +29,7 @@ module.exports = {
     src: [
       "src/a7.export.js",
       "src/a7.js",
+      "src/a7.ai.js",
       "src/a7.console.js",
       "src/a7.error.js",
       "src/a7.events.js",

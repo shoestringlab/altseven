@@ -16,6 +16,43 @@ var a7 = (function() {
       }
 
       var theOptions = {
+        ai: ( options.ai ? {
+          enabled: options.ai.enabled || false,
+          tasks: options.ai.tasks
+          /* tasks:[
+            'conversational',
+            'fill-mask',
+            'question-answering',
+            'sentence-similarity',
+            'summarization',
+            'table-question-answering',
+            'text-classification',
+            // 'sentiiment-analysis',
+            'text-generation',
+            'text2text-generation',
+            'token-classification',
+            'translation',
+            'zero-shot-classification',
+            'depth-estimation',
+            'image-classification',
+            'image-segmentation',
+            'image-to-image',
+            'mask-generation',
+            'object-detection',
+            'audio-classification',
+            'automatic-speech-recognition',
+            'text-to-speech',
+            //'text-to-audio',
+            'document-question-answering',
+            'feature-extraction',
+            'image-to-text',
+            'text-to-image',
+            'visual-question-answering',
+            'zero-shot-audio-classification',
+            'zero-shot-image-classification',
+            'zero-shot-object-detection'
+
+          ] */} : {}),
         auth: {
           sessionTimeout: (options.auth && options.auth.sessionTimeout ? options.auth.sessionTimeout : 60 * 15 * 1000 )
         },
@@ -89,6 +126,10 @@ var a7 = (function() {
             if( theOptions.router ){
               a7.log.trace("a7 - router init");
               a7.router.init( theOptions.router.options, theOptions.router.routes );
+            }
+            if( theOptions.ai ){
+              a7.log.trace( "a7 - ai init." );
+              a7.ai.init( theOptions.ai );
             }
             p1 = new Promise(function(resolve, reject) {
               a7.log.trace("a7 - layout init");

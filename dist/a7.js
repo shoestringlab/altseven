@@ -19,6 +19,43 @@ var a7 = (function() {
       }
 
       var theOptions = {
+        ai: ( options.ai ? {
+          enabled: options.ai.enabled || false,
+          tasks: options.ai.tasks
+          /* tasks:[
+            'conversational',
+            'fill-mask',
+            'question-answering',
+            'sentence-similarity',
+            'summarization',
+            'table-question-answering',
+            'text-classification',
+            // 'sentiiment-analysis',
+            'text-generation',
+            'text2text-generation',
+            'token-classification',
+            'translation',
+            'zero-shot-classification',
+            'depth-estimation',
+            'image-classification',
+            'image-segmentation',
+            'image-to-image',
+            'mask-generation',
+            'object-detection',
+            'audio-classification',
+            'automatic-speech-recognition',
+            'text-to-speech',
+            //'text-to-audio',
+            'document-question-answering',
+            'feature-extraction',
+            'image-to-text',
+            'text-to-image',
+            'visual-question-answering',
+            'zero-shot-audio-classification',
+            'zero-shot-image-classification',
+            'zero-shot-object-detection'
+
+          ] */} : {}),
         auth: {
           sessionTimeout: (options.auth && options.auth.sessionTimeout ? options.auth.sessionTimeout : 60 * 15 * 1000 )
         },
@@ -93,6 +130,10 @@ var a7 = (function() {
               a7.log.trace("a7 - router init");
               a7.router.init( theOptions.router.options, theOptions.router.routes );
             }
+            if( theOptions.ai ){
+              a7.log.trace( "a7 - ai init." );
+              a7.ai.init( theOptions.ai );
+            }
             p1 = new Promise(function(resolve, reject) {
               a7.log.trace("a7 - layout init");
               // initialize templating engine
@@ -136,6 +177,36 @@ var a7 = (function() {
   };
 })();
 
+a7.ai = (function() {
+	"use strict";
+	var pipes = {};
+  
+	return {
+ 
+	init: function(options){
+		if( options.enabled ){
+			import('/node_modules/@xenova/transformers/dist/transformers.min.js').then((pipeline)=>{
+
+				console.log('Transformers; loaded.');
+				console.dir( pipeline );
+				for( var idx = 0; idx <= options.tasks.length; idx++ ){
+					console.dir( options.tasks[idx] );
+					switch( options.tasks[idx].id ){
+						case "translation":
+							pipes[options.tasks[idx].id.replaceAll("-","_")] = pipeline( options.tasks[idx].id,{
+								src_lang: options.tasks[idx].src,
+								tgt_lang: options.tasks[idx].tgt
+							} );
+						default:
+							pipes[options.tasks[idx].id.replaceAll("-","_")] = pipeline( options.tasks[idx].id );
+					}
+				}
+			});
+		}
+	}
+	};
+  })();
+  
 
 a7.console = (function() {
   "use strict";
@@ -1303,6 +1374,7 @@ a7.router = (function() {
   return {
     open: _open,
     add: _add,
+    find: _find,
     match: _match,
     init: function( options, routes ){
       _router = new Router( routes );

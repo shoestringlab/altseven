@@ -103,7 +103,9 @@ var app = {
       todolist.template = function() {
         var str = `<ul>`;
         this.state.items.forEach(function(item) {
+          let spanishText = a7.ai.tasks['translation'](item.text);
           str += `<li>${item.text}</li>`;
+          str += `<li>${spanishText}</li>`;
         });
         str += `</ul>`;
         return str;
@@ -222,6 +224,10 @@ var app = {
 export var application = function init() {
 
   var options = {
+    ai: {
+          enabled: true, 
+          tasks: [{ id: 'translation', src: 'eng_Latn', tgt: 'spa_:Latn'}]
+    },
     console: {
       enabled: true,
       container: floatingpane

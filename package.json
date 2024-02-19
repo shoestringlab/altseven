@@ -7,13 +7,14 @@
     "dist"
   ],
   "dependencies": {
-    "trim-newlines": "^4.0.2"
   },
   "devDependencies": {
+    "@xenova/transformers": "^2.15.0",
     "eslint": "^8.32.0",
     "express": "^4.18.2",
     "gadget-ui": "^7.1.1",
     "grunt": "^1.5.3",
+    "grunt-cli": "^1.4.3",
     "grunt-closure-tools": "^1.0.0",
     "grunt-contrib-concat": "^0.5.0",
     "grunt-contrib-uglify-es": "git://github.com/gruntjs/grunt-contrib-uglify.git#harmony",
@@ -24,7 +25,8 @@
     "load-grunt-config": "^4.0.1",
     "load-grunt-tasks": "^3.1.0",
     "open-iconic": "^1.1.1",
-    "sha.js": "^2.4.11"
+    "sha.js": "^2.4.11",
+    "trim-newlines": "^4.0.2"
   },
   "scripts": {
     "test": "/test/index.htm"
