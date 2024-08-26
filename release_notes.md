@@ -1,3 +1,8 @@
+6.0.3
+============
+
+- Add args to User function to allow developer to set data into the User object when instantiated
+
 6.0.2
 ============
 
