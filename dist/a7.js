@@ -641,8 +641,11 @@ var Model = ( function() {
 	};
 }() );
 
-function User(){
+function User(args){
 	// init User
+	// if you pass an args structure into the function, the elements of args will be added to the User object
+	
+	Object.assign( this, args );
 	return this;
 }
 
@@ -931,6 +934,7 @@ a7.remote = ( function(){
 
 						promise
 							.then( function( response ) {
+								// set the token into sessionStorage so it is available if the browser is refreshed
 								var token = response.headers.get("X-Token");
 								if( token !== undefined && token !== null ){
 									_token = token;
@@ -941,12 +945,14 @@ a7.remote = ( function(){
 							.then( function( json ){
 								if( json.success ){
 									var user = a7.model.get( "user" );
+									// map the response object into the user object
 									Object.keys( json.user ).map( function( key ) {
 										user[ key ] = json.user[ key ];
 									});
+									// set the user into the sessionStorage and the model
 									sessionStorage.user = JSON.stringify( user );
 									a7.model.set( "user", user );
-
+									// handler/function/route based on success
 									if( params.success !== undefined ){
 										if( typeof params.success === 'function' ){
 											params.success( json );
@@ -1303,6 +1309,7 @@ a7.router = (function() {
   return {
     open: _open,
     add: _add,
+    find: _find,
     match: _match,
     init: function( options, routes ){
       _router = new Router( routes );
@@ -1371,9 +1378,10 @@ a7.security = (function() {
   };
 })();
 
-a7.ui = (function() {
+a7.ui = (function () {
   "use strict";
 
+  // browser events that can be used in templating, e.g. data-click will be added to the resulting HTML as a click event handler
   const resourceEvents = [
     'cached',
     'error',
@@ -1545,10 +1553,10 @@ a7.ui = (function() {
     'show'
   ];
 
-  const _standardEvents = resourceEvents.concat( networkEvents ).concat( focusEvents ).concat( websocketEvents ).concat( sessionHistoryEvents ).concat( cssAnimationEvents )
-            .concat( cssTransitionEvents ).concat( formEvents ).concat( printingEvents ).concat( textCompositionEvents ).concat( viewEvents ).concat( clipboardEvents )
-            .concat( keyboardEvents ).concat( mouseEvents ).concat( dragEvents ).concat( mediaEvents ).concat( progressEvents ).concat( storageEvents )
-            .concat( updateEvents ).concat( valueChangeEvents ).concat( uncategorizedEvents );
+  const _standardEvents = resourceEvents.concat(networkEvents).concat(focusEvents).concat(websocketEvents).concat(sessionHistoryEvents).concat(cssAnimationEvents)
+    .concat(cssTransitionEvents).concat(formEvents).concat(printingEvents).concat(textCompositionEvents).concat(viewEvents).concat(clipboardEvents)
+    .concat(keyboardEvents).concat(mouseEvents).concat(dragEvents).concat(mediaEvents).concat(progressEvents).concat(storageEvents)
+    .concat(updateEvents).concat(valueChangeEvents).concat(uncategorizedEvents);
 
   var
     _events = [],
@@ -1559,128 +1567,135 @@ a7.ui = (function() {
     _stateTransition = false,
     //_templateMap = {},
     _views = [],
-    _setSelector = function(name, selector) {
+
+    // selectors are cached for easy reference later
+    
+    _setSelector = function (name, selector) {
       _selectors[name] = selector;
     },
-    _getSelector = function(name){
+    _getSelector = function (name) {
       return _selectors[name];
     },
-    _getView = function( id ){
-      return _views[ id ];
+    // get an active view from the view struct
+    _getView = function (id) {
+      return _views[id];
     },
-    _getNode = function( selector ){
-      return document.querySelector( selector );
+    // get the HTML node for a selector
+    _getNode = function (selector) {
+      return document.querySelector(selector);
     },
-    _getEvents = function(){
+    // return the registered events for the application
+    _getEvents = function () {
       return _events;
     },
-    _register = function(  view ){
-      switch( _options.renderer ){
+    // register a view
+    // this happens automatically when a view is instantiated
+    _register = function (view) {
+      switch (_options.renderer) {
         case "Handlebars":
         case "Mustache":
         case "templateLiterals":
-          _views[ view.props.id ] = view;
-          view.fireEvent( "registered" );
+          _views[view.props.id] = view;
+          view.fireEvent("registered");
           break;
       }
     },
-
-    _unregister = function( id ){
-      delete _views[ id ];
+    // unregister the view
+    _unregister = function (id) {
+      delete _views[id];
     },
-
-    _getParentViewIds = function( id ){
-      a7.log.trace( "Find parents of " + id );
+    // get the IDs for the tree of parent views to the root view of this tree
+    _getParentViewIds = function (id) {
+      a7.log.trace("Find parents of " + id);
       let parentIds = [];
-      let view = _views[ id ];
-      while( view.props.parentID !== undefined ){
-        parentIds.unshift( view.props.parentID );
-        view = _views[ view.props.parentID ];
+      let view = _views[id];
+      while (view.props.parentID !== undefined) {
+        parentIds.unshift(view.props.parentID);
+        view = _views[view.props.parentID];
       }
       return parentIds;
       // parentids returned in highest to lowest order
     },
-
-     _getChildViewIds = function( id ){
-      a7.log.trace( "Find children of " + id );
+    // get the tree of child IDs of a view
+    _getChildViewIds = function (id) {
+      a7.log.trace("Find children of " + id);
       let childIds = [];
-      let view = _views[ id ];
+      let view = _views[id];
 
-      for( var child in view.children ){
-        let childId = view.children[ child ].props.id;
-        if( _getView( childId ) !== undefined ){
-          childIds.push( childId );
-          childIds.concat( _getChildViewIds( childId ) );
+      for (var child in view.children) {
+        let childId = view.children[child].props.id;
+        if (_getView(childId) !== undefined) {
+          childIds.push(childId);
+          childIds.concat(_getChildViewIds(childId));
         }
       }
-
       // returned in highest to lowest order
       return childIds;
     },
-
-    _enqueueForRender = function( id ){
-      if( ! _stateTransition ){
-        a7.log.info( 'enqueue: ' + id );
-        if( ! _queue.length ){
-          a7.log.trace( 'add first view to queue: ' + id );
-          _queue.push( id );
+    // add a view to the render queue
+    _enqueueForRender = function (id) {
+      if (!_stateTransition) {
+        a7.log.info('enqueue: ' + id);
+        if (!_queue.length) {
+          a7.log.trace('add first view to queue: ' + id);
+          _queue.push(id);
           // wait for other possible updates and then process the queue
-          setTimeout( _processRenderQueue, 18 );
-        }else{
-          let childIds = _getChildViewIds( id );
-          if( _views[ id ].props.parentID === undefined ){
+          setTimeout(_processRenderQueue, 18);
+        } else {
+          let childIds = _getChildViewIds(id);
+          if (_views[id].props.parentID === undefined) {
             // if the view is a root view, it should be pushed to the front of the stack
-            a7.log.trace( 'add to front of queue: ' + id );
-            _queue.unshift( id );
-          }else{
-            let parentIds = _getParentViewIds( id );
+            a7.log.trace('add to front of queue: ' + id);
+            _queue.unshift(id);
+          } else {
+            let parentIds = _getParentViewIds(id);
 
             let highParent = undefined;
-            if( parentIds.length ){
-              highParent = parentIds.find( function( parentId ){
-                return _queue.indexOf( parentId ) >= 0;
+            if (parentIds.length) {
+              highParent = parentIds.find(function (parentId) {
+                return _queue.indexOf(parentId) >= 0;
               });
             }
 
             // only add if there is no parent in the queue, since parents will render children
-            if( highParent === undefined ){
+            if (highParent === undefined) {
 
-              a7.log.trace( 'add to end of queue: ' + id );
-              _queue.push( id );
+              a7.log.trace('add to end of queue: ' + id);
+              _queue.push(id);
             }
           }
 
           // remove child views from the queue, they will be rendered by the parents
-          childIds.forEach( function( childId ){
-            if( _queue.indexOf( childId ) >= 0 ){
-              a7.log.trace( 'remove child from queue: ' + childId );
-              _queue.splice( _queue.indexOf( childId ), 1 );
+          childIds.forEach(function (childId) {
+            if (_queue.indexOf(childId) >= 0) {
+              a7.log.trace('remove child from queue: ' + childId);
+              _queue.splice(_queue.indexOf(childId), 1);
             }
           });
         }
-      }else{
-        _deferred.push( id );
+      } else {
+        _deferred.push(id);
       }
     },
 
-
-    _processRenderQueue = function(){
-      a7.log.trace( 'processing the queue' );
+    // render the queue
+    _processRenderQueue = function () {
+      a7.log.trace('processing the queue');
       _stateTransition = true;
 
-      _queue.forEach( function( id ){
-          _views[ id ].render();
+      _queue.forEach(function (id) {
+        _views[id].render();
       });
       _queue = [];
       _stateTransition = false;
-      _deferred.forEach( function( id ){
-        _enqueueForRender( id );
+      _deferred.forEach(function (id) {
+        _enqueueForRender(id);
       });
       _deferred = [];
     },
 
-    _removeView = function( id ){
-      delete _views[ id ];
+    _removeView = function (id) {
+      delete _views[id];
     };
 
   return {
@@ -1697,22 +1712,22 @@ a7.ui = (function() {
     removeView: _removeView,
     views: _views,
 
-    init: function(resolve, reject) {
+    init: function (resolve, reject) {
       a7.log.info("Layout initializing...");
       _options = a7.model.get("a7").ui;
 
       // set event groups to create listeners for
-      var eventGroups = ( _options.eventGroups ? _options.eventGroups : 'standard' );
-      switch( eventGroups ){
+      var eventGroups = (_options.eventGroups ? _options.eventGroups : 'standard');
+      switch (eventGroups) {
         case "extended":
           // extended events not implemented yet
-          reject( "Extended events are not implemented yet." );
+          reject("Extended events are not implemented yet.");
         case "standard":
           _events = _standardEvents;
           break;
         default:
-          _options.eventGroups.forEach( function( group ){
-            _events = _events.concat( (group) );
+          _options.eventGroups.forEach(function (group) {
+            _events = _events.concat((group));
           });
       }
 

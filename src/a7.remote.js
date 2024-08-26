@@ -121,6 +121,7 @@ a7.remote = ( function(){
 
 						promise
 							.then( function( response ) {
+								// set the token into sessionStorage so it is available if the browser is refreshed
 								var token = response.headers.get("X-Token");
 								if( token !== undefined && token !== null ){
 									_token = token;
@@ -131,12 +132,14 @@ a7.remote = ( function(){
 							.then( function( json ){
 								if( json.success ){
 									var user = a7.model.get( "user" );
+									// map the response object into the user object
 									Object.keys( json.user ).map( function( key ) {
 										user[ key ] = json.user[ key ];
 									});
+									// set the user into the sessionStorage and the model
 									sessionStorage.user = JSON.stringify( user );
 									a7.model.set( "user", user );
-
+									// handler/function/route based on success
 									if( params.success !== undefined ){
 										if( typeof params.success === 'function' ){
 											params.success( json );

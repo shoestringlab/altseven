@@ -201,8 +201,11 @@ var Model = ( function() {
 	};
 }() );
 
-function User(){
+function User(args){
 	// init User
+	// if you pass an args structure into the function, the elements of args will be added to the User object
+	
+	Object.assign( this, args );
 	return this;
 }
 
