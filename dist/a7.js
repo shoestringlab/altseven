@@ -84,15 +84,19 @@ var a7 = (function() {
           a7.log.init();
             a7.log.trace("a7 - security init");
             // init user state
-            a7.security.init();
+            // pass security options if they were defined
+            a7.security.init( ( options.security && options.security.options ? options.security.options : {} ) );
             a7.log.trace("a7 - remote init");
+            //pass remote modules if they were defined
             a7.remote.init( ( options.remote && options.remote.modules ? options.remote.modules : {} ) );
             a7.log.trace("a7 - events init");
             a7.events.init();
+            // init the router if it is being used
             if( theOptions.router ){
               a7.log.trace("a7 - router init");
               a7.router.init( theOptions.router.options, theOptions.router.routes );
             }
+            // init the ui templating engine
             p1 = new Promise(function(resolve, reject) {
               a7.log.trace("a7 - layout init");
               // initialize templating engine
@@ -1325,6 +1329,8 @@ a7.router = (function() {
 
 a7.security = (function() {
   "use strict";
+  
+  let _userArgs = [];
 
   var _isAuthenticated = function(resolve, reject) {
     a7.log.info("Checking authenticated state.. ");
@@ -1348,7 +1354,7 @@ a7.security = (function() {
   _invalidateSession = function(){
 		clearTimeout( a7.remote.getSessionTimer() );
     a7.remote.invalidateToken();
-		var user = a7.components.Constructor(a7.components.User, [], true);
+		var user = a7.components.Constructor(a7.components.User, _userArgs, true);
 		sessionStorage.user = JSON.stringify( user );
 		a7.model.set( "user", user );
   };
@@ -1363,10 +1369,11 @@ a7.security = (function() {
     // 	  browser refresh
     // 4. sets User object into a7.model
 
-    init: function() {
+    init: function( options ) {
       a7.log.info("Security initializing...");
+      _userArgs =  ( options.userArgs ? options.userArgs : [] );
       var suser,
-        user = a7.components.Constructor(a7.components.User, [], true);
+        user = a7.components.Constructor(a7.components.User, _userArgs, true);
       if (sessionStorage.user && sessionStorage.user !== "") {
         suser = JSON.parse(sessionStorage.user);
         Object.keys(suser).map(function(key) {

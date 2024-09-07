@@ -1,3 +1,8 @@
+6.1.0
+============
+
+- The security module now accepts an options argument for configuration at runtime. As of this release, you can pass userArgs, an array with an object that holds keys and default values you want to include when a new User object is instantiated, e.g. security: { options: { userArgs: [{userID: ""}]}}.
+
 6.0.3
 ============
 

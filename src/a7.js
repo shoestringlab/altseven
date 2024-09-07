@@ -81,15 +81,19 @@ var a7 = (function() {
           a7.log.init();
             a7.log.trace("a7 - security init");
             // init user state
-            a7.security.init();
+            // pass security options if they were defined
+            a7.security.init( ( options.security && options.security.options ? options.security.options : {} ) );
             a7.log.trace("a7 - remote init");
+            //pass remote modules if they were defined
             a7.remote.init( ( options.remote && options.remote.modules ? options.remote.modules : {} ) );
             a7.log.trace("a7 - events init");
             a7.events.init();
+            // init the router if it is being used
             if( theOptions.router ){
               a7.log.trace("a7 - router init");
               a7.router.init( theOptions.router.options, theOptions.router.routes );
             }
+            // init the ui templating engine
             p1 = new Promise(function(resolve, reject) {
               a7.log.trace("a7 - layout init");
               // initialize templating engine

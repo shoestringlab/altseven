@@ -1,21 +1,30 @@
 altseven
 =========
 
-v 6.0.3
+v 6.1.0
 
 A JavaScript framework. Originally built as an exploration into reactive programming with JavaScript. Now a full-fledged Web framework.
 
 
 Compile on CLI from root folder:
 
-    $ grunt clean
+    `$ grunt clean`
 
 To install dev dependencies from NPM:
 
-    $ npm install
+    `$ npm install`
 
 
-Current Release - 6.0.3
+Current Release - 6.1.0
+--------
+
+The security module now accepts an options argument for configuration at runtime. As of this release, you can pass userArgs, an array with an object that holds keys and default values you want to include when a new User object is instantiated, e.g. security: { options: { userArgs: [{userID: ""}]}}.
+
+Note that the library is no longer published on Bower, so pull from npm.
+
+`$ npm install altseven`
+
+6.0.3
 --------
 
 A documentation site has been added at https://altseven.shoestringlab.com. The documentation is itself hosted on Github and anyone can offer updates and fixes.
