@@ -60,7 +60,7 @@ View.prototype = {
 	},
 	events : ['mustRender','rendered', 'mustRegister', 'registered', 'mustUnregister'],
   setState: function( args ){
-    this.state = args;
+    this.state = Object.assign( args );
     // setting state requires a re-render
 		this.fireEvent( 'mustRender' );
 	},

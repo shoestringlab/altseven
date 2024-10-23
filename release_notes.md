@@ -1,3 +1,9 @@
+6.2.0
+============
+
+- The model now handles Map objects so that they are preserved as iterable Maps rather than being returned as generic Objects.
+- The underlying model object of the framework now contains an experimental feature, binding an HTML element to a key in the model, so that changes to the value of the HTML element change the model, and vice versa. This feature is not directly exposed through the framework at this time. This code may change significantly before it is considered stable, so treat it as experimental.
+
 6.1.0
 ============
 

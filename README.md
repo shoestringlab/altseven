@@ -1,7 +1,7 @@
 altseven
 =========
 
-v 6.1.0
+v 6.2.0
 
 A JavaScript framework. Originally built as an exploration into reactive programming with JavaScript. Now a full-fledged Web framework.
 
@@ -15,10 +15,11 @@ To install dev dependencies from NPM:
     `$ npm install`
 
 
-Current Release - 6.1.0
+Current Release - 6.2.0
 --------
 
-The security module now accepts an options argument for configuration at runtime. As of this release, you can pass userArgs, an array with an object that holds keys and default values you want to include when a new User object is instantiated, e.g. security: { options: { userArgs: [{userID: ""}]}}.
+* The model now handles Map objects so that they are preserved as iterable Maps rather than being returned as generic Objects.
+* The underlying model object of the framework now contains an experimental feature, binding an HTML element to a key in the model, so that changes to the value of the HTML element change the model, and vice versa. This feature is not directly exposed through the framework at this time. This code may change significantly before it is considered stable, so treat it as experimental.
 
 Note that the library is no longer published on Bower, so pull from npm.
 
