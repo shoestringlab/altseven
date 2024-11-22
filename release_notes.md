@@ -1,3 +1,9 @@
+6.3.0
+============
+- The mustRender event handler for View objects is now a debounced function configurable in the application settings so developers can control the minimum delay for re-rendering views.
+- The debounce function in a7.util is now available to developers for use in applications.
+
+
 6.2.0
 ============
 

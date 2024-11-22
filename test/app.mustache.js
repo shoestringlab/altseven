@@ -1,5 +1,5 @@
 import {a7} from '/dist/a7.js';
-import {floatingpane} from '/node_modules/gadget-ui/dist/gadget-ui.es6.js';
+import {floatingpane} from '/node_modules/gadget-ui/dist/gadget-ui.es.js';
 
 var app = {
   main: (function() {

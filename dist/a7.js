@@ -56,6 +56,7 @@ var a7 = (function() {
               ? "Handlebars"
               : "templateLiterals" )
             : "templateLiterals" ),
+            debounceTime: ( options.ui && options.ui.debounceTime ? options.ui.debounceTime : 18 ),
             timeout : ( options.ui && options.ui.timeout ? options.ui.timeout : 600000 ) // default 10 minute check for registered views
         },
         ready: false,
@@ -920,16 +921,20 @@ View.prototype = {
 			}
 		}.bind( this ) );
 
-		this.on( "mustRender", function(){
+		// mustRender is a debounced function so we can control how often views should re-render.
+		// debounce leading, so the render will be queued and subsequent requests to render will be ignored until the delay time is reached
+		// delay defaults to 18 ms, can be set in app options as ui.debounceTime
+		this.on( "mustRender", a7.util.debounce( function(){
 			a7.log.trace( 'mustRender: ' + this.props.id );
 			if( this.shouldRender() ){
 				a7.ui.enqueueForRender( this.props.id );
+				
 			}else{
 				a7.log.trace( 'Render cancelled: ' + this.props.id );
 				// undo skip, it must be explicitly set each time
 				this.skipRender = false;
 			}
-		}.bind( this ));
+		}.bind( this )), a7.model.get( "a7" ).ui.debounceTime, true );
 
 		this.on( "rendered", function(){
 			if( this.isTransient ){
@@ -1622,508 +1627,545 @@ a7.ui = (function () {
 
   // browser events that can be used in templating, e.g. data-click will be added to the resulting HTML as a click event handler
   const resourceEvents = [
-    'cached',
-    'error',
-    'abort',
-    'load',
-    'beforeunload'
+	'cached',
+	'error',
+	'abort',
+	'load',
+	'beforeunload'
   ];
 
   const networkEvents = [
-    'online',
-    'offline'
+	'online',
+	'offline'
   ];
 
   const focusEvents = [
-    'focus',
-    'blur'
+	'focus',
+	'blur'
   ];
 
   const websocketEvents = [
-    'open',
-    'message',
-    'error',
-    'close'
+	'open',
+	'message',
+	'error',
+	'close'
   ];
 
   const sessionHistoryEvents = [
-    'pagehide',
-    'pageshow',
-    'popstate'
+	'pagehide',
+	'pageshow',
+	'popstate'
   ];
 
   const cssAnimationEvents = [
-    'animationstart',
-    'animationend',
-    'animationiteration'
+	'animationstart',
+	'animationend',
+	'animationiteration'
   ];
 
   const cssTransitionEvents = [
-    'transitionstart',
-    'transitioncancel',
-    'transitionend',
-    'transitionrun'
+	'transitionstart',
+	'transitioncancel',
+	'transitionend',
+	'transitionrun'
   ];
 
   const formEvents = [
-    'reset',
-    'submit'
+	'reset',
+	'submit'
   ];
 
   const printingEvents = [
-    'beforeprint',
-    'afterprint'
+	'beforeprint',
+	'afterprint'
   ];
 
   const textCompositionEvents = [
-    'compositionstart',
-    'compositionupdate',
-    'compositionend'
+	'compositionstart',
+	'compositionupdate',
+	'compositionend'
   ];
 
   const viewEvents = [
-    'fullscreenchange',
-    'fullscreenerror',
-    'resize',
-    'scroll'
+	'fullscreenchange',
+	'fullscreenerror',
+	'resize',
+	'scroll'
   ];
 
   const clipboardEvents = [
-    'cut',
-    'copy',
-    'paste'
+	'cut',
+	'copy',
+	'paste'
   ];
 
   const keyboardEvents = [
-    'keydown',
-    'keypress',
-    'keyup'
+	'keydown',
+	'keypress',
+	'keyup'
   ];
 
   const mouseEvents = [
-    'auxclick',
-    'click',
-    'contextmenu',
-    'dblclick',
-    'mousedown',
-    'mousenter',
-    'mouseleave',
-    'mousemove',
-    'mouseover',
-    'mouseout',
-    'mouseup',
-    'pointerlockchange',
-    'pointerlockerror',
-    'wheel'
+	'auxclick',
+	'click',
+	'contextmenu',
+	'dblclick',
+	'mousedown',
+	'mousenter',
+	'mouseleave',
+	'mousemove',
+	'mouseover',
+	'mouseout',
+	'mouseup',
+	'pointerlockchange',
+	'pointerlockerror',
+	'wheel'
   ];
 
   const dragEvents = [
-    'drag',
-    'dragend',
-    'dragstart',
-    'dragleave',
-    'dragover',
-    'drop'
+	'drag',
+	'dragend',
+	'dragstart',
+	'dragleave',
+	'dragover',
+	'drop'
   ];
 
   const mediaEvents = [
-    'audioprocess',
-    'canplay',
-    'canplaythrough',
-    'complete',
-    'durationchange',
-    'emptied',
-    'ended',
-    'loadeddata',
-    'loadedmetadata',
-    'pause',
-    'play',
-    'playing',
-    'ratechange',
-    'seeked',
-    'seeking',
-    'stalled',
-    'suspend',
-    'timeupdate',
-    'columechange',
-    'waiting'
+	'audioprocess',
+	'canplay',
+	'canplaythrough',
+	'complete',
+	'durationchange',
+	'emptied',
+	'ended',
+	'loadeddata',
+	'loadedmetadata',
+	'pause',
+	'play',
+	'playing',
+	'ratechange',
+	'seeked',
+	'seeking',
+	'stalled',
+	'suspend',
+	'timeupdate',
+	'columechange',
+	'waiting'
   ];
 
   const progressEvents = [
-    // duplicates from resource events
-    /* 'abort',
-    'error',
-    'load', */
-    'loadend',
-    'loadstart',
-    'progress',
-    'timeout'
+	// duplicates from resource events
+	/* 'abort',
+	'error',
+	'load', */
+	'loadend',
+	'loadstart',
+	'progress',
+	'timeout'
   ];
 
   const storageEvents = [
-    'change',
-    'storage'
+	'change',
+	'storage'
   ];
 
   const updateEvents = [
-    'checking',
-    'downloading',
-    /* 'error', */
-    'noupdate',
-    'obsolete',
-    'updateready'
+	'checking',
+	'downloading',
+	/* 'error', */
+	'noupdate',
+	'obsolete',
+	'updateready'
   ];
 
   const valueChangeEvents = [
-    'broadcast',
-    'CheckBoxStateChange',
-    'hashchange',
-    'input',
-    'RadioStateChange',
-    'readystatechange',
-    'ValueChange'
+	'broadcast',
+	'CheckBoxStateChange',
+	'hashchange',
+	'input',
+	'RadioStateChange',
+	'readystatechange',
+	'ValueChange'
   ];
 
   const uncategorizedEvents = [
-    'invalid',
-    'localized',
-    /* 'message',
-    'open', */
-    'show'
+	'invalid',
+	'localized',
+	/* 'message',
+	'open', */
+	'show'
   ];
 
   const _standardEvents = resourceEvents.concat(networkEvents).concat(focusEvents).concat(websocketEvents).concat(sessionHistoryEvents).concat(cssAnimationEvents)
-    .concat(cssTransitionEvents).concat(formEvents).concat(printingEvents).concat(textCompositionEvents).concat(viewEvents).concat(clipboardEvents)
-    .concat(keyboardEvents).concat(mouseEvents).concat(dragEvents).concat(mediaEvents).concat(progressEvents).concat(storageEvents)
-    .concat(updateEvents).concat(valueChangeEvents).concat(uncategorizedEvents);
+	.concat(cssTransitionEvents).concat(formEvents).concat(printingEvents).concat(textCompositionEvents).concat(viewEvents).concat(clipboardEvents)
+	.concat(keyboardEvents).concat(mouseEvents).concat(dragEvents).concat(mediaEvents).concat(progressEvents).concat(storageEvents)
+	.concat(updateEvents).concat(valueChangeEvents).concat(uncategorizedEvents);
 
   var
-    _events = [],
-    _options = {},
-    _selectors = {},
-    _queue = [],
-    _deferred = [],
-    _stateTransition = false,
-    //_templateMap = {},
-    _views = [],
+	_events = [],
+	_options = {},
+	_selectors = {},
+	_queue = [],
+	_deferred = [],
+	_stateTransition = false,
+	//_templateMap = {},
+	_views = [],
 
-    // selectors are cached for easy reference later
-    
-    _setSelector = function (name, selector) {
-      _selectors[name] = selector;
-    },
-    _getSelector = function (name) {
-      return _selectors[name];
-    },
-    // get an active view from the view struct
-    _getView = function (id) {
-      return _views[id];
-    },
-    // get the HTML node for a selector
-    _getNode = function (selector) {
-      return document.querySelector(selector);
-    },
-    // return the registered events for the application
-    _getEvents = function () {
-      return _events;
-    },
-    // register a view
-    // this happens automatically when a view is instantiated
-    _register = function (view) {
-      switch (_options.renderer) {
-        case "Handlebars":
-        case "Mustache":
-        case "templateLiterals":
-          _views[view.props.id] = view;
-          view.fireEvent("registered");
-          break;
-      }
-    },
-    // unregister the view
-    _unregister = function (id) {
-      delete _views[id];
-    },
-    // get the IDs for the tree of parent views to the root view of this tree
-    _getParentViewIds = function (id) {
-      a7.log.trace("Find parents of " + id);
-      let parentIds = [];
-      let view = _views[id];
-      while (view.props.parentID !== undefined) {
-        parentIds.unshift(view.props.parentID);
-        view = _views[view.props.parentID];
-      }
-      return parentIds;
-      // parentids returned in highest to lowest order
-    },
-    // get the tree of child IDs of a view
-    _getChildViewIds = function (id) {
-      a7.log.trace("Find children of " + id);
-      let childIds = [];
-      let view = _views[id];
+	// selectors are cached for easy reference later
 
-      for (var child in view.children) {
-        let childId = view.children[child].props.id;
-        if (_getView(childId) !== undefined) {
-          childIds.push(childId);
-          childIds.concat(_getChildViewIds(childId));
-        }
-      }
-      // returned in highest to lowest order
-      return childIds;
-    },
-    // add a view to the render queue
-    _enqueueForRender = function (id) {
-      if (!_stateTransition) {
-        a7.log.info('enqueue: ' + id);
-        if (!_queue.length) {
-          a7.log.trace('add first view to queue: ' + id);
-          _queue.push(id);
-          // wait for other possible updates and then process the queue
-          setTimeout(_processRenderQueue, 18);
-        } else {
-          let childIds = _getChildViewIds(id);
-          if (_views[id].props.parentID === undefined) {
-            // if the view is a root view, it should be pushed to the front of the stack
-            a7.log.trace('add to front of queue: ' + id);
-            _queue.unshift(id);
-          } else {
-            let parentIds = _getParentViewIds(id);
+	_setSelector = function (name, selector) {
+	  _selectors[name] = selector;
+	},
+	_getSelector = function (name) {
+	  return _selectors[name];
+	},
+	// get an active view from the view struct
+	_getView = function (id) {
+	  return _views[id];
+	},
+	// get the HTML node for a selector
+	_getNode = function (selector) {
+	  return document.querySelector(selector);
+	},
+	// return the registered events for the application
+	_getEvents = function () {
+	  return _events;
+	},
+	// register a view
+	// this happens automatically when a view is instantiated
+	_register = function (view) {
+	  switch (_options.renderer) {
+		case "Handlebars":
+		case "Mustache":
+		case "templateLiterals":
+		  _views[view.props.id] = view;
+		  view.fireEvent("registered");
+		  break;
+	  }
+	},
+	// unregister the view
+	_unregister = function (id) {
+	  delete _views[id];
+	},
+	// get the IDs for the tree of parent views to the root view of this tree
+	_getParentViewIds = function (id) {
+	  a7.log.trace("Find parents of " + id);
+	  let parentIds = [];
+	  let view = _views[id];
+	  while (view.props.parentID !== undefined) {
+		parentIds.unshift(view.props.parentID);
+		view = _views[view.props.parentID];
+	  }
+	  return parentIds;
+	  // parentids returned in highest to lowest order
+	},
+	// get the tree of child IDs of a view
+	_getChildViewIds = function (id) {
+	  a7.log.trace("Find children of " + id);
+	  let childIds = [];
+	  let view = _views[id];
 
-            let highParent = undefined;
-            if (parentIds.length) {
-              highParent = parentIds.find(function (parentId) {
-                return _queue.indexOf(parentId) >= 0;
-              });
-            }
+	  for (var child in view.children) {
+		let childId = view.children[child].props.id;
+		if (_getView(childId) !== undefined) {
+		  childIds.push(childId);
+		  childIds.concat(_getChildViewIds(childId));
+		}
+	  }
+	  // returned in highest to lowest order
+	  return childIds;
+	},
+	// add a view to the render queue
+	_enqueueForRender = function (id) {
+	  // if _stateTransition is true, the queue is being processed
+	  if (!_stateTransition) {
+			a7.log.info('enqueue: ' + id);
+			if (!_queue.length) {
+				a7.log.trace('add first view to queue: ' + id);
+				_queue.push(id);
+				_processRenderQueue();
+			} else {
+				let childIds = _getChildViewIds(id);
+				if (_views[id].props.parentID === undefined) {
+					// if the view is a root view, it should be pushed to the front of the stack
+					a7.log.trace('add to front of queue: ' + id);
+					_queue.unshift(id);
+				} else {
+					let parentIds = _getParentViewIds(id);
 
-            // only add if there is no parent in the queue, since parents will render children
-            if (highParent === undefined) {
+					let highParent = undefined;
+					if (parentIds.length) {
+					highParent = parentIds.find(function (parentId) {
+						return _queue.indexOf(parentId) >= 0;
+					});
+					}
 
-              a7.log.trace('add to end of queue: ' + id);
-              _queue.push(id);
-            }
-          }
+					// only add if there is no parent in the queue, since parents will render children
+					if (highParent === undefined) {
 
-          // remove child views from the queue, they will be rendered by the parents
-          childIds.forEach(function (childId) {
-            if (_queue.indexOf(childId) >= 0) {
-              a7.log.trace('remove child from queue: ' + childId);
-              _queue.splice(_queue.indexOf(childId), 1);
-            }
-          });
-        }
-      } else {
-        _deferred.push(id);
-      }
-    },
+					a7.log.trace('add to end of queue: ' + id);
+					_queue.push(id);
+					}
+				}
 
-    // render the queue
-    _processRenderQueue = function () {
-      a7.log.trace('processing the queue');
-      _stateTransition = true;
+				// remove child views from the queue, they will be rendered by the parents
+				childIds.forEach(function (childId) {
+					if (_queue.indexOf(childId) >= 0) {
+					a7.log.trace('remove child from queue: ' + childId);
+					_queue.splice(_queue.indexOf(childId), 1);
+					}
+				});
+			}
+	  } else {
+		_deferred.push(id);
+	  }
+	},
 
-      _queue.forEach(function (id) {
-        _views[id].render();
-      });
-      _queue = [];
-      _stateTransition = false;
-      _deferred.forEach(function (id) {
-        _enqueueForRender(id);
-      });
-      _deferred = [];
-    },
+	// render the queue
+	_processRenderQueue = function () {
+	  a7.log.trace('processing the queue');
+	  _stateTransition = true;
 
-    _removeView = function (id) {
-      delete _views[id];
-    };
+	  _queue.forEach(function (id) {
+		_views[id].render();
+	  });
+	  _queue = [];
+	  _stateTransition = false;
+	  _deferred.forEach(function (id) {
+		_enqueueForRender(id);
+	  });
+	  _deferred = [];
+	},
+
+	_removeView = function (id) {
+	  delete _views[id];
+	};
 
   return {
-    //render: _render,
-    getEvents: _getEvents,
-    selectors: _selectors,
-    getSelector: _getSelector,
-    setSelector: _setSelector,
-    getNode: _getNode,
-    register: _register,
-    unregister: _unregister,
-    getView: _getView,
-    enqueueForRender: _enqueueForRender,
-    removeView: _removeView,
-    views: _views,
+	//render: _render,
+	getEvents: _getEvents,
+	selectors: _selectors,
+	getSelector: _getSelector,
+	setSelector: _setSelector,
+	getNode: _getNode,
+	register: _register,
+	unregister: _unregister,
+	getView: _getView,
+	enqueueForRender: _enqueueForRender,
+	removeView: _removeView,
+	views: _views,
 
-    init: function (resolve, reject) {
-      a7.log.info("Layout initializing...");
-      _options = a7.model.get("a7").ui;
+	init: function (resolve, reject) {
+	  a7.log.info("Layout initializing...");
+	  _options = a7.model.get("a7").ui;
 
-      // set event groups to create listeners for
-      var eventGroups = (_options.eventGroups ? _options.eventGroups : 'standard');
-      switch (eventGroups) {
-        case "extended":
-          // extended events not implemented yet
-          reject("Extended events are not implemented yet.");
-        case "standard":
-          _events = _standardEvents;
-          break;
-        default:
-          _options.eventGroups.forEach(function (group) {
-            _events = _events.concat((group));
-          });
-      }
+	  // set event groups to create listeners for
+	  var eventGroups = (_options.eventGroups ? _options.eventGroups : 'standard');
+	  switch (eventGroups) {
+		case "extended":
+		  // extended events not implemented yet
+		  reject("Extended events are not implemented yet.");
+		case "standard":
+		  _events = _standardEvents;
+		  break;
+		default:
+		  _options.eventGroups.forEach(function (group) {
+			_events = _events.concat((group));
+		  });
+	  }
 
-      resolve();
-    }
+	  resolve();
+	}
   };
 })();
 
-a7.util = ( function(){
+a7.util = (function () {
 
 
-	return{
+	return {
 		// split by commas, used below
-		split : function( val ) {
-			return val.split( /,\s*/ );
+		split: function (val) {
+			return val.split(/,\s*/);
 		},
 
 		// return the last item from a comma-separated list
-		extractLast : function( term ) {
-			return this.split( term ).pop();
+		extractLast: function (term) {
+			return this.split(term).pop();
 		},
 
 		// encode and decode base64
-		base64 : {
-			keyStr : "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",
+		base64: {
+			keyStr: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=",
 
-			encode64 : function( input ) {
-				if ( !String( input ).length ) {
+			encode64: function (input) {
+				if (!String(input).length) {
 					return false;
 				}
 				var output = "", chr1, chr2, chr3, enc1, enc2, enc3, enc4, i = 0;
 
 				do {
-					chr1 = input.charCodeAt( i++ );
-					chr2 = input.charCodeAt( i++ );
-					chr3 = input.charCodeAt( i++ );
+					chr1 = input.charCodeAt(i++);
+					chr2 = input.charCodeAt(i++);
+					chr3 = input.charCodeAt(i++);
 
 					enc1 = chr1 >> 2;
-					enc2 = ( ( chr1 & 3 ) << 4 ) | ( chr2 >> 4 );
-					enc3 = ( ( chr2 & 15 ) << 2 ) | ( chr3 >> 6 );
+					enc2 = ((chr1 & 3) << 4) | (chr2 >> 4);
+					enc3 = ((chr2 & 15) << 2) | (chr3 >> 6);
 					enc4 = chr3 & 63;
 
-					if ( isNaN( chr2 ) ) {
+					if (isNaN(chr2)) {
 						enc3 = enc4 = 64;
-					} else if ( isNaN( chr3 ) ) {
+					} else if (isNaN(chr3)) {
 						enc4 = 64;
 					}
 
-					output = output + this.keyStr.charAt( enc1 )
-							+ this.keyStr.charAt( enc2 )
-							+ this.keyStr.charAt( enc3 )
-							+ this.keyStr.charAt( enc4 );
-				} while ( i < input.length );
+					output = output + this.keyStr.charAt(enc1)
+						+ this.keyStr.charAt(enc2)
+						+ this.keyStr.charAt(enc3)
+						+ this.keyStr.charAt(enc4);
+				} while (i < input.length);
 
 				return output;
 			},
 
-			decode64 : function( input ) {
-				if ( !input ) {
+			decode64: function (input) {
+				if (!input) {
 					return false;
 				}
 				var output = "", chr1, chr2, chr3, enc1, enc2, enc3, enc4, i = 0;
 
 				// remove all characters that are not A-Z, a-z, 0-9, +, /, or =
-				input = input.replace( /[^A-Za-z0-9\+\/\=]/g, "" );
+				input = input.replace(/[^A-Za-z0-9\+\/\=]/g, "");
 
 				do {
-					enc1 = this.keyStr.indexOf( input.charAt( i++ ) );
-					enc2 = this.keyStr.indexOf( input.charAt( i++ ) );
-					enc3 = this.keyStr.indexOf( input.charAt( i++ ) );
-					enc4 = this.keyStr.indexOf( input.charAt( i++ ) );
+					enc1 = this.keyStr.indexOf(input.charAt(i++));
+					enc2 = this.keyStr.indexOf(input.charAt(i++));
+					enc3 = this.keyStr.indexOf(input.charAt(i++));
+					enc4 = this.keyStr.indexOf(input.charAt(i++));
 
-					chr1 = ( enc1 << 2 ) | ( enc2 >> 4 );
-					chr2 = ( ( enc2 & 15 ) << 4 ) | ( enc3 >> 2 );
-					chr3 = ( ( enc3 & 3 ) << 6 ) | enc4;
+					chr1 = (enc1 << 2) | (enc2 >> 4);
+					chr2 = ((enc2 & 15) << 4) | (enc3 >> 2);
+					chr3 = ((enc3 & 3) << 6) | enc4;
 
-					output = output + String.fromCharCode( chr1 );
+					output = output + String.fromCharCode(chr1);
 
-					if ( enc3 !== 64 ) {
-						output = output + String.fromCharCode( chr2 );
+					if (enc3 !== 64) {
+						output = output + String.fromCharCode(chr2);
 					}
-					if ( enc4 !== 64 ) {
-						output = output + String.fromCharCode( chr3 );
+					if (enc4 !== 64) {
+						output = output + String.fromCharCode(chr3);
 					}
-				} while ( i < input.length );
+				} while (i < input.length);
 
 				return output;
 			}
 		},
 
 		// add a leading zero to single numbers so the string is at least two characters
-		leadingZero : function( n ) {
-			return ( n < 10 ) ? ( "0" + n ) : n;
+		leadingZero: function (n) {
+			return (n < 10) ? ("0" + n) : n;
 		},
 
-		dynamicSort : function( property ) {
+		dynamicSort: function (property) {
 			var sortOrder = 1;
-			if ( property[ 0 ] === "-" ) {
+			if (property[0] === "-") {
 				sortOrder = -1;
-				property = property.substr( 1 );
+				property = property.substr(1);
 			}
-			return function( a, b ) {
-				var result = ( a[ property ] < b[ property ] ) ? -1
-						: ( a[ property ] > b[ property ] ) ? 1 : 0;
+			return function (a, b) {
+				var result = (a[property] < b[property]) ? -1
+					: (a[property] > b[property]) ? 1 : 0;
 				return result * sortOrder;
 			};
 		},
 
 		// return yes|no for 1|0
-		yesNo : function( val ) {
-			return parseInt( val, 10 ) < 1 ? "No" : "Yes";
+		yesNo: function (val) {
+			return parseInt(val, 10) < 1 ? "No" : "Yes";
 		},
 
 		// validate a javascript date object
-		isValidDate : function( d ) {
-			if ( Object.prototype.toString.call( d ) !== "[object Date]" ) {
+		isValidDate: function (d) {
+			if (Object.prototype.toString.call(d) !== "[object Date]") {
 				return false;
 			}
-			return !isNaN( d.getTime() );
+			return !isNaN(d.getTime());
 		},
 
 		// generate a pseudo-random ID
-		id : function() {
-			return ( ( Math.random() * 100 ).toString() + ( Math.random() * 100 )
-					.toString() ).replace( /\./g, "" );
+		id: function () {
+			return ((Math.random() * 100).toString() + (Math.random() * 100)
+				.toString()).replace(/\./g, "");
 		},
 
 		// try/catch a function
-		tryCatch : function( fn, ctx, args ) {
+		tryCatch: function (fn, ctx, args) {
 			var errorObject = {
-				value : null
+				value: null
 			};
 			try {
-				return fn.apply( ctx, args );
-			} catch ( e ) {
+				return fn.apply(ctx, args);
+			} catch (e) {
 				errorObject.value = e;
 				return errorObject;
 			}
 		},
 
 		// return a numeric representation of the value passed
-		getNumberValue : function( pixelValue ) {
-			return ( isNaN( Number( pixelValue ) ) ? Number( pixelValue.substring( 0, pixelValue.length - 2 ) ) : pixelValue );
+		getNumberValue: function (pixelValue) {
+			return (isNaN(Number(pixelValue)) ? Number(pixelValue.substring(0, pixelValue.length - 2)) : pixelValue);
 		},
 
 		// check whether a value is numeric
-		isNumeric : function( num ) {
-			return !isNaN( parseFloat( num ) ) && isFinite( num );
+		isNumeric: function (num) {
+			return !isNaN(parseFloat(num)) && isFinite(num);
 		},
 
 		// get top/left offset of a selector on screen
-		getOffset : function( selector ) {
+		getOffset: function (selector) {
 			var rect = selector.getBoundingClientRect();
 
 			return {
-				top : rect.top + document.body.scrollTop,
-				left : rect.left + document.body.scrollLeft
+				top: rect.top + document.body.scrollTop,
+				left: rect.left + document.body.scrollLeft
+			};
+		},
+
+		/**
+		 * Creates a debounced function that delays invoking `func` until after `wait` milliseconds 
+		 * have elapsed since the last time the debounced function was invoked.
+		 * 
+		 * @param {Function} func - The function to debounce.
+		 * @param {number} wait - The number of milliseconds to delay.
+		 * @param {boolean} [immediate=false] - Trigger the function on the leading edge, instead of the trailing.
+		 * @return {Function} A new debounced function.
+		 */
+		debounce:function(func, wait, immediate = false) {
+			let timeout;
+
+			return function executedFunction() {
+				// Save the context and arguments for later invocation
+				const context = this;
+				const args = arguments;
+
+				// Define the function that will actually call `func`
+				const later = function() {
+					timeout = null;
+					if (!immediate) func.apply(context, args);
+				};
+
+				const callNow = immediate && !timeout;
+
+				// Clear the previous timeout
+				clearTimeout(timeout);
+
+				// Set a new timeout
+				timeout = setTimeout(later, wait);
+
+				// If 'immediate' is true and this is the first time the function has been called,
+				// execute it right away
+				if (callNow) func.apply(context, args);
 			};
 		}
 	};

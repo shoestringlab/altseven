@@ -1,7 +1,7 @@
 altseven
 =========
 
-v 6.2.0
+v 6.3.0
 
 A JavaScript framework. Originally built as an exploration into reactive programming with JavaScript. Now a full-fledged Web framework.
 
@@ -15,40 +15,17 @@ To install dev dependencies from NPM:
     `$ npm install`
 
 
-Current Release - 6.2.0
+Current Release - 6.3.0
 --------
 
-* The model now handles Map objects so that they are preserved as iterable Maps rather than being returned as generic Objects.
-* The underlying model object of the framework now contains an experimental feature, binding an HTML element to a key in the model, so that changes to the value of the HTML element change the model, and vice versa. This feature is not directly exposed through the framework at this time. This code may change significantly before it is considered stable, so treat it as experimental.
+- The mustRender event handler for View objects is now a debounced function configurable in the application settings so developers can control the minimum delay for re-rendering views.
+- The debounce function in a7.util is now available to developers for use in applications.
+
 
 Note that the library is no longer published on Bower, so pull from npm.
 
 `$ npm install altseven`
 
-6.0.3
---------
-
-A documentation site has been added at https://altseven.shoestringlab.com. The documentation is itself hosted on Github and anyone can offer updates and fixes.
-
-
-6.0.0
---------
-
-6.0.0 is an exciting release as it adds a significant new capability to the framework with built-in client-side URL routing. See the release notes for more details.
-
-
-***Changes***
---------
-
-As of 4.1.0, there are significant additions and changes to the codebase. See the release_notes.md file for details.
-
-As of v 3.2.0, the altseven model has been modified to suit the needs of the framework. Binding code has been stripped from it, get and set have been modified to deep copy objects so no variables are shared outside the model, a history stack and functions to operate on it have been added to enable framework undo and redo functionality to be added later.
-
-As of 3.1.0, altseven contains a rendering queue that manages the rendering pipeline for views. It also contains a deferred pipeline that fills once the existing queue starts rendering and becomes the new queue once the existing queue renders.
-
-As of v 3.0.0, the framework is complete enough to build applications that can set state and update views dynamically, work with remote services, and use the built in security framework.
-
-As of v 2.0.0, there are no required external dependencies for deployment. The gadget-ui model has been pulled into altseven as a component as the default model.
 
 You only need to install dependencies from npm to work on the altseven framework, or for optional modules:
 
@@ -64,10 +41,6 @@ modlazy can be used as a module/dependency loader if you use Handlebars or Musta
 
     $ npm install modlazy
 
-
-As of v 1.2.0, you do not need to install dependencies from Bower unless you wish to use Mustache for templating.
-
-    $ bower install mustache.js
 
 
 ***Running the Sample App***

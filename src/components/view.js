@@ -25,16 +25,20 @@ View.prototype = {
 			}
 		}.bind( this ) );
 
-		this.on( "mustRender", function(){
+		// mustRender is a debounced function so we can control how often views should re-render.
+		// debounce leading, so the render will be queued and subsequent requests to render will be ignored until the delay time is reached
+		// delay defaults to 18 ms, can be set in app options as ui.debounceTime
+		this.on( "mustRender", a7.util.debounce( function(){
 			a7.log.trace( 'mustRender: ' + this.props.id );
 			if( this.shouldRender() ){
 				a7.ui.enqueueForRender( this.props.id );
+				
 			}else{
 				a7.log.trace( 'Render cancelled: ' + this.props.id );
 				// undo skip, it must be explicitly set each time
 				this.skipRender = false;
 			}
-		}.bind( this ));
+		}.bind( this )), a7.model.get( "a7" ).ui.debounceTime, true );
 
 		this.on( "rendered", function(){
 			if( this.isTransient ){

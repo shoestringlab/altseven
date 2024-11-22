@@ -1,6 +1,6 @@
 {
   "name": "altseven",
-  "version": "6.2.0",
+  "version": "6.3.0",
   "description": "JavaScript framework",
   "main": "./dist/a7.js",
   "files": [
@@ -42,6 +42,6 @@
     "JavaScript",
     "framework"
   ],
-  "author": "Robert Munn <robertdmunn@gmail.com>",
+  "author": "Robert Munn <robert@robertmunn.com",
   "license": "MPL-2.0"
 }
