@@ -15,7 +15,7 @@ To install dev dependencies from NPM:
     `$ npm install`
 
 
-Current Release - 7.0.0-alpha
+Current Release - 7.0.0-beta
 --------
 
 The 7.x release represents a potential departure from previous version compatibility. Current breaking changes:
