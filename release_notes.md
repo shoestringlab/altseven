@@ -1,3 +1,11 @@
+7.0.0-alpha
+============
+
+The 7.x release represents a potential departure from previous version compatibility. Current breaking changes:
+- a7.ui.setSelector( selector ) now also caches the node in _nodes[] using document.querySelector( selector ).
+- a7.ui.getNode( name ) now returns the cached node.
+
+
 6.3.0
 ============
 - The mustRender event handler for View objects is now a debounced function configurable in the application settings so developers can control the minimum delay for re-rendering views.

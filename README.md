@@ -1,7 +1,7 @@
 altseven
 =========
 
-v 6.3.0
+v 7.0.0
 
 A JavaScript framework. Originally built as an exploration into reactive programming with JavaScript. Now a full-fledged Web framework.
 
@@ -15,12 +15,12 @@ To install dev dependencies from NPM:
     `$ npm install`
 
 
-Current Release - 6.3.0
+Current Release - 7.0.0-alpha
 --------
 
-- The mustRender event handler for View objects is now a debounced function configurable in the application settings so developers can control the minimum delay for re-rendering views.
-- The debounce function in a7.util is now available to developers for use in applications.
-
+The 7.x release represents a potential departure from previous version compatibility. Current breaking changes:
+- a7.ui.setSelector( selector ) now also caches the node in _nodes[] using document.querySelector( selector ).
+- a7.ui.getNode( name ) now returns the cached node.
 
 Note that the library is no longer published on Bower, so pull from npm.
 
