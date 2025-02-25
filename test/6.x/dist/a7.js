@@ -141,38 +141,37 @@ var a7 = (function() {
   };
 })();
 
-a7.console = (function () {
-	'use strict'
 
-	var title = 'Console Window',
-		// the div we'll create to host the console content
-		consoleDiv,
-		// flag whether console is running
-		active = false,
-		_addMessage = function (message, dt, source, level) {
-			var div = document.createElement('div')
-			div.setAttribute('class', 'a7-console-row-' + source)
-			if (level !== undefined) {
-				div.innerHTML = level + ': '
-				div.setAttribute(
-					'class',
-					div.getAttribute('class') + ' a7-console-row-' + level
-				)
-			}
-			div.innerHTML +=
-				+(dt.getHours() < 10 ? '0' + dt.getHours() : dt.getHours()) +
-				':' +
-				(dt.getMinutes() < 10
-					? '0' + dt.getMinutes()
-					: dt.getMinutes()) +
-				': ' +
-				message
-			consoleDiv.appendChild(div)
-		}
+a7.console = (function() {
+  "use strict";
 
-	var _handleMessage = function (message, json) {
-		var ix = 0
-		if (json.type === 'history') {
+  var title = "Console Window",
+    // the div we'll create to host the console content
+    consoleDiv,
+    // flag whether console is running
+    active = false,
+    _addMessage = function(message, dt, source, level) {
+      var div = document.createElement("div");
+      div.setAttribute("class", "a7-console-row-" + source);
+      if (level !== undefined) {
+        div.innerHTML = level + ": ";
+        div.setAttribute(
+          "class",
+          div.getAttribute("class") + " a7-console-row-" + level
+        );
+      }
+      div.innerHTML +=
+        +(dt.getHours() < 10 ? "0" + dt.getHours() : dt.getHours()) +
+        ":" +
+        (dt.getMinutes() < 10 ? "0" + dt.getMinutes() : dt.getMinutes()) +
+        ": " +
+        message;
+      consoleDiv.appendChild(div);
+    };
+
+  var _handleMessage = function( message, json ){
+    var ix = 0;
+		if (json.type === "history") {
 			// entire message
 			// history
 			// insert every single message to the chat window
@@ -180,71 +179,64 @@ a7.console = (function () {
 				_addMessage(
 					json.data[ix].text,
 					new Date(json.data[ix].time),
-					'websocket'
-				)
+					"websocket"
+				);
 			}
-		} else if (json.type === 'message') {
+		} else if (json.type === "message") {
 			// it's a single
 			// message
-			_addMessage(json.data.text, new Date(json.data.time), 'websocket')
+			_addMessage(json.data.text, new Date(json.data.time), "websocket");
 		} else {
-			a7.log.error("This doesn't look like valid JSON: ", json)
+			a7.log.error("This doesn't look like valid JSON: ", json);
 		}
-	}
+  }
 
-	return {
-		init: function (options, resolve, reject) {
-			var console = options.console
-			if (console.container === '')
-				reject(
-					'You must specify a container object for the console display.'
-				)
+  return {
+    init: function( options, resolve, reject) {
+      var console = options.console;
+      if( console.container === "" ) reject( "You must specify a container object for the console display." );
 
-			// check for console state
-			if (console.enabled) {
-				active = true
-				consoleDiv = document.createElement('div')
-				consoleDiv.setAttribute('id', 'a7consoleDiv')
-				consoleDiv.setAttribute('class', 'a7-console')
-				document.body.append(consoleDiv)
+      // check for console state
+      if ( console.enabled ) {
+        active = true;
+        consoleDiv = document.createElement("div");
+        consoleDiv.setAttribute("id", "consoleDiv");
+        consoleDiv.setAttribute("class", "a7-console");
+        document.body.append(consoleDiv);
 
-				var fp = a7.components.Constructor(
-					console.container,
-					[
-						consoleDiv,
-						{
-							width: console.width,
-							left: console.left,
-							height: console.height,
-							title: title,
-							top: console.top,
-							enableShrink: true,
-							enableClose: true,
-						},
-					],
-					false
-				)
-				if (fp.element) fp.element.setAttribute('right', 0)
+        var fp = a7.components.Constructor(
+            console.container,
+            [
+              consoleDiv,
+              {
+                width: console.width,
+                left: console.left,
+                height: console.height,
+                title: title,
+                top: console.top,
+                enableShrink: false,
+                enableClose: true
+              }
+            ],
+            false
+          );
 
-				if (console.wsServer) {
-					var connection = a7.remote.webSocket(
-						console.wsServer,
-						_handleMessage
-					)
-				}
+        fp.selector.setAttribute("right", 0);
 
-				a7.console.addMessage = _addMessage
-				a7.log.info('Console initializing...')
-				resolve()
-			} else {
-				// console init should not run if console is set to false
-				reject(
-					'Console init should not be called when console option is set to false.'
-				)
-			}
-		},
-	}
-})()
+        if( console.wsServer ){
+          var connection = a7.remote.webSocket( console.wsServer, _handleMessage );
+        }
+
+        a7.console.addMessage = _addMessage;
+        a7.log.info("Console initializing...");
+        resolve();
+      } else {
+        // console init should not run if console is set to false
+        reject( "Console init should not be called when console option is set to false." );
+      }
+    }
+  };
+})();
 
 a7.error = (function() {
   "use strict";
@@ -405,65 +397,51 @@ a7.log = ( function(){
 	};
 }());
 
-a7.model = (function () {
-	'use strict'
+a7.model = ( function() {
+	"use strict";
 	var _model,
-		_methods = {}
+		_methods = {};
 
 	return {
-		destroy: function () {
-			return _methods['destroy'].apply(_model, arguments)
-		},
-		get: function () {
-			return _methods['get'].apply(_model, arguments)
-		},
-		set: function () {
-			return _methods['set'].apply(_model, arguments)
-		},
-		exists: function () {
-			return _methods['exists'].apply(_model, arguments)
-		},
-		bind: function () {
-			return _methods['bind'].apply(_model, arguments)
-		},
-		undo: function () {
-			return _methods['undo'].apply(_model, arguments)
-		},
-		redo: function () {
-			return _methods['redo'].apply(_model, arguments)
-		},
-		rewind: function () {
-			return _methods['rewind'].apply(_model, arguments)
-		},
-		fastForward: function () {
-			return _methods['fastForward'].apply(_model, arguments)
-		},
-		init: function (options, resolve) {
-			a7.log.info('Model initializing... ')
 
-			if (typeof options.model == 'string') {
-				switch (options.model) {
-					case 'altseven':
-						_model = a7.components.Model
-						_model.init(options)
-						break
-					case 'gadgetui':
-						_model = gadgetui.model
-						break
+		destroy : function(){
+			return _methods[ "destroy" ].apply( _model, arguments );
+		},
+		get : function(){
+			return _methods[ "get" ].apply( _model, arguments );
+		},
+		set : function(){
+			return _methods[ "set" ].apply( _model, arguments );
+		},
+		exists : function(){
+			return _methods[ "exists" ].apply( _model, arguments );
+		},
+		init: function( options, resolve ){
+			a7.log.info( "Model initializing... " );
+
+			if( typeof options.model == "string" ){
+				switch( options.model ){
+					case "altseven":
+						_model = a7.components.Model;
+						_model.init( options );
+						break;
+					case "gadgetui":
+						_model = gadgetui.model;
+						break;
 				}
-			} else if (typeof options.model == 'object') {
-				_model = options.model
+			}else if( typeof options.model == "object" ){
+				_model = options.model;
 			}
-			a7.log.trace('Model set: ' + _model)
+			a7.log.trace( "Model set: " + _model );
 			// gadgetui maps directly, so we can loop on the keys
-			Object.keys(_model).forEach(function (key) {
-				_methods[key] = _model[key]
-			})
+			Object.keys( _model ).forEach( function( key ){
+				_methods[ key ] = _model[ key ];
+			});
 
-			resolve()
-		},
-	}
-})()
+			resolve();
+		}
+	};
+}() );
 
 a7.components = ( function() {"use strict";function Constructor( constructor, args, addBindings ) {
 	var returnedObj,
@@ -517,453 +495,388 @@ a7.components = ( function() {"use strict";function Constructor( constructor, ar
  */
 
 var EventBindings = {
-	on: function (event, func) {
-		if (this.events[event] === undefined) {
-			this.events[event] = []
+	on : function( event, func ){
+		if( this.events[ event ] === undefined ){
+			this.events[ event ] = [];
 		}
-		this.events[event].push(func)
-		return this
+		this.events[ event ].push( func );
+		return this;
 	},
 
-	off: function (event) {
+	off : function( event ){
 		// clear listeners
-		this.events[event] = []
-		return this
+		this.events[ event ] = [];
+		return this;
 	},
 
-	fireEvent: function (key, args) {
-		var _this = this
-		if (this.events[key] !== undefined) {
-			this.events[key].forEach(function (func) {
-				func(_this, args)
-			})
+	fireEvent : function( key, args ){
+		var _this = this;
+		if( this.events[ key ] !== undefined ){
+			this.events[ key ].forEach( function( func ){
+				func( _this, args );
+			});
 		}
 	},
 
-	getAll: function () {
-		return [
-			{ name: 'on', func: this.on },
-			{ name: 'off', func: this.off },
-			{ name: 'fireEvent', func: this.fireEvent },
-		]
-	},
-}
+	getAll : function(){
+		return [ 	{ name : "on", func : this.on },
+							{ name : "off", func : this.off },
+							{ name : "fireEvent", func : this.fireEvent } ];
+	}
+};
 
-const Model = (() => {
-	'use strict'
+var Model = ( function() {
+	"use strict";
 
-	const modelStore = new Map()
-	const mementoStore = new Map()
-	let maxMementos = 20 // Default value
+	var _model = {};
+	var _mementos = [];
+	var _maxEntries = 20;
+	var _currentIndex = 0;
 
-	class BindableObject {
-		constructor(data, element) {
-			this.data = this.processValue(data)
-			this.elements = []
-			this.mementos = []
-			this.currentMementoIndex = -1
-			if (element) {
-				this.bind(element)
-			}
-			this.saveMemento() // Save initial state
-		}
-
-		handleEvent(event) {
-			if (event.type !== 'change') return
-
-			event.originalSource ??= 'BindableObject.handleEvent[change]'
-
-			for (const { elem, prop } of this.elements) {
-				if (
-					event.target.name === prop &&
-					event.originalSource !== 'BindableObject.updateDomElement'
-				) {
-					const value = event.target.type.includes('select')
-						? {
-								id: event.target.value,
-								text: event.target.options[
-									event.target.selectedIndex
-								].textContent,
-							}
-						: event.target.value
-
-					this.change(value, event, prop)
-				}
-			}
-		}
-
-		change(value, event, property) {
-			event.originalSource ??= 'BindableObject.change'
-			console.log(`change : Source: ${event.originalSource}`)
-
-			const processedValue = this.processValue(value)
-
-			if (!property) {
-				this.data = processedValue
-			} else if (typeof this.data === 'object' && this.data !== null) {
-				if (!(property in this.data)) {
-					throw new Error(
-						`Property '${property}' of object is undefined.`
-					)
-				}
-				this.data[property] = processedValue
-			} else {
-				throw new Error(
-					'Attempt to treat a simple value as an object with properties.'
-				)
-			}
-
-			this.saveMemento()
-
-			this.elements
-				.filter(
-					({ prop, elem }) =>
-						(!property || property === prop) &&
-						elem !== event.target
-				)
-				.forEach(({ elem }) =>
-					this.updateDomElement(event, elem, processedValue)
-				)
-		}
-
-		updateDom(event, value, property) {
-			event.originalSource ??= 'BindableObject.updateDom'
-
-			this.elements.forEach(({ elem, prop }) => {
-				if (!property) {
-					if (typeof value === 'object' && value !== null) {
-						if (prop in value) {
-							this.updateDomElement(event, elem, value[prop])
-						}
-					} else {
-						this.updateDomElement(event, elem, value)
-					}
-				} else if (prop === property) {
-					this.updateDomElement(event, elem, value)
-				}
-			})
-		}
-
-		updateDomElement(event, element, value) {
-			event.originalSource ??= 'BindableObject.updateDomElement'
-
-			const updateOptions = () => {
-				element.innerHTML = ''
-				const items = Array.isArray(value)
-					? value
-					: value instanceof Map
-						? Array.from(value.entries())
-						: [value]
-
-				if (element.tagName === 'SELECT') {
-					items.forEach((item, idx) => {
-						const opt = document.createElement('option')
-						opt.value =
-							typeof item === 'object'
-								? (item.id ?? item[0])
-								: item
-						opt.textContent =
-							typeof item === 'object'
-								? (item.text ?? item[1])
-								: item
-						element.appendChild(opt)
-					})
-				} else if (['UL', 'OL'].includes(element.tagName)) {
-					items.forEach((item) => {
-						const li = document.createElement('li')
-						li.textContent =
-							typeof item === 'object'
-								? (item.text ?? item[1])
-								: item
-						element.appendChild(li)
-					})
-				}
-			}
-
-			const isInput = ['INPUT', 'TEXTAREA'].includes(element.tagName)
-			const isArrayElement = ['OL', 'UL', 'SELECT'].includes(
-				element.tagName
-			)
-			const textElements = [
-				'DIV', // Generic container, often contains text
-				'SPAN', // Inline container, typically for text styling
-				'H1', // Heading level 1
-				'H2', // Heading level 2
-				'H3', // Heading level 3
-				'H4', // Heading level 4
-				'H5', // Heading level 5
-				'H6', // Heading level 6
-				'P', // Paragraph
-				'LABEL', // Caption for form elements, displays text
-				'BUTTON', // Clickable button, often with text content
-				'A', // Anchor (hyperlink), typically contains text
-				'STRONG', // Bold text for emphasis
-				'EM', // Italic text for emphasis
-				'B', // Bold text (presentational)
-				'I', // Italic text (presentational)
-				'U', // Underlined text
-				'SMALL', // Smaller text, often for fine print
-				'SUB', // Subscript text
-				'SUP', // Superscript text
-				'Q', // Short inline quotation
-				'BLOCKQUOTE', // Long quotation
-				'CITE', // Citation or reference
-				'CODE', // Code snippet
-				'PRE', // Preformatted text
-				'ABBR', // Abbreviation with optional title attribute
-				'DFN', // Defining instance of a term
-				'SAMP', // Sample output from a program
-				'KBD', // Keyboard input
-				'VAR', // Variable in programming/math context
-				'LI', // List item (in UL or OL)
-				'DT', // Term in a description list
-				'DD', // Description in a description list
-				'TH', // Table header cell
-				'TD', // Table data cell
-				'CAPTION', // Table caption
-				'FIGCAPTION', // Caption for a figure
-				'SUMMARY', // Summary for a details element
-				'LEGEND', // Caption for a fieldset in a form
-				'TITLE', // Document title (displayed in browser tab)
-			]
-			const isTextElement = textElements.includes(element.tagName)
-
-			if (typeof value === 'object' && value !== null) {
-				if (isInput)
-					element.value =
-						value.id ?? (value instanceof Map ? '' : value[0]) ?? ''
-				else if (isArrayElement) updateOptions()
-				else if (isTextElement)
-					element.textContent =
-						value.text ??
-						(value instanceof Map ? '' : value[1]) ??
-						''
-			} else {
-				if (isInput) element.value = value ?? ''
-				else if (isArrayElement) updateOptions()
-				else if (isTextElement) element.textContent = value ?? ''
-			}
-
-			if (
-				event.originalSource !== 'model.set' &&
-				event.originalSource !== 'memento.restore'
-			) {
-				element.dispatchEvent(
-					new Event('change', {
-						originalSource: 'model.updateDomElement',
-					})
-				)
-			}
-		}
-
-		bind(element, property) {
-			const binding = { elem: element, prop: property || '' }
-			element.value = property ? this.data[property] : this.data
-
-			element.addEventListener('change', this)
-			this.elements.push(binding)
-		}
-
-		processValue(value) {
-			switch (typeof value) {
-				case 'undefined':
-				case 'number':
-				case 'boolean':
-				case 'function':
-				case 'symbol':
-				case 'string':
-					return value
-				case 'object':
-					if (value === null) return null
-					if (value instanceof Map) return new Map(value)
-					return JSON.parse(JSON.stringify(value))
-				default:
-					return value
-			}
-		}
-
-		saveMemento() {
-			// Remove future mementos if we're adding after an undo
-			if (this.currentMementoIndex < this.mementos.length - 1) {
-				this.mementos.splice(this.currentMementoIndex + 1)
-			}
-
-			const memento = this.processValue(this.data)
-			this.mementos.push(memento)
-
-			if (this.mementos.length > maxMementos) {
-				this.mementos.shift() // Remove oldest memento
-			} else {
-				this.currentMementoIndex++
-			}
-		}
-
-		undo() {
-			if (this.currentMementoIndex > 0) {
-				this.currentMementoIndex--
-				this.restoreMemento()
-				return true
-			}
-			return false
-		}
-
-		redo() {
-			if (this.currentMementoIndex < this.mementos.length - 1) {
-				this.currentMementoIndex++
-				this.restoreMemento()
-				return true
-			}
-			return false
-		}
-
-		rewind() {
-			if (this.currentMementoIndex > 0) {
-				this.currentMementoIndex = 0
-				this.restoreMemento()
-				return true
-			}
-			return false
-		}
-
-		fastForward() {
-			if (this.currentMementoIndex < this.mementos.length - 1) {
-				this.currentMementoIndex = this.mementos.length - 1
-				this.restoreMemento()
-				return true
-			}
-			return false
-		}
-
-		restoreMemento() {
-			this.data = this.processValue(
-				this.mementos[this.currentMementoIndex]
-			)
-			const event = { originalSource: 'memento.restore' }
-			this.elements.forEach(({ elem, prop }) => {
-				this.updateDomElement(
-					event,
-					elem,
-					prop ? this.data[prop] : this.data
-				)
-			})
+	function BindableObject( data, element ) {
+		this.data = data;
+		this.elements = [ ];
+		if ( element !== undefined ) {
+			this.bind( element );
 		}
 	}
+
+	BindableObject.prototype.handleEvent = function( ev ) {
+		var ix, obj;
+		switch ( ev.type ) {
+			case "change":
+				for( ix = 0; ix < this.elements.length; ix++ ){
+					obj = this.elements[ ix ];
+					if( ev.originalSource === undefined ){
+						ev.originalSource = "BindableObject.handleEvent['change']";
+					}
+					if( ev.target.name === obj.prop && ev.originalSource !== 'BindableObject.updateDomElement' ){
+						//select box binding
+						if( ev.target.type.match( /select/ ) ){
+							this.change( { 	id : ev.target.value,
+									text : ev.target.options[ev.target.selectedIndex].innerHTML
+								}, ev, obj.prop );
+						}
+						else{
+						// text input binding
+						this.change( ev.target.value, ev, obj.prop );
+						}
+					}
+				}
+
+		}
+	};
+
+	// for each bound control, update the value
+	BindableObject.prototype.change = function( value, event, property ) {
+		var ix, obj;
+		if( event.originalSource === undefined ){
+			event.originalSource = "BindableObject.change";
+		}
+		console.log( "change : Source: " + event.originalSource );
+
+		// this code changes the value of the BinableObject to the incoming value
+		if ( property === undefined ) {
+			// Directive is to replace the entire value stored in the BindableObject
+			// update the BindableObject value with the incoming value
+			// value could be anything, simple value or object, does not matter
+			this.data = value;
+		}
+		else if ( typeof this.data === 'object' ) {
+			//Directive is to replace a property of the value stored in the BindableObject
+			// verifies _this "data" is an object and not a simple value
+			// update the BindableObject's specified property with the incoming value
+			// value could be anything, simple value or object, does not matter
+
+			if( this.data[ property ] === undefined ){
+				throw( "Property '" + property + "' of object is undefined." );
+			}
+			else{
+				this.data[ property ] = value;
+			}
+			// check if we are updating only a single property or the entire object
+
+		}
+		else {
+			throw "Attempt to treat a simple value as an object with properties. Change fails.";
+		}
+
+		// check if there are other dom elements linked to the property
+		for( ix = 0; ix < this.elements.length; ix++ ){
+			obj = this.elements[ ix ];
+			if( ( property === undefined || property === obj.prop ) && ( event.target !== undefined && obj.elem != event.target ) ){
+				this.updateDomElement( event,  obj.elem, value );
+			}
+		}
+	};
+
+	BindableObject.prototype.updateDom = function( event, value, property ){
+		var ix, obj, key;
+		if( event.originalSource === undefined ){
+			event.originalSource = 'BindableObject.updateDom';
+		}
+		// this code changes the value of the DOM element to the incoming value
+		for( ix = 0; ix < this.elements.length; ix++ ){
+			obj = this.elements[ ix ];
+
+			if ( property === undefined  ){
+				if( typeof value === 'object' ){
+					for( key in value ){
+						if( this.elements[ ix ].prop === key ){
+							this.updateDomElement( event, obj.elem, value[ key ] );
+						}
+					}
+				}else{
+					// this code sets the value of each control bound to the BindableObject
+					// to the correspondingly bound property of the incoming value
+					this.updateDomElement( event, obj.elem, value );
+				}
+
+				//break;
+			}else if ( obj.prop === property ){
+				this.updateDomElement( event, obj.elem, value );
+			}
+		}
+	};
+
+	BindableObject.prototype.updateDomElement = function( event, selector, newValue ){
+		var valueElements = "INPUT";
+		var arrayElements = "OL,UL,SELECT";
+		var wrappingElements = "DIV,SPAN,H1,H2,H3,H4,H5,H6,P,TEXTAREA,LABEL,BUTTON";
+
+		var _updateOptions = function(){
+			switch( selector.tagName ){
+				case "SELECT":
+					while (selector.firstChild) {
+						selector.removeChild(selector.firstChild);
+					}
+					var idx = 0;
+					newValue.forEach( function( item ){
+						var opt = document.createElement("option");
+						if( typeof item === 'object' ){
+							opt.value = item.id;
+							opt.text = item.text;
+						}else{
+							opt.text = item;
+						}
+						selector.appendChild( opt );
+						idx++;
+					});
+				break;
+				case "UL":
+				case "OL":
+					while (selector.firstChild) {
+						selector.removeChild(selector.firstChild);
+					}
+					newValue.forEach( function( item ){
+						var opt = document.createElement("li");
+						opt.textContent = item;
+						selector.appendChild( opt );
+					});
+				break;
+			}
+		};
+
+		if( event.originalSource === undefined ){
+			event.originalSource = "BindableObject.updateDomElement";
+		}
+		//console.log( "updateDomElement : selector: { type: " + selector.nodeName + ", name: " + selector.name + " }" );
+		//console.log( "updateDomElement : Source: " + event.originalSource );
+
+		// updating the bound DOM element requires understanding what kind of DOM element is being updated
+		// and what kind of data we are dealing with
+
+		if( typeof newValue === 'object' ){
+			// select box objects are populated with { text: text, id: id }
+			if( valueElements.indexOf( selector.tagName ) >=0 ){
+				selector.value = newValue.id;
+			}else if( arrayElements.indexOf( selector.tagName ) >=0 ){
+				_updateOptions();
+			}else{
+				selector.textContent = newValue.text;
+			}
+		}else{
+			if( valueElements.indexOf( selector.tagName ) >=0 ){
+				selector.value = newValue;
+			}else if( arrayElements.indexOf( selector.tagName ) >=0 ){
+				_updateOptions();
+			}else{
+				selector.textContent = newValue;
+			}
+		}
+
+		// we have three ways to update values
+		// 1. via a change event fired from changing the DOM element
+		// 2. via model.set() which should change the model value and update the dom element(s)
+		// 3. via a second dom element, e.g. when more than one dom element is linked to the property
+		//    we need to be able to update the other dom elements without entering an infinite loop
+		if( event.originalSource !== 'model.set' ){
+			var ev = new Event( "change" );
+			ev.originalSource = 'model.updateDomElement';
+			selector.dispatchEvent( ev );
+		}
+	};
+
+	// bind an object to an HTML element
+	BindableObject.prototype.bind = function( element, property ) {
+		var e, _this = this;
+
+		if ( property === undefined ) {
+			// BindableObject holds a simple value
+			// set the DOM element value to the value of the Bindable object
+			element.value = this.data;
+			e = {
+				elem : element,
+				prop : ""
+			};
+		}
+		else {
+			// Bindable object holds an object with properties
+			// set the DOM element value to the value of the specified property in the
+			// Bindable object
+			element.value = this.data[ property ];
+			e = {
+				elem : element,
+				prop : property
+			};
+		}
+		//add an event listener so we get notified when the value of the DOM element
+		// changes
+		//element[ 0 ].addEventListener( "change", this, false );
+		//IE 8 support
+		if (element.addEventListener) {
+			element.addEventListener( "change", this, false);
+		}
+		else {
+			// IE8
+			element.attachEvent("onpropertychange", function( ev ){
+				if( ev.propertyName === 'value'){
+					var el = ev.srcElement, val = ( el.nodeName === 'SELECT' ) ? { id: el.value, text: el.options[el.selectedIndex].innerHTML } : el.value;
+					_this.change( val, { target: el }, el.name );
+				}
+			});
+		}
+		this.elements.push( e );
+	};
+
+	var _setModelValue = function( name, value ){
+		a7.log.trace( "Set key: " + name + " = " + JSON.stringify( value ) );
+
+		switch( typeof value ){
+			case "undefined":
+			case "number":
+			case "boolean":
+			case "function":
+			case "Symbol":
+			case "string":
+				// simple values are copied by value
+				// functions and symbols
+				_model[ name ] = value;
+				break;
+			case "object":
+				// null objects are set to null
+				if( value === null ){
+					_model[ name ] = null;
+				}else if( value.constructor === Map){
+						_model[ name ] = new Map(value);
+				}else{
+						// deep copying objects (will not copy method definitions, but we expect only data )
+						_model[ name ] = JSON.parse( JSON.stringify( value ) );
+				}
+				break;
+		}
+		// save the state of the model
+		_setMemento();
+	};
+
+	var _keyExists = function( object, key ){
+		return ( object.hasOwnProperty( key ) );
+	};
+
+	var _getMemento = function( index ){
+		return JSON.parse( JSON.stringify( _mementos[ index ] ) );
+	};
+
+	var _setMemento = function(){
+		a7.log.trace( "Set memento" );
+		if( _currentIndex < _mementos.length - 1 ){
+			_mementos = _mementos.slice( 0, _currentIndex );
+		}
+		if( _mementos.length === _maxEntries ){
+			a7.log.trace( "model - moving an item off the stack history." );
+			// push the oldest entry off the stack
+			_mementos.shift();
+		}
+		_mementos.push( JSON.parse( JSON.stringify( _model ) ) );
+		// we saved last model state, set index to latest entry
+		_currentIndex = _mementos.length -1;
+	};
+
+	var _rewind = function( steps ){
+		var myIndex = 0;
+		steps = ( steps !== undefined ? steps : 1 );
+		a7.log.trace( "Move back in history index by " + steps + " operations " );
+		myIndex = _currentIndex - steps;
+		_setCurrentIndex( myIndex );
+	};
+
+	var _fastForward = function( steps ){
+		var myIndex = 0;
+		steps = ( steps !== undefined ? steps : 1 );
+		a7.log.trace( "Move forward in history index by " + steps + " operations " );
+		myIndex = _currentIndex + steps;
+		_setCurrentIndex( myIndex );
+	};
+
+	var _undo = function( steps ){
+		_rewind( steps );
+		_model = _getMemento( _currentIndex );
+	};
+
+	var _redo = function( steps ){
+		_fastForward( steps );
+		_model = _getMemento( _currentIndex );
+	};
+
+	var _setCurrentIndex = function( index ){
+		_currentIndex = ( index < 0 ? 0 : index > _mementos.length - 1 ? _mementos.length - 1 : index );
+	};
 
 	return {
-		BindableObject,
-
-		init(options = {}) {
-			maxMementos = options.maxMementos ?? 20
+		undo: _undo,
+		redo: _redo,
+		init: function( options ){
+			_maxEntries = ( options !== undefined && options.maxEntries !== undefined ? options.maxEntries : 20 );
 		},
-
-		create(name, value, element) {
-			const processedValue = new BindableObject(value).processValue(value)
-			const bindable = new BindableObject(processedValue, element)
-			modelStore.set(name, bindable)
-			mementoStore.set(name, bindable)
+		destroy: function( name ){
+			_setMemento();
+			delete _model[ name ];
 		},
-
-		destroy(name) {
-			modelStore.delete(name)
-			mementoStore.delete(name)
+		exists: function( name ){
+			return _keyExists( _model, name );
 		},
-
-		bind(name, element) {
-			const [base, prop] = name.split('.')
-			const model = modelStore.get(base)
-			if (model) {
-				model.bind(element, prop)
-			}
-		},
-
-		exists(name) {
-			return modelStore.has(name)
-		},
-
-		get(name) {
-			if (!name) {
-				console.log('Expected parameter [name] is not defined.')
-				return undefined
-			}
-
-			const [base, prop] = name.split('.')
-			const model = modelStore.get(base)
-
-			if (!model) {
-				console.log(`Key '${base}' does not exist in the model.`)
-				return undefined
-			}
-
-			const value = prop ? model.data[prop] : model.data
-			return value instanceof Map ? new Map(value) : value
-		},
-
-		set(name, value) {
-			if (!name) {
-				console.log('Expected parameter [name] is not defined.')
-				return
-			}
-
-			const [base, prop] = name.split('.')
-			const event = { originalSource: 'model.set' }
-
-			if (!modelStore.has(base)) {
-				if (!prop) {
-					this.create(base, value)
-				} else {
-					throw new Error(`Object ${base} is not yet initialized.`)
+		get: function( name ) {
+			if( _model[ name ] === undefined ){
+				return;
+			}else{
+				try{
+					if(_model[ name ].constructor === Map){
+						return new Map( _model[ name ] );
+					}else{
+						return JSON.parse( JSON.stringify( _model[ name ] ) );
+					}
+				}catch( e ){
+					a7.log.error( e );
+					throw( e );
 				}
-			} else {
-				const model = modelStore.get(base)
-				const processedValue = model.processValue(value)
-				model.change(processedValue, event, prop)
-				model.updateDom(event, processedValue, prop)
 			}
 		},
-
-		undo(name) {
-			const model = mementoStore.get(name)
-			return model ? model.undo() : false
-		},
-
-		redo(name) {
-			const model = mementoStore.get(name)
-			return model ? model.redo() : false
-		},
-
-		rewind(name) {
-			const model = mementoStore.get(name)
-			return model ? model.rewind() : false
-		},
-
-		fastForward(name) {
-			const model = mementoStore.get(name)
-			return model ? model.fastForward() : false
-		},
-	}
-})()
-
-/*
-// Initialize with custom memento limit
-model.init({ maxMementos: 50 });
-
-// Create a model
-model.create("user", { name: "John" });
-
-// Make changes
-model.set("user.name", "Jane");
-model.set("user.name", "Bob");
-
-// Undo/redo
-model.undo("user"); // Returns to "Jane"
-model.undo("user"); // Returns to "John"
-model.redo("user"); // Returns to "Jane"
-
-// Rewind/fast forward
-model.rewind("user"); // Back to "John"
-model.fastForward("user"); // To "Bob"
-
-*/
+		set: function( name, value ){
+			_setModelValue( name, value );
+			return;
+		}
+	};
+}() );
 
 function User(args){
 	// init User
@@ -981,208 +894,154 @@ User.prototype.getMemento = function(){
 	return user;
 };
 
-function View(props) {
-	this.renderer = a7.model.get('a7').ui.renderer
-	this.type = 'View'
-	this.timeout
-	this.timer
-	this.element // html element the view renders into
-	this.props = props
-	this.isTransient = props.isTransient || false
-	this.state = {}
-	this.skipRender = false
-	this.children = {} // child views
-	this.components = {} // register objects external to the framework so we can address them later
-	this.config()
-	this.fireEvent('mustRegister')
+function View( props ){
+	this.renderer = a7.model.get("a7").ui.renderer;
+	this.type = 'View';
+	this.timeout;
+	this.timer;
+	this.element; // html element the view renders into
+	this.props = props;
+	this.isTransient = props.isTransient || false;
+	this.state = {};
+	this.skipRender = false;
+	this.children = {}; // child views
+	this.components = {}; // register objects external to the framework so we can address them later
+	this.config();
+	this.fireEvent( "mustRegister" );
 }
 
 View.prototype = {
-	config: function () {
-		this.on(
-			'mustRegister',
-			function () {
-				a7.log.trace('mustRegister: ' + this.props.id)
-				a7.ui.register(this)
-				if (a7.ui.getView(this.props.parentID)) {
-					a7.ui.getView(this.props.parentID).addChild(this)
-				}
-			}.bind(this)
-		)
+	config: function(){
+
+		this.on( "mustRegister", function(){
+			a7.log.trace( 'mustRegister: ' + this.props.id );
+			a7.ui.register( this );
+			if( a7.ui.getView( this.props.parentID ) ){
+				a7.ui.getView( this.props.parentID ).addChild( this );
+			}
+		}.bind( this ) );
 
 		// mustRender is a debounced function so we can control how often views should re-render.
 		// debounce leading, so the render will be queued and subsequent requests to render will be ignored until the delay time is reached
 		// delay defaults to 18 ms, can be set in app options as ui.debounceTime
-		this.on(
-			'mustRender',
-			a7.util.debounce(
-				function () {
-					a7.log.trace('mustRender: ' + this.props.id)
-					if (this.shouldRender()) {
-						a7.ui.enqueueForRender(this.props.id)
-					} else {
-						a7.log.trace('Render cancelled: ' + this.props.id)
-						// undo skip, it must be explicitly set each time
-						this.skipRender = false
-					}
-				}.bind(this)
-			),
-			a7.model.get('a7').ui.debounceTime,
-			true
-		)
+		this.on( "mustRender", a7.util.debounce( function(){
+			a7.log.trace( 'mustRender: ' + this.props.id );
+			if( this.shouldRender() ){
+				a7.ui.enqueueForRender( this.props.id );
+				
+			}else{
+				a7.log.trace( 'Render cancelled: ' + this.props.id );
+				// undo skip, it must be explicitly set each time
+				this.skipRender = false;
+			}
+		}.bind( this )), a7.model.get( "a7" ).ui.debounceTime, true );
 
-		this.on(
-			'rendered',
-			function () {
-				if (this.isTransient) {
-					// set the timeout
-					if (this.timer !== undefined) {
-						clearTimeout(this.timer)
-					}
-					this.timer = setTimeout(
-						this.checkRenderStatus.bind(this),
-						a7.model.get('a7').ui.timeout
-					)
+		this.on( "rendered", function(){
+			if( this.isTransient ){
+				// set the timeout
+				if( this.timer !== undefined ){
+					clearTimeout( this.timer );
 				}
-				this.onRendered()
-			}.bind(this)
-		)
+				this.timer = setTimeout( this.checkRenderStatus.bind( this ), a7.model.get( "a7" ).ui.timeout );
+			}
+			this.onRendered();
+		}.bind( this ));
 
-		this.on(
-			'registered',
-			function () {
-				if (this.props.parentID === undefined || this.mustRender) {
-					// only fire render event for root views, children will render in the chain
-					this.fireEvent('mustRender')
-				}
-			}.bind(this)
-		)
+		this.on( "registered", function(){
+			if( this.props.parentID === undefined || this.mustRender ){
+				// only fire render event for root views, children will render in the chain
+				this.fireEvent( "mustRender" );
+			}
+		}.bind( this ));
 
-		this.on(
-			'mustUnregister',
-			function () {
-				a7.ui.unregister(this.props.id)
-			}.bind(this)
-		)
+		this.on( "mustUnregister", function(){
+			a7.ui.unregister( this.props.id );
+		}.bind( this ));
 	},
-	events: [
-		'mustRender',
-		'rendered',
-		'mustRegister',
-		'registered',
-		'mustUnregister',
-	],
-	setState: function (args) {
-		this.state = Object.assign(args)
-		// setting state requires a re-render
-		this.fireEvent('mustRender')
+	events : ['mustRender','rendered', 'mustRegister', 'registered', 'mustUnregister'],
+  setState: function( args ){
+    this.state = Object.assign( args );
+    // setting state requires a re-render
+		this.fireEvent( 'mustRender' );
 	},
-	getState: function () {
-		return Object.assign(this.state)
+	getState: function(){
+		return Object.assign( this.state );
 	},
-	addChild: function (view) {
-		this.children[view.props.id] = view
+	addChild: function( view ){
+		this.children[ view.props.id ] = view;
 		// force a render for children added
 		//this.children[ view.props.id ].mustRender = true;
 	},
-	removeChild: function (view) {
-		delete this.children[view.props.id]
+	removeChild: function( view ){
+		delete this.children[ view.props.id ];
 	},
-	clearChildren: function () {
-		this.children = {}
+	clearChildren: function(){
+		this.children = {};
 	},
-	getParent: function () {
-		return this.props.parentID
-			? a7.ui.getView(this.props.parentID)
-			: undefined
+	getParent: function(){
+		return ( this.props.parentID ? a7.ui.getView( this.props.parentID ) : undefined );
 	},
-	render: function () {
-		a7.log.info('render: ' + this.props.id)
-		if (this.element === undefined || this.element === null) {
-			this.element = document.querySelector(this.props.selector)
+	render: function(){
+		a7.log.info( 'render: ' + this.props.id );
+		if( this.element === undefined || this.element === null ){
+			this.element = document.querySelector( this.props.selector );
 		}
-		if (!this.element) {
-			a7.log.error(
-				'The DOM element for view ' +
-					this.props.id +
-					' was not found. The view will be removed and unregistered.'
-			)
+		if( !this.element ){
+			a7.log.error( "The DOM element for view " + this.props.id + " was not found. The view will be removed and unregistered." );
 			// if the component has a parent, remove the component from the parent's children
-			if (this.props.parentID !== undefined) {
-				a7.ui.getView(this.props.parentID).removeChild(this)
+			if( this.props.parentID !== undefined ){
+				a7.ui.getView( this.props.parentID ).removeChild( this );
 			}
 			// if the selector isn't in the DOM, skip rendering and unregister the view
-			this.fireEvent('mustUnregister')
-			return
+			this.fireEvent( 'mustUnregister' );
+			return;
 		}
 		//throw( "You must define a selector for the view." );
-		this.element.innerHTML =
-			typeof this.template == 'function' ? this.template() : this.template
+		this.element.innerHTML = ( typeof this.template == "function" ? this.template() : this.template );
 
-		// create events marked with data-on* in the template
-		var eventArr = []
-		a7.ui.getEvents().forEach(function (eve) {
-			eventArr.push('[data-on' + eve + ']')
-		})
-		var eles = this.element.querySelectorAll(eventArr.toString())
+		var eventArr = [];
+		a7.ui.getEvents().forEach( function( eve ){
+			eventArr.push("[data-on" + eve + "]");
+		});
+		var eles = this.element.querySelectorAll( eventArr.toString() );
 
-		eles.forEach(
-			function (sel) {
-				for (var ix = 0; ix < sel.attributes.length; ix++) {
-					var attribute = sel.attributes[ix]
-					if (attribute.name.startsWith('data-on')) {
-						var event = attribute.name.substring(
-							7,
-							attribute.name.length
-						)
-						sel.addEventListener(
-							event,
-							this.eventHandlers[
-								sel.attributes['data-on' + event].value
-							]
-						)
-					}
+		eles.forEach( function( sel ){
+			for( var ix=0; ix < sel.attributes.length; ix++ ){
+				var attribute = sel.attributes[ix];
+				if( attribute.name.startsWith( "data-on" ) ){
+					var event = attribute.name.substring( 7, attribute.name.length );
+					sel.addEventListener( event, this.eventHandlers[ sel.attributes["data-on" + event].value ] );
 				}
-			}.bind(this)
-		)
-		// bind any elements marked with data-bind to the model
-		let boundEles = this.element.querySelectorAll('[data-bind]')
-		boundEles.forEach(function (ele) {
-			console.log('binding: ', ele)
-			a7.model.bind(ele.attributes['data-bind'].value, ele)
-		})
-		this.fireEvent('rendered')
+			}
+		}.bind( this ));
+
+		this.fireEvent( "rendered" );
 	},
-	shouldRender: function () {
-		if (this.skipRender) {
-			return false
-		} else {
-			return true
-		}
+	shouldRender: function(){
+    if( this.skipRender ){
+      return false;
+    }else{
+      return true;
+    }
 	},
 	// after rendering, render all the children of the view
-	onRendered: function () {
-		for (var child in this.children) {
-			this.children[child].element = document.querySelector(
-				this.children[child].props.selector
-			)
-			this.children[child].render()
+	onRendered: function(){
+		for( var child in this.children ){
+			this.children[ child ].element = document.querySelector( this.children[ child ].props.selector );
+			this.children[ child ].render();
 		}
 	},
 	// need to add props.isTransient (default false) to make views permanent by default
-	checkRenderStatus: function () {
-		if (document.querySelector(this.props.selector) === null) {
-			a7.ui.unregister(this.id)
-		} else {
-			if (this.isTransient) {
-				this.timer = setTimeout(
-					this.checkRenderStatus.bind(this),
-					a7.model.get('a7').ui.timeout
-				)
+	checkRenderStatus: function(){
+		if( document.querySelector( this.props.selector ) === null ){
+			a7.ui.unregister( this.id );
+		}else{
+			if( this.isTransient ){
+				this.timer = setTimeout( this.checkRenderStatus.bind( this ), a7.model.get( "a7" ).ui.timeout );
 			}
 		}
-	},
-}
+	}
+};
 
 return {
   Constructor: Constructor,
@@ -1764,339 +1623,362 @@ a7.security = (function() {
 })();
 
 a7.ui = (function () {
-    'use strict'
+  "use strict";
 
-    // browser events that can be used in templating, e.g. data-click will be added to the resulting HTML as a click event handler
-    const resourceEvents = ['cached', 'error', 'abort', 'load', 'beforeunload']
+  // browser events that can be used in templating, e.g. data-click will be added to the resulting HTML as a click event handler
+  const resourceEvents = [
+	'cached',
+	'error',
+	'abort',
+	'load',
+	'beforeunload'
+  ];
 
-    const networkEvents = ['online', 'offline']
+  const networkEvents = [
+	'online',
+	'offline'
+  ];
 
-    const focusEvents = ['focus', 'blur']
+  const focusEvents = [
+	'focus',
+	'blur'
+  ];
 
-    const websocketEvents = ['open', 'message', 'error', 'close']
+  const websocketEvents = [
+	'open',
+	'message',
+	'error',
+	'close'
+  ];
 
-    const sessionHistoryEvents = ['pagehide', 'pageshow', 'popstate']
+  const sessionHistoryEvents = [
+	'pagehide',
+	'pageshow',
+	'popstate'
+  ];
 
-    const cssAnimationEvents = [
-        'animationstart',
-        'animationend',
-        'animationiteration',
-    ]
+  const cssAnimationEvents = [
+	'animationstart',
+	'animationend',
+	'animationiteration'
+  ];
 
-    const cssTransitionEvents = [
-        'transitionstart',
-        'transitioncancel',
-        'transitionend',
-        'transitionrun',
-    ]
+  const cssTransitionEvents = [
+	'transitionstart',
+	'transitioncancel',
+	'transitionend',
+	'transitionrun'
+  ];
 
-    const formEvents = ['reset', 'submit']
+  const formEvents = [
+	'reset',
+	'submit'
+  ];
 
-    const printingEvents = ['beforeprint', 'afterprint']
+  const printingEvents = [
+	'beforeprint',
+	'afterprint'
+  ];
 
-    const textCompositionEvents = [
-        'compositionstart',
-        'compositionupdate',
-        'compositionend',
-    ]
+  const textCompositionEvents = [
+	'compositionstart',
+	'compositionupdate',
+	'compositionend'
+  ];
 
-    const viewEvents = [
-        'fullscreenchange',
-        'fullscreenerror',
-        'resize',
-        'scroll',
-    ]
+  const viewEvents = [
+	'fullscreenchange',
+	'fullscreenerror',
+	'resize',
+	'scroll'
+  ];
 
-    const clipboardEvents = ['cut', 'copy', 'paste']
+  const clipboardEvents = [
+	'cut',
+	'copy',
+	'paste'
+  ];
 
-    const keyboardEvents = ['keydown', 'keypress', 'keyup']
+  const keyboardEvents = [
+	'keydown',
+	'keypress',
+	'keyup'
+  ];
 
-    const mouseEvents = [
-        'auxclick',
-        'click',
-        'contextmenu',
-        'dblclick',
-        'mousedown',
-        'mousenter',
-        'mouseleave',
-        'mousemove',
-        'mouseover',
-        'mouseout',
-        'mouseup',
-        'pointerlockchange',
-        'pointerlockerror',
-        'wheel',
-    ]
+  const mouseEvents = [
+	'auxclick',
+	'click',
+	'contextmenu',
+	'dblclick',
+	'mousedown',
+	'mousenter',
+	'mouseleave',
+	'mousemove',
+	'mouseover',
+	'mouseout',
+	'mouseup',
+	'pointerlockchange',
+	'pointerlockerror',
+	'wheel'
+  ];
 
-    const dragEvents = [
-        'drag',
-        'dragend',
-        'dragstart',
-        'dragleave',
-        'dragover',
-        'drop',
-    ]
+  const dragEvents = [
+	'drag',
+	'dragend',
+	'dragstart',
+	'dragleave',
+	'dragover',
+	'drop'
+  ];
 
-    const mediaEvents = [
-        'audioprocess',
-        'canplay',
-        'canplaythrough',
-        'complete',
-        'durationchange',
-        'emptied',
-        'ended',
-        'loadeddata',
-        'loadedmetadata',
-        'pause',
-        'play',
-        'playing',
-        'ratechange',
-        'seeked',
-        'seeking',
-        'stalled',
-        'suspend',
-        'timeupdate',
-        'columechange',
-        'waiting',
-    ]
+  const mediaEvents = [
+	'audioprocess',
+	'canplay',
+	'canplaythrough',
+	'complete',
+	'durationchange',
+	'emptied',
+	'ended',
+	'loadeddata',
+	'loadedmetadata',
+	'pause',
+	'play',
+	'playing',
+	'ratechange',
+	'seeked',
+	'seeking',
+	'stalled',
+	'suspend',
+	'timeupdate',
+	'columechange',
+	'waiting'
+  ];
 
-    const progressEvents = [
-        // duplicates from resource events
-        /* 'abort',
+  const progressEvents = [
+	// duplicates from resource events
+	/* 'abort',
 	'error',
 	'load', */
-        'loadend',
-        'loadstart',
-        'progress',
-        'timeout',
-    ]
+	'loadend',
+	'loadstart',
+	'progress',
+	'timeout'
+  ];
 
-    const storageEvents = ['change', 'storage']
+  const storageEvents = [
+	'change',
+	'storage'
+  ];
 
-    const updateEvents = [
-        'checking',
-        'downloading',
-        /* 'error', */
-        'noupdate',
-        'obsolete',
-        'updateready',
-    ]
+  const updateEvents = [
+	'checking',
+	'downloading',
+	/* 'error', */
+	'noupdate',
+	'obsolete',
+	'updateready'
+  ];
 
-    const valueChangeEvents = [
-        'broadcast',
-        'CheckBoxStateChange',
-        'hashchange',
-        'input',
-        'RadioStateChange',
-        'readystatechange',
-        'ValueChange',
-    ]
+  const valueChangeEvents = [
+	'broadcast',
+	'CheckBoxStateChange',
+	'hashchange',
+	'input',
+	'RadioStateChange',
+	'readystatechange',
+	'ValueChange'
+  ];
 
-    const uncategorizedEvents = [
-        'invalid',
-        'localized',
-        /* 'message',
+  const uncategorizedEvents = [
+	'invalid',
+	'localized',
+	/* 'message',
 	'open', */
-        'show',
-    ]
+	'show'
+  ];
 
-    const _standardEvents = resourceEvents
-        .concat(networkEvents)
-        .concat(focusEvents)
-        .concat(websocketEvents)
-        .concat(sessionHistoryEvents)
-        .concat(cssAnimationEvents)
-        .concat(cssTransitionEvents)
-        .concat(formEvents)
-        .concat(printingEvents)
-        .concat(textCompositionEvents)
-        .concat(viewEvents)
-        .concat(clipboardEvents)
-        .concat(keyboardEvents)
-        .concat(mouseEvents)
-        .concat(dragEvents)
-        .concat(mediaEvents)
-        .concat(progressEvents)
-        .concat(storageEvents)
-        .concat(updateEvents)
-        .concat(valueChangeEvents)
-        .concat(uncategorizedEvents)
+  const _standardEvents = resourceEvents.concat(networkEvents).concat(focusEvents).concat(websocketEvents).concat(sessionHistoryEvents).concat(cssAnimationEvents)
+	.concat(cssTransitionEvents).concat(formEvents).concat(printingEvents).concat(textCompositionEvents).concat(viewEvents).concat(clipboardEvents)
+	.concat(keyboardEvents).concat(mouseEvents).concat(dragEvents).concat(mediaEvents).concat(progressEvents).concat(storageEvents)
+	.concat(updateEvents).concat(valueChangeEvents).concat(uncategorizedEvents);
 
-    var _events = [],
-        _options = {},
-        _selectors = {},
-        _nodes = {},
-        _queue = [],
-        _deferred = [],
-        _stateTransition = false,
-        //_templateMap = {},
-        _views = [],
-        // selectors are cached for easy reference later
+  var
+	_events = [],
+	_options = {},
+	_selectors = {},
+	_queue = [],
+	_deferred = [],
+	_stateTransition = false,
+	//_templateMap = {},
+	_views = [],
 
-        _setSelector = function (name, selector) {
-            _selectors[name] = selector
-            _nodes[name] = document.querySelector(selector)
-        },
-        _getSelector = function (name) {
-            return _selectors[name]
-        },
-        // get an active view from the view struct
-        _getView = function (id) {
-            return _views[id]
-        },
-        _getNode = function (name) {
-            return _nodes[name]
-        },
-        // return the registered events for the application
-        _getEvents = function () {
-            return _events
-        },
-        // register a view
-        // this happens automatically when a view is instantiated
-        _register = function (view) {
-            switch (_options.renderer) {
-                case 'Handlebars':
-                case 'Mustache':
-                case 'templateLiterals':
-                    _views[view.props.id] = view
-                    view.fireEvent('registered')
-                    break
-            }
-        },
-        // unregister the view
-        _unregister = function (id) {
-            delete _views[id]
-        },
-        // get the IDs for the tree of parent views to the root view of this tree
-        _getParentViewIds = function (id) {
-            a7.log.trace('Find parents of ' + id)
-            let parentIds = []
-            let view = _views[id]
-            while (view.props.parentID !== undefined) {
-                parentIds.unshift(view.props.parentID)
-                view = _views[view.props.parentID]
-            }
-            return parentIds
-            // parentids returned in highest to lowest order
-        },
-        // get the tree of child IDs of a view
-        _getChildViewIds = function (id) {
-            a7.log.trace('Find children of ' + id)
-            let childIds = []
-            let view = _views[id]
+	// selectors are cached for easy reference later
 
-            for (var child in view.children) {
-                let childId = view.children[child].props.id
-                if (_getView(childId) !== undefined) {
-                    childIds.push(childId)
-                    childIds.concat(_getChildViewIds(childId))
-                }
-            }
-            // returned in highest to lowest order
-            return childIds
-        },
-        // add a view to the render queue
-        _enqueueForRender = function (id) {
-            // if _stateTransition is true, the queue is being processed
-            if (!_stateTransition) {
-                a7.log.info('enqueue: ' + id)
-                if (!_queue.length) {
-                    a7.log.trace('add first view to queue: ' + id)
-                    _queue.push(id)
-                    _processRenderQueue()
-                } else {
-                    let childIds = _getChildViewIds(id)
-                    if (_views[id].props.parentID === undefined) {
-                        // if the view is a root view, it should be pushed to the front of the stack
-                        a7.log.trace('add to front of queue: ' + id)
-                        _queue.unshift(id)
-                    } else {
-                        let parentIds = _getParentViewIds(id)
+	_setSelector = function (name, selector) {
+	  _selectors[name] = selector;
+	},
+	_getSelector = function (name) {
+	  return _selectors[name];
+	},
+	// get an active view from the view struct
+	_getView = function (id) {
+	  return _views[id];
+	},
+	// get the HTML node for a selector
+	_getNode = function (selector) {
+	  return document.querySelector(selector);
+	},
+	// return the registered events for the application
+	_getEvents = function () {
+	  return _events;
+	},
+	// register a view
+	// this happens automatically when a view is instantiated
+	_register = function (view) {
+	  switch (_options.renderer) {
+		case "Handlebars":
+		case "Mustache":
+		case "templateLiterals":
+		  _views[view.props.id] = view;
+		  view.fireEvent("registered");
+		  break;
+	  }
+	},
+	// unregister the view
+	_unregister = function (id) {
+	  delete _views[id];
+	},
+	// get the IDs for the tree of parent views to the root view of this tree
+	_getParentViewIds = function (id) {
+	  a7.log.trace("Find parents of " + id);
+	  let parentIds = [];
+	  let view = _views[id];
+	  while (view.props.parentID !== undefined) {
+		parentIds.unshift(view.props.parentID);
+		view = _views[view.props.parentID];
+	  }
+	  return parentIds;
+	  // parentids returned in highest to lowest order
+	},
+	// get the tree of child IDs of a view
+	_getChildViewIds = function (id) {
+	  a7.log.trace("Find children of " + id);
+	  let childIds = [];
+	  let view = _views[id];
 
-                        let highParent = undefined
-                        if (parentIds.length) {
-                            highParent = parentIds.find(function (parentId) {
-                                return _queue.indexOf(parentId) >= 0
-                            })
-                        }
+	  for (var child in view.children) {
+		let childId = view.children[child].props.id;
+		if (_getView(childId) !== undefined) {
+		  childIds.push(childId);
+		  childIds.concat(_getChildViewIds(childId));
+		}
+	  }
+	  // returned in highest to lowest order
+	  return childIds;
+	},
+	// add a view to the render queue
+	_enqueueForRender = function (id) {
+	  // if _stateTransition is true, the queue is being processed
+	  if (!_stateTransition) {
+			a7.log.info('enqueue: ' + id);
+			if (!_queue.length) {
+				a7.log.trace('add first view to queue: ' + id);
+				_queue.push(id);
+				_processRenderQueue();
+			} else {
+				let childIds = _getChildViewIds(id);
+				if (_views[id].props.parentID === undefined) {
+					// if the view is a root view, it should be pushed to the front of the stack
+					a7.log.trace('add to front of queue: ' + id);
+					_queue.unshift(id);
+				} else {
+					let parentIds = _getParentViewIds(id);
 
-                        // only add if there is no parent in the queue, since parents will render children
-                        if (highParent === undefined) {
-                            a7.log.trace('add to end of queue: ' + id)
-                            _queue.push(id)
-                        }
-                    }
+					let highParent = undefined;
+					if (parentIds.length) {
+					highParent = parentIds.find(function (parentId) {
+						return _queue.indexOf(parentId) >= 0;
+					});
+					}
 
-                    // remove child views from the queue, they will be rendered by the parents
-                    childIds.forEach(function (childId) {
-                        if (_queue.indexOf(childId) >= 0) {
-                            a7.log.trace('remove child from queue: ' + childId)
-                            _queue.splice(_queue.indexOf(childId), 1)
-                        }
-                    })
-                }
-            } else {
-                _deferred.push(id)
-            }
-        },
-        // render the queue
-        _processRenderQueue = function () {
-            a7.log.trace('processing the queue')
-            _stateTransition = true
+					// only add if there is no parent in the queue, since parents will render children
+					if (highParent === undefined) {
 
-            _queue.forEach(function (id) {
-                _views[id].render()
-            })
-            _queue = []
-            _stateTransition = false
-            _deferred.forEach(function (id) {
-                _enqueueForRender(id)
-            })
-            _deferred = []
-        },
-        _removeView = function (id) {
-            delete _views[id]
-        }
+					a7.log.trace('add to end of queue: ' + id);
+					_queue.push(id);
+					}
+				}
 
-    return {
-        //render: _render,
-        getEvents: _getEvents,
-        selectors: _selectors,
-        getSelector: _getSelector,
-        setSelector: _setSelector,
-        getNode: _getNode,
-        register: _register,
-        unregister: _unregister,
-        getView: _getView,
-        enqueueForRender: _enqueueForRender,
-        removeView: _removeView,
-        views: _views,
+				// remove child views from the queue, they will be rendered by the parents
+				childIds.forEach(function (childId) {
+					if (_queue.indexOf(childId) >= 0) {
+					a7.log.trace('remove child from queue: ' + childId);
+					_queue.splice(_queue.indexOf(childId), 1);
+					}
+				});
+			}
+	  } else {
+		_deferred.push(id);
+	  }
+	},
 
-        init: function (resolve, reject) {
-            a7.log.info('Layout initializing...')
-            _options = a7.model.get('a7').ui
+	// render the queue
+	_processRenderQueue = function () {
+	  a7.log.trace('processing the queue');
+	  _stateTransition = true;
 
-            // set event groups to create listeners for
-            var eventGroups = _options.eventGroups
-                ? _options.eventGroups
-                : 'standard'
-            switch (eventGroups) {
-                case 'extended':
-                    // extended events not implemented yet
-                    reject('Extended events are not implemented yet.')
-                case 'standard':
-                    _events = _standardEvents
-                    break
-                default:
-                    _options.eventGroups.forEach(function (group) {
-                        _events = _events.concat(group)
-                    })
-            }
+	  _queue.forEach(function (id) {
+		_views[id].render();
+	  });
+	  _queue = [];
+	  _stateTransition = false;
+	  _deferred.forEach(function (id) {
+		_enqueueForRender(id);
+	  });
+	  _deferred = [];
+	},
 
-            resolve()
-        },
-    }
-})()
+	_removeView = function (id) {
+	  delete _views[id];
+	};
+
+  return {
+	//render: _render,
+	getEvents: _getEvents,
+	selectors: _selectors,
+	getSelector: _getSelector,
+	setSelector: _setSelector,
+	getNode: _getNode,
+	register: _register,
+	unregister: _unregister,
+	getView: _getView,
+	enqueueForRender: _enqueueForRender,
+	removeView: _removeView,
+	views: _views,
+
+	init: function (resolve, reject) {
+	  a7.log.info("Layout initializing...");
+	  _options = a7.model.get("a7").ui;
+
+	  // set event groups to create listeners for
+	  var eventGroups = (_options.eventGroups ? _options.eventGroups : 'standard');
+	  switch (eventGroups) {
+		case "extended":
+		  // extended events not implemented yet
+		  reject("Extended events are not implemented yet.");
+		case "standard":
+		  _events = _standardEvents;
+		  break;
+		default:
+		  _options.eventGroups.forEach(function (group) {
+			_events = _events.concat((group));
+		  });
+	  }
+
+	  resolve();
+	}
+  };
+})();
 
 a7.util = (function () {
 

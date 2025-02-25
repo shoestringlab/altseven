@@ -1,47 +1,48 @@
 {
-  "name": "altseven",
-  "version": "7.0.0-beta",
-  "description": "JavaScript framework",
-  "main": "./dist/a7.js",
-  "files": [
-    "dist"
-  ],
-  "dependencies": {
-  },
-  "devDependencies": {
-    "eslint": "^8.32.0",
-    "express": "^4.18.2",
-    "gadget-ui": "^9.3.0",
-    "grunt": "^1.5.3",
-    "grunt-cli": "^1.5.0",
-    "grunt-closure-tools": "^1.0.0",
-    "grunt-contrib-concat": "^0.5.0",
-    "grunt-contrib-uglify-es": "git://github.com/gruntjs/grunt-contrib-uglify.git#harmony",
-    "grunt-contrib-watch": "^1.1.0",
-    "grunt-jslint": "^1.1.12",
-    "grunt-newer": "^1.1.0",
-    "js-base64": "^2.5.2",
-    "load-grunt-config": "^4.0.1",
-    "load-grunt-tasks": "^3.1.0",
-    "open-iconic": "^1.1.1",
-    "sha.js": "^2.4.11",
-    "trim-newlines": "^4.0.2"
-  },
-  "scripts": {
-    "test": "/test/index.htm"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/shoestringlab/altseven.git"
-  },
-  "bugs": {
-    "url": "https://github.com/shoestringlab/altseven/issues"
-  },
-  "homepage": "https://github.com/shoestringlab/altseven#readme",
-  "keywords": [
-    "JavaScript",
-    "framework"
-  ],
-  "author": "Robert Munn <robert@robertmunn.com",
-  "license": "MPL-2.0"
+	"name": "altseven",
+	"version": "7.0.1",
+	"description": "JavaScript framework",
+	"main": "./dist/a7.js",
+	"files": [
+		"dist"
+	],
+	"dependencies": {
+		"feather-icons": "^4.29.2"
+	},
+	"devDependencies": {
+		"eslint": "^8.32.0",
+		"express": "^4.18.2",
+		"gadget-ui": "^10.1.0",
+		"grunt": "^1.5.3",
+		"grunt-cli": "^1.5.0",
+		"grunt-closure-tools": "^1.0.0",
+		"grunt-contrib-concat": "^0.5.0",
+		"grunt-contrib-uglify-es": "git://github.com/gruntjs/grunt-contrib-uglify.git#harmony",
+		"grunt-contrib-watch": "^1.1.0",
+		"grunt-jslint": "^1.1.12",
+		"grunt-newer": "^1.1.0",
+		"js-base64": "^2.5.2",
+		"load-grunt-config": "^4.0.1",
+		"load-grunt-tasks": "^3.1.0",
+		"open-iconic": "^1.1.1",
+		"sha.js": "^2.4.11",
+		"trim-newlines": "^4.0.2"
+	},
+	"scripts": {
+		"test": "/test/index.htm"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/shoestringlab/altseven.git"
+	},
+	"bugs": {
+		"url": "https://github.com/shoestringlab/altseven/issues"
+	},
+	"homepage": "https://github.com/shoestringlab/altseven#readme",
+	"keywords": [
+		"JavaScript",
+		"framework"
+	],
+	"author": "Robert Munn <robert@robertmunn.com",
+	"license": "MPL-2.0"
 }

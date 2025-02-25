@@ -1,0 +1,23 @@
+<html>
+
+<head>
+
+<script>
+  function run(){
+
+    var scriptTag = document.createElement("script");
+    var inline = document.createTextNode( document.querySelector( "#code" ).innerText );
+    scriptTag.appendChild( inline );
+    document.body.appendChild( scriptTag );
+  }
+</script>
+</head>
+
+<body>
+
+<div id="code" style="width: 80%; height: 50%; border: 1px solid silver;" contenteditable="true">
+
+</div>
+<button type="button" onclick="run();">Run</button>
+</body>
+</html>

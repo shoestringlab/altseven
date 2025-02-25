@@ -1,7 +1,6 @@
-altseven
-=========
+# altseven
 
-v 7.0.0
+v 7.0.1
 
 A JavaScript framework. Originally built as an exploration into reactive programming with JavaScript. Now a full-fledged Web framework.
 
@@ -15,12 +14,16 @@ To install dev dependencies from NPM:
     `$ npm install`
 
 
-Current Release - 7.0.0-beta
+Current Release - 7.0.1
 --------
 
-The 7.x release represents a potential departure from previous version compatibility. Current breaking changes:
-- a7.ui.setSelector( selector ) now also caches the node in _nodes[] using document.querySelector( selector ).
-- a7.ui.getNode( name ) now returns the cached node.
+This release adds data binding to views, and new capabilities to the model, including undo, redo, fast forward, and rewind functions for any value in the model.
+
+Data binding is accomplished by using the attribute data-bind=<key> on any given HTML attribute that displays or inputs text, e.g. data-bind='user.firstname'. In this case, the firstname property of the user key in the model will be bound to the HTML element.
+
+Gadget-ui has been marked as a dependency for versioning purposes. It is not strictly necessary to use it for anything.
+
+## Installation
 
 Note that the library is no longer published on Bower, so pull from npm.
 

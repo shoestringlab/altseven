@@ -1,3 +1,11 @@
+7.0.1
+============
+
+This release adds data binding to views, and new capabilities to the model, including undo, redo, fast forward, and rewind functions for any value in the model.
+
+Data binding is accomplished by using the attribute data-bind=<key> on any given HTML attribute that displays or inputs text, e.g. data-bind='user.firstname'. In this case, the firstname property of the user key in the model will be bound to the HTML element.
+
+
 7.0.0-alpha
 ============
 
