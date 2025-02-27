@@ -29,7 +29,7 @@ app.post('/api/auth/logout', auth.logout)
 app.get('/api/auth/refresh', auth.refresh)
 
 // default route
-app.use('*', express.static('./test/7.x/tl.htm'))
+app.use('*', express.static('./test/7.x/index.htm'))
 
 // set our listener
 var server = app.listen(8800, function () {})

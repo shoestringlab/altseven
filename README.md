@@ -1,6 +1,6 @@
 # altseven
 
-v 7.0.1
+v 7.0.2
 
 A JavaScript framework. Originally built as an exploration into reactive programming with JavaScript. Now a full-fledged Web framework.
 
@@ -14,7 +14,7 @@ To install dev dependencies from NPM:
     `$ npm install`
 
 
-Current Release - 7.0.1
+Current Release - 7.0.2
 --------
 
 This release adds data binding to views, and new capabilities to the model, including undo, redo, fast forward, and rewind functions for any value in the model.
@@ -44,13 +44,24 @@ modlazy can be used as a module/dependency loader if you use Handlebars or Musta
 
     $ npm install modlazy
 
+## Documentation
+
+https://altseven.shoestringlab.com
 
 
-***Running the Sample App***
+## Running the Sample App
 
-As of 6.0.0-beta, a CFML engine is no longer required to run the sample apps. You can now run $ node index.js from the root of the project and access the sample apps at 127.0.0.1:8800/test/index.htm. As of the beta, only the Template Literals sample app has been tested with this release.
+### NodeJS
 
-----
+$ node index.js
+
+from the root of the project and access the sample apps at:
+
+127.0.0.1:8800/test/index.html.
+
+### CFML
+
+The CFML engine test has been deprecated and may not be functional.
 
 To run the example application included in the /test folder, you need a CFML engine. The easiest way to run it is to install CommandBox:
 
