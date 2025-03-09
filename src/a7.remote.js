@@ -127,7 +127,7 @@ a7.remote = (function () {
 									),
 							},
 							body: JSON.stringify({
-								rememberMe: obj.rememberMe || false,
+								rememberMe: params.rememberMe || false,
 							}),
 						}
 
