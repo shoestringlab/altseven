@@ -1,3 +1,10 @@
+7.1.0
+============
+
+This release adds a rememberMe value set in the body of the built in remote login function so users can stay authenticated beyond their current session. Only the flag is
+provided. It defaults to false if not presnt. The developer is responsible for implementation of the functionality.
+
+
 7.0.2
 ============
 

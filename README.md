@@ -1,6 +1,6 @@
 # altseven
 
-v 7.0.2
+v 7.1.0
 
 A JavaScript framework. Originally built as an exploration into reactive programming with JavaScript. Now a full-fledged Web framework.
 
@@ -14,14 +14,11 @@ To install dev dependencies from NPM:
     `$ npm install`
 
 
-Current Release - 7.0.2
+Current Release - 7.1.0
 --------
 
-This release adds data binding to views, and new capabilities to the model, including undo, redo, fast forward, and rewind functions for any value in the model.
-
-Data binding is accomplished by using the attribute data-bind=<key> on any given HTML attribute that displays or inputs text, e.g. data-bind='user.firstname'. In this case, the firstname property of the user key in the model will be bound to the HTML element.
-
-Gadget-ui has been marked as a dependency for versioning purposes. It is not strictly necessary to use it for anything.
+This release adds a rememberMe value set in the body of the built in remote login function so users can stay authenticated beyond their current session. Only the flag is
+provided. It defaults to false if not presnt. The developer is responsible for implementation of the functionality.
 
 ## Installation
 
