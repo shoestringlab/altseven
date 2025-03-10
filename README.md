@@ -1,6 +1,6 @@
 # altseven
 
-v 7.1.1
+v 7.1.2
 
 A JavaScript framework. Originally built as an exploration into reactive programming with JavaScript. Now a full-fledged Web framework.
 
@@ -14,7 +14,7 @@ To install dev dependencies from NPM:
     `$ npm install`
 
 
-Current Release - 7.1.1
+Current Release - 7.1.2
 --------
 
 This release adds a rememberMe value set in the body of the built in remote login function so users can stay authenticated beyond their current session. Only the flag is

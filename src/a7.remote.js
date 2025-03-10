@@ -125,6 +125,9 @@ a7.remote = (function () {
 									a7.util.base64.encode64(
 										params.username + ':' + params.password
 									),
+								Accept: 'application/json, application/xml, text/play, text/html, *.*',
+								'Content-Type':
+									'application/json; charset=utf-8',
 							},
 							body: JSON.stringify({
 								rememberMe: params.rememberMe || false,
