@@ -1,9 +1,13 @@
+7.2.0
+============
+
+This release changes the required response of the refresh mechanism and changes the response of a7.security.isAuthenticated. Previously, this method returned true or false. Now, this method returns an object { authenticated: true|false }. The refresh method on the server should now return an object with the authenticated key and a boolean value. The refresh method may also optionally return other information, such as an updated user object. This refresh method can be used to re-establish a user session if the rememberMeToken cookie is set in the user's browser.
+
 7.1.0
 ============
 
 This release adds a rememberMe value set in the body of the built in remote login function so users can stay authenticated beyond their current session. Only the flag is
 provided. It defaults to false if not presnt. The developer is responsible for implementation of the functionality.
-
 
 7.0.2
 ============

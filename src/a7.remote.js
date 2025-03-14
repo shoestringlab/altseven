@@ -74,9 +74,11 @@ a7.remote = (function () {
 			})
 
 			promise
-				.then(function (active) {
-					// session is still active, no need to do anything else
-					a7.log.trace('Still logged in.')
+				.then(function (response) {
+					if (response.authenticated) {
+						// session is still active, no need to do anything else
+						a7.log.trace('Still logged in.')
+					}
 				})
 				.catch(function (error) {
 					a7.events.publish('auth.sessionTimeout')
@@ -98,7 +100,7 @@ a7.remote = (function () {
 		getSessionTimer: function () {
 			return _sessionTimer
 		},
-
+		refreshClientSession: _refreshClientSession,
 		init: function (modules) {
 			var auth = a7.model.get('a7').auth
 			_options = a7.model.get('a7').remote
@@ -143,8 +145,7 @@ a7.remote = (function () {
 							// set the token into sessionStorage so it is available if the browser is refreshed
 							var token = response.headers.get('X-Token')
 							if (token !== undefined && token !== null) {
-								_token = token
-								sessionStorage.token = token
+								_setToken(token)
 							}
 							return response.json()
 						})
@@ -245,7 +246,7 @@ a7.remote = (function () {
 						.then(function (json) {
 							// then json is handled
 							if (params.resolve !== undefined) {
-								params.resolve(json.success)
+								params.resolve(json)
 							}
 						})
 				},
