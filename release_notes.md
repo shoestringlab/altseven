@@ -1,3 +1,8 @@
+7.3.0
+============
+
+This release adds an experimental feature, adding the optional remote.tokenType setting, defaulting to 'X-Token' (the previous standard), with an option to use 'access_token'. This option changes the way tokens are handled in the framework, passing requests to the back end using the Authorization: Bearer <token> header standard from OAuth 2.0. On the response, the framework will pull tokens set in the access_token header, which is not a standard part of the OAuth response, where the access_token is returned in the response body. This feature may or may not be maintained long time, so be warned.
+
 7.2.0
 ============
 

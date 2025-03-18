@@ -143,7 +143,11 @@ a7.remote = (function () {
 					promise
 						.then(function (response) {
 							// set the token into sessionStorage so it is available if the browser is refreshed
-							var token = response.headers.get('X-Token')
+							//
+							var token =
+								_options.tokenType === 'X-Token'
+									? response.headers.get('X-Token')
+									: response.headers.get('Access_token')
 							if (token !== undefined && token !== null) {
 								_setToken(token)
 							}
@@ -249,6 +253,11 @@ a7.remote = (function () {
 								params.resolve(json)
 							}
 						})
+						.catch(function (error) {
+							if (params.reject) {
+								params.reject(error)
+							}
+						})
 				},
 			}
 
@@ -265,7 +274,7 @@ a7.remote = (function () {
 			a7.log.info('fetch: ' + uri)
 			var request, promise
 
-			//if secure and tokens, we need to check timeout and add X-Token header
+			//if secure and tokens, we need to check timeout and add Authorization header
 			if (secure && _options.useTokens) {
 				var currentTime = new Date(),
 					diff = Math.abs(currentTime - _time),
@@ -276,13 +285,26 @@ a7.remote = (function () {
 					a7.events.publish('auth.sessionTimeout')
 					return
 				} else if (_token !== undefined && _token !== null) {
-					// set X-Token
+					// set Authorization: Bearer header
 					if (params.headers === undefined) {
-						params.headers = {
-							'X-Token': _token,
+						if (_options.tokenType === 'X-Token') {
+							params.headers = {
+								'X-Token': _token,
+							}
+						} else {
+							params.headers = {
+								Authorization: 'Bearer ' + a7.remote.getToken(),
+							}
 						}
+
+						//							'Content-Type': 'application/json',
 					} else {
-						params.headers['X-Token'] = _token
+						if (_options.tokenType === 'X-Token') {
+							params.headers['X-Token'] = _token
+						} else {
+							params.headers['Authorization'] =
+								`Bearer ${a7.remote.getToken()}`
+						}
 					}
 				}
 
@@ -292,24 +314,33 @@ a7.remote = (function () {
 			//calling the native JS fetch method ...
 			promise = fetch(request)
 
-			promise.then(function (response) {
-				if (secure && _options.useTokens) {
-					var token = response.headers.get('X-Token')
-					if (token !== undefined && token !== null) {
-						_setToken(token)
+			promise
+				.then(function (response) {
+					if (secure && _options.useTokens) {
+						// according to https://www.rfc-editor.org/rfc/rfc6749#section-5.1
+						// the access_token response key should be in the body. we're going to include it as a header for non-oauth implementations
+						var token =
+							_options.tokenType === 'X-Token'
+								? response.headers.get('X-Token')
+								: response.headers.get('Access_token')
+						if (token !== undefined && token !== null) {
+							_setToken(token)
 
-						if (_sessionTimer !== undefined) {
-							clearTimeout(_sessionTimer)
+							if (_sessionTimer !== undefined) {
+								clearTimeout(_sessionTimer)
+							}
+							_sessionTimer = setTimeout(
+								_refreshClientSession,
+								_options.sessionTimeout
+							)
+						} else {
+							a7.events.publish('auth.sessionTimeout')
 						}
-						_sessionTimer = setTimeout(
-							_refreshClientSession,
-							_options.sessionTimeout
-						)
-					} else {
-						a7.events.publish('auth.sessionTimeout')
 					}
-				}
-			})
+				})
+				.catch(function (error) {
+					a7.log.error(error)
+				})
 
 			return promise
 		},

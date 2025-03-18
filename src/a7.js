@@ -59,6 +59,7 @@ var a7 = (function () {
 								options.auth && options.auth.useTokens
 									? options.auth.useTokens
 									: true,
+							tokenType: options.remote.tokenType || 'X-Token',
 						}
 					: { useTokens: true },
 				router: options.router
