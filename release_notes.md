@@ -1,3 +1,10 @@
+7.4.0
+============
+
+This release adds a config option to disable the security module. By default, the security module remains enabled, but if you add  options: { security: { enabled: false} }, you will prevent the security module from being initialized on startup. Note that disabling the security module will prevent you from using the remote module with tokens. This feature is in development so be aware if you disable security that the remote module may be affected beyond the loss of tokens.
+
+In addition, the security module has seen some internal changes. The isAuthenticated method has been simplified to call the auth.refresh event, so it assumes tokens are active in use. Also, it has added setUser(user) and getUser() methods. setUser set the users into session storage and, if a model is in use, sets the user into the model. GetUser gets the current user, and if no use is active, returns an empty User object.
+
 7.3.0
 ============
 

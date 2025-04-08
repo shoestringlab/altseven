@@ -8,3 +8,4 @@ wirebox
 models
 grunt/jslint
 .vscode/
+nginx/

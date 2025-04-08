@@ -1,6 +1,6 @@
 # altseven
 
-v 7.3.0
+v 7.4.0
 
 A JavaScript framework. Originally built as an exploration into reactive programming with JavaScript. Now a full-fledged Web framework.
 
@@ -14,10 +14,12 @@ To install dev dependencies from NPM:
     `$ npm install`
 
 
-Current Release - 7.3.0
+Current Release - 7.4.0
 --------
 
-This release adds an experimental feature, adding the optional remote.tokenType setting, defaulting to 'X-Token' (the previous standard), with an option to use 'access_token'. This option changes the way tokens are handled in the framework, passing requests to the back end using the Authorization: Bearer <token> header standard from OAuth 2.0. On the response, the framework will pull tokens set in the access_token header, which is not a standard part of the OAuth response, where the access_token is returned in the response body. This feature may or may not be maintained long time, so be warned.
+This release adds a config option to disable the security module. By default, the security module remains enabled, but if you add  options: { security: { enabled: false} }, you will prevent the security module from being initialized on startup. Note that disabling the security module will prevent you from using the remote module with tokens. This feature is in development so be aware if you disable security that the remote module may be affected beyond the loss of tokens.
+
+In addition, the security module has seen some internal changes. The isAuthenticated method has been simplified to call the auth.refresh event, so it assumes tokens are active in use. Also, it has added setUser(user) and getUser() methods. setUser set the users into session storage and, if a model is in use, sets the user into the model. GetUser gets the current user, and if no use is active, returns an empty User object.
 
 ## Installation
 

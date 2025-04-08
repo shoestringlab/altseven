@@ -2,7 +2,7 @@
 export var a7 = a7;
 
 var a7 = (function () {
-	'use strict'
+	"use strict";
 	return {
 		// initialization
 		// 1. sets console and templating options
@@ -10,13 +10,12 @@ var a7 = (function () {
 		// 3. checks user auth state
 		// 4. renders initial layout
 		init: function (options, initResolve, initReject) {
-			var pr, p0, p1, p2
+			var pr, p0, p1, p2;
 
-			options.model =
-				options.model !== undefined ? options.model : 'altseven'
-			if (options.model === '') {
+			options.model = options.model !== undefined ? options.model : "altseven";
+			if (options.model === "") {
 				// model required
-				initReject('A model is required, but no model was specified.')
+				initReject("A model is required, but no model was specified.");
 			}
 
 			var theOptions = {
@@ -29,12 +28,12 @@ var a7 = (function () {
 				console: options.console
 					? {
 							enabled: options.console.enabled || false,
-							wsServer: options.console.wsServer || '',
+							wsServer: options.console.wsServer || "",
 							container:
 								options.console.container ||
-								(typeof gadgetui === 'object'
+								(typeof gadgetui === "object"
 									? gadgetui.display.FloatingPane
-									: ''),
+									: ""),
 							top: options.console.top || 100,
 							left: options.console.left || 500,
 							width: options.console.width || 500,
@@ -45,7 +44,7 @@ var a7 = (function () {
 					logLevel:
 						options.logging && options.logging.logLevel
 							? options.logging.logLevel
-							: 'ERROR,FATAL,INFO',
+							: "ERROR,FATAL,INFO",
 					toBrowserConsole:
 						options.logging && options.logging.toBrowserConsole
 							? options.logging.toBrowserConsole
@@ -55,14 +54,14 @@ var a7 = (function () {
 				remote: options.remote
 					? {
 							// modules: ( options.remote.modules | undefined ) // don't set into Model since they are being registered in Remote
-							loginURL: options.remote.loginURL || '',
-							logoutURL: options.remote.logoutURL || '',
-							refreshURL: options.remote.refreshURL || '',
+							loginURL: options.remote.loginURL || "",
+							logoutURL: options.remote.logoutURL || "",
+							refreshURL: options.remote.refreshURL || "",
 							useTokens:
 								options.auth && options.auth.useTokens
 									? options.auth.useTokens
 									: true,
-							tokenType: options.remote.tokenType || 'X-Token',
+							tokenType: options.remote.tokenType || "X-Token",
 						}
 					: { useTokens: true },
 				router: options.router
@@ -73,120 +72,117 @@ var a7 = (function () {
 							routes: options.router.routes || undefined,
 						}
 					: undefined,
+				security: options.security
+					? {
+							enabled: options.security.enabled || true,
+							options: options.security.options || {},
+						}
+					: { enabled: true, options: {} },
 				ui: {
 					renderer: options.ui
 						? options.ui.renderer ||
-							(typeof Mustache === 'object'
-								? 'Mustache'
-								: typeof Handlebars === 'object'
-									? 'Handlebars'
-									: 'templateLiterals')
-						: 'templateLiterals',
+							(typeof Mustache === "object"
+								? "Mustache"
+								: typeof Handlebars === "object"
+									? "Handlebars"
+									: "templateLiterals")
+						: "templateLiterals",
 					debounceTime:
 						options.ui && options.ui.debounceTime
 							? options.ui.debounceTime
 							: 18,
 					timeout:
-						options.ui && options.ui.timeout
-							? options.ui.timeout
-							: 600000, // default 10 minute check for registered views
+						options.ui && options.ui.timeout ? options.ui.timeout : 600000, // default 10 minute check for registered views
 				},
 				ready: false,
-				user: '',
-			}
+			};
 
 			pr = new Promise(function (resolve, reject) {
-				a7.log.trace('a7 - model init')
-				a7.model.init(theOptions, resolve, reject)
-			})
+				a7.log.trace("a7 - model init");
+				a7.model.init(theOptions, resolve, reject);
+			});
 
 			pr.then(function () {
-				a7.model.set('a7', theOptions)
+				a7.model.set("a7", theOptions);
 			}).then(function () {
 				p0 = new Promise(function (resolve, reject) {
-					if (a7.model.get('a7').console.enabled) {
-						a7.log.trace('a7 - console init')
-						a7.console.init(theOptions, resolve, reject)
+					if (a7.model.get("a7").console.enabled) {
+						a7.log.trace("a7 - console init");
+						a7.console.init(theOptions, resolve, reject);
 					} else {
-						resolve()
+						resolve();
 					}
-				})
+				});
 
 				p0.then(function () {
-					a7.log.trace('a7 - log init')
-					a7.log.init()
-					a7.log.trace('a7 - security init')
-					// init user state
-					// pass security options if they were defined
-					a7.security.init(
-						options.security && options.security.options
-							? options.security.options
-							: {}
-					)
-					a7.log.trace('a7 - remote init')
+					a7.log.trace("a7 - log init");
+					a7.log.init();
+
+					if (theOptions.security.enabled) {
+						a7.log.trace("a7 - security init");
+						// init user state
+						// pass security options if they were defined
+						a7.security.init(theOptions);
+					}
+					a7.log.trace("a7 - remote init");
 					//pass remote modules if they were defined
 					a7.remote.init(
 						options.remote && options.remote.modules
 							? options.remote.modules
-							: {}
-					)
-					a7.log.trace('a7 - events init')
-					a7.events.init()
+							: {},
+					);
+					a7.log.trace("a7 - events init");
+					a7.events.init();
 					// init the router if it is being used
 					if (theOptions.router) {
-						a7.log.trace('a7 - router init')
-						a7.router.init(
-							theOptions.router.options,
-							theOptions.router.routes
-						)
+						a7.log.trace("a7 - router init");
+						a7.router.init(theOptions.router.options, theOptions.router.routes);
 					}
 					// init the ui templating engine
 					p1 = new Promise(function (resolve, reject) {
-						a7.log.trace('a7 - layout init')
+						a7.log.trace("a7 - layout init");
 						// initialize templating engine
-						a7.ui.init(resolve, reject)
-					})
+						a7.ui.init(resolve, reject);
+					});
 
 					p1.then(function () {
-						p2 = new Promise(function (resolve, reject) {
-							a7.log.trace('a7 - isSecured')
-							// check whether user is authenticated
-							a7.security.isAuthenticated(resolve, reject)
-						})
+						if (theOptions.security.enabled) {
+							p2 = new Promise(function (resolve, reject) {
+								a7.log.trace("a7 - isSecured");
+								// check whether user is authenticated
+								a7.security.isAuthenticated(resolve, reject);
+							});
 
-						p2.then(function (response) {
-							a7.error.init()
-							a7.log.info(
-								'Authenticated: ' +
-									response.authenticated +
-									'...'
-							)
-							a7.log.info('Init complete...')
-							initResolve({
-								secure: response.authenticated,
-							})
-						})
+							p2.then(function (response) {
+								a7.error.init();
+								a7.log.info("Authenticated: " + response.authenticated + "...");
+								a7.log.info("Init complete...");
+								initResolve(response);
+							});
 
-						p2['catch'](function (message) {
-							a7.log.error(message)
-							initReject()
-						})
-					})
-				})
+							p2["catch"](function (message) {
+								a7.log.error(message);
+								initReject();
+							});
+						} else {
+							initResolve({});
+						}
+					});
+				});
 
-				p0['catch'](function (message) {
-					a7.log.error(message)
-					initReject()
-				})
-			})
+				p0["catch"](function (message) {
+					a7.log.error(message);
+					initReject();
+				});
+			});
 
-			pr['catch'](function (message) {
-				a7.log.error(message)
-				initReject()
-			})
+			pr["catch"](function (message) {
+				a7.log.error(message);
+				initReject();
+			});
 		},
-	}
-})()
+	};
+})();
 
 a7.console = (function () {
 	'use strict'
@@ -1814,47 +1810,59 @@ a7.router = (function() {
 })();
 
 a7.security = (function () {
-	'use strict'
+	"use strict";
 
-	let _userArgs = []
+	let _userArgs = [],
+		_useModel = false;
 
-	var _isAuthenticated = function (resolve, reject) {
-			a7.log.info('Checking authenticated state.. ')
-			if (a7.model.get('a7').remote.useTokens) {
-				var token = a7.remote.getToken()
-				if (token !== undefined && token !== null && token.length > 0) {
-					var timer = a7.remote.getSessionTimer()
-					// if the timer isn't defined, that means the app just reloaded, so we need to refresh against the server
-					if (timer === undefined) {
-						a7.log.info('Refreshing user...')
-						// if there is a valid token, check authentication state with the server
-						a7.events.publish('auth.refresh', {
-							resolve: resolve,
-							reject: reject,
-						})
-					} else {
-						resolve({ authenticated: true })
-					}
-				} else {
-					resolve({ authenticated: false })
-				}
+	var _isAuthenticated = async function (resolve, reject) {
+			a7.log.info("Checking authenticated state.. ");
+			let response = await new Promise((resolve, reject) => {
+				a7.remote.invoke("auth.refresh", {
+					resolve: resolve,
+					reject: reject,
+				});
+			});
+
+			if (response.authenticated) {
+				_setUser(response.user);
 			}
+			resolve(response);
 		},
 		_invalidateSession = function () {
-			clearTimeout(a7.remote.getSessionTimer())
-			a7.remote.invalidateToken()
-			var user = a7.components.Constructor(
-				a7.components.User,
-				_userArgs,
-				true
-			)
-			sessionStorage.user = JSON.stringify(user)
-			a7.model.set('user', user)
-		}
+			clearTimeout(a7.remote.getSessionTimer());
+			a7.remote.invalidateToken();
+			var user = a7.components.Constructor(a7.components.User, _userArgs, true);
+			_setUser(user);
+		},
+		_setUser = function (user) {
+			// if the app uses a model, set the user into the model
+			if (_useModel) {
+				a7.model.set("user", user);
+			}
+			sessionStorage.user = JSON.stringify(user);
+		},
+		_getUser = function () {
+			// create a base user
+			let suser, user;
+			let mUser = _useModel ? a7.model.get("user") : null;
+			if (typeof mUser !== "undefined" && mUser !== "" && mUser !== null) {
+				user = mUser;
+			} else if (sessionStorage.user && sessionStorage.user !== "") {
+				suser = JSON.parse(sessionStorage.user);
+				user = a7.components.Constructor(a7.components.User, _userArgs, true);
+				Object.keys(suser).map(function (key) {
+					user[key] = suser[key];
+				});
+			}
+			return user;
+		};
 
 	return {
 		invalidateSession: _invalidateSession,
 		isAuthenticated: _isAuthenticated,
+		setUser: _setUser,
+		getUser: _getUser,
 		// initialization
 		// 1. creates a new user object
 		// 2. checks sessionStorage for user string
@@ -1862,25 +1870,17 @@ a7.security = (function () {
 		// 	  browser refresh
 		// 4. sets User object into a7.model
 
-		init: function (options) {
-			a7.log.info('Security initializing...')
-			_userArgs = options.userArgs ? options.userArgs : []
-			var suser,
-				user = a7.components.Constructor(
-					a7.components.User,
-					_userArgs,
-					true
-				)
-			if (sessionStorage.user && sessionStorage.user !== '') {
-				suser = JSON.parse(sessionStorage.user)
-				Object.keys(suser).map(function (key) {
-					user[key] = suser[key]
-				})
-			}
-			a7.model.set('user', user)
+		init: function (theOptions) {
+			a7.log.info("Security initializing...");
+			let options = theOptions.security.options;
+			let _useModel = theOptions.model.length > 0 ? true : false;
+			// initialize and set the user
+			_userArgs = options.userArgs ? options.userArgs : [];
+			let user = _getUser(_userArgs);
+			_setUser(user);
 		},
-	}
-})()
+	};
+})();
 
 a7.ui = (function () {
     'use strict'

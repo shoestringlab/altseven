@@ -1,45 +1,57 @@
 a7.security = (function () {
-	'use strict'
+	"use strict";
 
-	let _userArgs = []
+	let _userArgs = [],
+		_useModel = false;
 
-	var _isAuthenticated = function (resolve, reject) {
-			a7.log.info('Checking authenticated state.. ')
-			if (a7.model.get('a7').remote.useTokens) {
-				var token = a7.remote.getToken()
-				if (token !== undefined && token !== null && token.length > 0) {
-					var timer = a7.remote.getSessionTimer()
-					// if the timer isn't defined, that means the app just reloaded, so we need to refresh against the server
-					if (timer === undefined) {
-						a7.log.info('Refreshing user...')
-						// if there is a valid token, check authentication state with the server
-						a7.events.publish('auth.refresh', {
-							resolve: resolve,
-							reject: reject,
-						})
-					} else {
-						resolve({ authenticated: true })
-					}
-				} else {
-					resolve({ authenticated: false })
-				}
+	var _isAuthenticated = async function (resolve, reject) {
+			a7.log.info("Checking authenticated state.. ");
+			let response = await new Promise((resolve, reject) => {
+				a7.remote.invoke("auth.refresh", {
+					resolve: resolve,
+					reject: reject,
+				});
+			});
+
+			if (response.authenticated) {
+				_setUser(response.user);
 			}
+			resolve(response);
 		},
 		_invalidateSession = function () {
-			clearTimeout(a7.remote.getSessionTimer())
-			a7.remote.invalidateToken()
-			var user = a7.components.Constructor(
-				a7.components.User,
-				_userArgs,
-				true
-			)
-			sessionStorage.user = JSON.stringify(user)
-			a7.model.set('user', user)
-		}
+			clearTimeout(a7.remote.getSessionTimer());
+			a7.remote.invalidateToken();
+			var user = a7.components.Constructor(a7.components.User, _userArgs, true);
+			_setUser(user);
+		},
+		_setUser = function (user) {
+			// if the app uses a model, set the user into the model
+			if (_useModel) {
+				a7.model.set("user", user);
+			}
+			sessionStorage.user = JSON.stringify(user);
+		},
+		_getUser = function () {
+			// create a base user
+			let suser, user;
+			let mUser = _useModel ? a7.model.get("user") : null;
+			if (typeof mUser !== "undefined" && mUser !== "" && mUser !== null) {
+				user = mUser;
+			} else if (sessionStorage.user && sessionStorage.user !== "") {
+				suser = JSON.parse(sessionStorage.user);
+				user = a7.components.Constructor(a7.components.User, _userArgs, true);
+				Object.keys(suser).map(function (key) {
+					user[key] = suser[key];
+				});
+			}
+			return user;
+		};
 
 	return {
 		invalidateSession: _invalidateSession,
 		isAuthenticated: _isAuthenticated,
+		setUser: _setUser,
+		getUser: _getUser,
 		// initialization
 		// 1. creates a new user object
 		// 2. checks sessionStorage for user string
@@ -47,22 +59,14 @@ a7.security = (function () {
 		// 	  browser refresh
 		// 4. sets User object into a7.model
 
-		init: function (options) {
-			a7.log.info('Security initializing...')
-			_userArgs = options.userArgs ? options.userArgs : []
-			var suser,
-				user = a7.components.Constructor(
-					a7.components.User,
-					_userArgs,
-					true
-				)
-			if (sessionStorage.user && sessionStorage.user !== '') {
-				suser = JSON.parse(sessionStorage.user)
-				Object.keys(suser).map(function (key) {
-					user[key] = suser[key]
-				})
-			}
-			a7.model.set('user', user)
+		init: function (theOptions) {
+			a7.log.info("Security initializing...");
+			let options = theOptions.security.options;
+			let _useModel = theOptions.model.length > 0 ? true : false;
+			// initialize and set the user
+			_userArgs = options.userArgs ? options.userArgs : [];
+			let user = _getUser(_userArgs);
+			_setUser(user);
 		},
-	}
-})()
+	};
+})();
