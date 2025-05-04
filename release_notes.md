@@ -1,3 +1,8 @@
+7.4.1
+============
+
+Bug fixes in the init function to properly capture the options structure.
+
 7.4.0
 ============
 

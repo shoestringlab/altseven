@@ -1,4 +1,4 @@
-import { a7 } from '/dist/a7.js'
+import { a7 } from "/dist/a7.js";
 
 var app = {
 	main: (function () {
@@ -6,25 +6,25 @@ var app = {
 			init: function (state) {
 				// render the hello page
 				app.components.BindingTest({
-					id: 'bindingTest',
-					selector: '#main',
+					id: "bindingTest",
+					selector: "#main",
 				}),
 					app.components.ModelDisplay({
-						id: 'modelDisplay',
-						selector: '#modelDiv',
-					})
+						id: "modelDisplay",
+						selector: "#modelDiv",
+					});
 			},
-		}
+		};
 	})(),
 	components: (function () {
 		function BindingTest(props) {
 			var bindingTest = a7.components.Constructor(
 				a7.components.View,
 				[props],
-				true
-			)
+				true,
+			);
 
-			bindingTest.state = {}
+			bindingTest.state = {};
 
 			bindingTest.template = function () {
 				return `<h3>Form Binding Test</h3>
@@ -92,71 +92,75 @@ var app = {
 						</button>
 					</div>
 				</form>
-				`
-			}
+				`;
+			};
 
 			bindingTest.eventHandlers = {
 				resetModel: function () {
-					a7.model.set('user', {
-						firstName: '',
-						lastName: '',
-						username: '',
-						email: '',
-					})
+					a7.model.set("user", {
+						firstName: "",
+						lastName: "",
+						username: "",
+						email: "",
+					});
 				},
-			}
+			};
 
-			return bindingTest
+			return bindingTest;
 		}
 
 		function ModelDisplay(props) {
 			var modelDisplay = a7.components.Constructor(
 				a7.components.View,
 				[props],
-				true
-			)
+				true,
+			);
 
-			modelDisplay.state = {}
+			modelDisplay.state = {};
 
 			modelDisplay.template = function () {
 				return `<div>First Name:	<span id="fName" data-bind="user.firstName"></span></div>
 				<div>Last Name: <span id="lName" data-bind="user.lastName"></span></div>
 				<div>Username: <span id="uName" data-bind="user.username"></span></div>
 				<div>Email: <span id="emailAddr" data-bind="user.email"></span></div>
-				`
-			}
+				`;
+			};
 
-			modelDisplay.eventHandlers = {}
+			modelDisplay.eventHandlers = {};
 
-			return modelDisplay
+			return modelDisplay;
 		}
 
 		return {
 			BindingTest: BindingTest,
 			ModelDisplay: ModelDisplay,
-		}
+		};
 	})(),
-}
+};
 
 export var application = function init() {
-	var options = {}
+	var options = {
+		security: {
+			enabled: false,
+		},
+	};
 
 	var p = new Promise(function (resolve, reject) {
-		a7.init(options, resolve, reject)
-	})
+		a7.init(options, resolve, reject);
+	});
 	p.then(function (state) {
-		app.main.init()
-		a7.model.set('user', {
-			firstName: '',
-			lastName: '',
-			username: '',
-			email: '',
-		})
-		a7.log.info('App init.')
-	})
-	p['catch'](function (message) {
-		console.log(message)
-	})
+		app.main.init();
+		a7.model.set("user", {
+			firstName: "",
+			lastName: "",
+			username: "",
+			email: "",
+		});
+		a7.log.info("App init.");
+	});
+	p["catch"](function (message) {
+		console.log(message);
+	});
 
-	return app
-}
+	return app;
+};

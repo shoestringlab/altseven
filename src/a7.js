@@ -14,82 +14,63 @@ var a7 = (function () {
 				// model required
 				initReject("A model is required, but no model was specified.");
 			}
-
-			var theOptions = {
+			const theOptions = {
 				auth: {
-					sessionTimeout:
-						options.auth && options.auth.sessionTimeout
-							? options.auth.sessionTimeout
-							: 60 * 15 * 1000,
+					sessionTimeout: options?.auth?.sessionTimeout ?? 15 * 60 * 1000, // 15 minutes
 				},
-				console: options.console
+				console: options?.console
 					? {
-							enabled: options.console.enabled || false,
-							wsServer: options.console.wsServer || "",
+							enabled: options.console.enabled ?? false,
+							wsServer: options.console.wsServer ?? "",
 							container:
-								options.console.container ||
+								options.console.container ??
 								(typeof gadgetui === "object"
 									? gadgetui.display.FloatingPane
 									: ""),
-							top: options.console.top || 100,
-							left: options.console.left || 500,
-							width: options.console.width || 500,
-							height: options.console.height || 300,
+							top: options.console.top ?? 100,
+							left: options.console.left ?? 500,
+							width: options.console.width ?? 500,
+							height: options.console.height ?? 300,
 						}
 					: {},
 				logging: {
-					logLevel:
-						options.logging && options.logging.logLevel
-							? options.logging.logLevel
-							: "ERROR,FATAL,INFO",
-					toBrowserConsole:
-						options.logging && options.logging.toBrowserConsole
-							? options.logging.toBrowserConsole
-							: false,
+					logLevel: options?.logging?.logLevel ?? "ERROR,FATAL,INFO",
+					toBrowserConsole: options?.logging?.toBrowserConsole ?? false,
 				},
-				model: options.model,
-				remote: options.remote
+				model: options?.model,
+				remote: options?.remote
 					? {
-							// modules: ( options.remote.modules | undefined ) // don't set into Model since they are being registered in Remote
-							loginURL: options.remote.loginURL || "",
-							logoutURL: options.remote.logoutURL || "",
-							refreshURL: options.remote.refreshURL || "",
-							useTokens:
-								options.auth && options.auth.useTokens
-									? options.auth.useTokens
-									: true,
-							tokenType: options.remote.tokenType || "X-Token",
+							loginURL: options.remote.loginURL ?? "",
+							logoutURL: options.remote.logoutURL ?? "",
+							refreshURL: options.remote.refreshURL ?? "",
+							useTokens: options?.auth?.useTokens ?? true,
+							tokenType: options.remote.tokenType ?? "X-Token",
 						}
 					: { useTokens: true },
-				router: options.router
+				router: options?.router
 					? {
 							options: {
-								useEvents: options.router.useEvents || true,
+								useEvents: options.router.useEvents ?? true,
 							},
-							routes: options.router.routes || undefined,
+							routes: options.router.routes,
 						}
 					: undefined,
-				security: options.security
+				security: options?.security
 					? {
-							enabled: options.security.enabled || true,
-							options: options.security.options || {},
+							enabled: options.security.enabled ?? true,
+							options: options.security.options ?? {},
 						}
 					: { enabled: true, options: {} },
 				ui: {
-					renderer: options.ui
-						? options.ui.renderer ||
-							(typeof Mustache === "object"
-								? "Mustache"
-								: typeof Handlebars === "object"
-									? "Handlebars"
-									: "templateLiterals")
-						: "templateLiterals",
-					debounceTime:
-						options.ui && options.ui.debounceTime
-							? options.ui.debounceTime
-							: 18,
-					timeout:
-						options.ui && options.ui.timeout ? options.ui.timeout : 600000, // default 10 minute check for registered views
+					renderer:
+						options?.ui?.renderer ??
+						(typeof Mustache === "object"
+							? "Mustache"
+							: typeof Handlebars === "object"
+								? "Handlebars"
+								: "templateLiterals"),
+					debounceTime: options?.ui?.debounceTime ?? 18,
+					timeout: options?.ui?.timeout ?? 600000, // 10 minutes
 				},
 				ready: false,
 			};
