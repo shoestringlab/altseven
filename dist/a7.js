@@ -47,7 +47,7 @@ var a7 = (function () {
 							logoutURL: options.remote.logoutURL ?? "",
 							refreshURL: options.remote.refreshURL ?? "",
 							useTokens: options?.auth?.useTokens ?? true,
-							tokenType: options.remote.tokenType ?? "X-Token",
+							tokenType: options.remote.tokenType ?? "X-Token", // Authorization is the other token type
 						}
 					: { useTokens: true },
 				router: options?.router
@@ -573,6 +573,105 @@ var EventBindings = {
 	},
 }
 
+class Component {
+	constructor() {
+		this.events = {};
+	}
+
+	// event bindings
+	on(event, func) {
+		if (this.events[event] === undefined) {
+			this.events[event] = [];
+		}
+		this.events[event].push(func);
+		return this;
+	}
+
+	off(event) {
+		// Clear listeners
+		this.events[event] = [];
+		return this;
+	}
+
+	fireEvent(key, args) {
+		if (this.events[key] !== undefined) {
+			this.events[key].forEach((func) => {
+				func(this, args);
+			});
+		}
+	}
+
+	getAll() {
+		return [
+			{ name: "on", func: this.on },
+			{ name: "off", func: this.off },
+			{ name: "fireEvent", func: this.fireEvent },
+		];
+	}
+}
+
+class DataProvider extends Component {
+	constructor(props) {
+		super();
+		this.schema = {};
+		this.baseState = {};
+		this.view = props.view;
+		this.id = this.view.id + "-dataProvider";
+		this.data = {};
+		this.services = new Map();
+		this.config();
+		this.fireEvent("mustRegister");
+	}
+
+	config() {
+		// Config setup
+		// Get the services registered in the app
+		this.services = a7.services.getAll();
+		this.on("mustRegister", () => {
+			this.register();
+		});
+	}
+
+	register() {
+		// Register with the view
+		this.view.registerDataProvider(this);
+		// Register with the services
+		this.services.forEach((service) => {
+			service.registerDataProvider(this);
+		});
+	}
+
+	setData(args) {
+		// Defaults to the built-in behavior of the View
+		this.data = Object.assign(args);
+	}
+
+	getData() {
+		return Object.assign(this.data);
+	}
+}
+
+class Entity extends Component {
+	constructor(props) {
+		super();
+		for (item in props) {
+			this[item] = props[item];
+		}
+	}
+
+	validate() {
+		for (field in this.schema) {
+			if (field.required && !this[field]) {
+				throw new Error(`Field ${field} is required`);
+			}
+			if (field.type && typeof this[field] !== field.type) {
+				throw new Error(`Field ${field} must be of type ${field.type}`);
+			}
+		}
+		return true;
+	}
+}
+
 const Model = (() => {
 	'use strict'
 
@@ -989,231 +1088,590 @@ model.fastForward("user"); // To "Bob"
 
 */
 
-function User(args){
-	// init User
-	// if you pass an args structure into the function, the elements of args will be added to the User object
-	
-	Object.assign( this, args );
-	return this;
+class Service extends Component {
+	constructor(props) {
+		super();
+		this.id = props.id; // id of the service to register with the framework
+		this.key = props.key; // name of the Object key
+		this.remoteMethods = props.remoteMethods;
+		this.entity = props.entity;
+		this.dataProviders = new Map();
+		this.config();
+		this.fireEvent("mustRegister");
+	}
+
+	config() {
+		let dataMap = this.get();
+		if (!dataMap || !(dataMap instanceof Map)) {
+			this.set(new Map());
+		}
+
+		this.on(
+			"mustRegister",
+			function () {
+				a7.log.trace("mustRegister: Service: " + this.id);
+				a7.services.register(this);
+			}.bind(this),
+		);
+	}
+
+	registerDataProvider(dp) {
+		// Register the new data provider
+		this.dataProviders.set(dp.id, dp);
+	}
+
+	convertArrayToMap(dataArray) {
+		let dataMap = new Map();
+		dataArray.forEach((item) => {
+			if (item[this.key]) {
+				dataMap.set(item[this.key], item);
+			}
+		});
+		return dataMap;
+	}
+
+	convertMapToArray(dataMap) {
+		return Array.from(dataMap.values());
+	}
+
+	// Compare itemIDs against cached items
+	compareIDs(IDs) {
+		const dataMap = this.get();
+		const present = [];
+		const missing = [];
+
+		if (!(dataMap instanceof Map)) {
+			return { present, missing: IDs };
+		}
+
+		IDs.forEach((id) => {
+			if (dataMap.has(id)) {
+				present.push(id);
+			} else {
+				missing.push(id);
+			}
+		});
+
+		return { present, missing };
+	}
+
+	// Merge new items into the existing Map
+	merge(newItems) {
+		let dataMap = this.get();
+
+		if (!(dataMap instanceof Map)) {
+			dataMap = new Map();
+		}
+
+		newItems.forEach((item) => {
+			if (item[this.key]) {
+				dataMap.set(item[this.key], item);
+			}
+		});
+
+		this.set(dataMap);
+		return dataMap;
+	}
+
+	new() {
+		return Object.assign({}, this.entity);
+	}
+
+	async create(obj) {
+		let entity = obj;
+		await a7.remote
+			.invoke(this.remoteMethods.create, obj)
+			.then((response) => response.json())
+			.then((json) => {
+				this.cacheSet(json);
+				entity = json;
+			});
+		return entity;
+	}
+
+	async read(obj) {
+		let dataMap = this.get();
+		if (!dataMap.has(obj[this.key])) {
+			await a7.remote
+				.invoke(this.remoteMethods.read, obj)
+				.then((response) => response.json())
+				.then((json) => {
+					this.cacheSet(json);
+					dataMap = this.get();
+				});
+		}
+
+		return dataMap.get(obj[this.key]);
+	}
+
+	async update(obj) {
+		let entity = obj;
+		await a7.remote
+			.invoke(this.remoteMethods.update, obj)
+			.then((response) => response.json())
+			.then((json) => {
+				this.cacheSet(json);
+				obj = json;
+			});
+		return entity;
+	}
+
+	async delete(obj) {
+		await a7.remote
+			.invoke(this.remoteMethods.delete, obj)
+			.then((response) => response.json())
+			.then((json) => {
+				this.cacheDelete(obj[this.key]);
+			});
+		return true;
+	}
+
+	async readAll(obj) {
+		let dataMap = this.get();
+		if (!dataMap.size) {
+			await a7.remote
+				.invoke(this.remoteMethods.readAll, obj)
+				.then((response) => response.json())
+				.then((json) => {
+					this.merge(json);
+				});
+		}
+		return this.get();
+	}
+
+	cacheDelete(id) {
+		let dataMap = this.get();
+		dataMap.delete(id);
+		this.set(dataMap);
+	}
+
+	cacheSet(item) {
+		let dataMap = this.get();
+		dataMap.set(item[this.key], item);
+		this.set(dataMap);
+	}
+
+	set(dataMap) {
+		a7.model.set(this.id, dataMap);
+	}
+
+	get() {
+		return a7.model.get(this.id);
+	}
+
+	// Retrieve items, using cache when possible
+	async readMany(IDs) {
+		// Compare requested IDs with cache
+		const { present, missing } = this.compareIDs(IDs);
+
+		// Fetch missing items if any
+
+		if (missing.length > 0) {
+			let obj = { id: missing };
+
+			await a7.remote
+				.invoke(this.remoteMethods.readMany, obj)
+				.then((response) => response.json())
+				.then((json) => {
+					if (Array.isArray(json)) {
+						this.merge(json);
+					}
+				});
+		}
+
+		// Get cached items
+		const itemsMap = this.get();
+		const cachedItems = present.map((id) => itemsMap.get(id));
+
+		// Return all requested items in order, filtering out nulls
+		const result = IDs.map((id) => {
+			const item = itemsMap.get(id);
+			return item || null; // Return null for items that couldn't be found
+		});
+		return result.filter((item) => item !== null); // Filter out any null values
+	}
+
+	sort(items, sortFields) {
+		// Convert items to array if it's a Map
+		let itemsArray = items instanceof Map ? Array.from(items.values()) : items;
+
+		// Validate sortFields input
+		if (
+			!sortFields ||
+			typeof sortFields !== "object" ||
+			Object.keys(sortFields).length === 0
+		) {
+			throw new Error("Invalid sort fields provided");
+		}
+
+		// Sort the array based on the provided sort fields and directions
+		itemsArray.sort((a, b) => {
+			for (let field of Object.keys(sortFields)) {
+				const direction = sortFields[field] || "asc"; // Default to ascending if no direction is specified
+				const valueA = a[field];
+				const valueB = b[field];
+
+				if (valueA === undefined || valueB === undefined) {
+					continue;
+				}
+
+				if (typeof valueA !== typeof valueB) {
+					throw new Error(`Inconsistent types for sorting field '${field}'`);
+				}
+
+				if (typeof valueA === "string") {
+					// Handle string comparison
+					const result = valueA.localeCompare(valueB);
+					return direction === "asc" ? result : -result;
+				} else {
+					// Handle number and other comparable types
+					if (valueA < valueB) {
+						return direction === "asc" ? -1 : 1;
+					} else if (valueA > valueB) {
+						return direction === "asc" ? 1 : -1;
+					}
+				}
+			}
+
+			// If all fields are equal, maintain original order
+			return 0;
+		});
+
+		return itemsArray;
+	}
+
+	filter(items, criteria) {
+		// Convert items to array if it's a Map
+		let itemsArray = items instanceof Map ? Array.from(items.values()) : items;
+
+		// Validate criteria input
+		if (
+			!criteria ||
+			typeof criteria !== "object" ||
+			Object.keys(criteria).length === 0
+		) {
+			throw new Error("Invalid filter criteria provided");
+		}
+
+		// Helper function to compare values based on the operator
+		const compareValues = (valueA, valueB, operator) => {
+			switch (operator) {
+				case "=":
+					return valueA === valueB;
+				case "!=":
+					return valueA !== valueB;
+				case ">":
+					return valueA > valueB;
+				case "<":
+					return valueA < valueB;
+				case ">=":
+					return valueA >= valueB;
+				case "<=":
+					return valueA <= valueB;
+				case "∈":
+				case "in":
+					// Check if value is in the set
+					return Array.isArray(valueB) && valueB.includes(valueA);
+				case "∉":
+				case "not in":
+					// Check if value is not in the set
+					return Array.isArray(valueB) && !valueB.includes(valueA);
+				default:
+					throw new Error(`Invalid operator: ${operator}`);
+			}
+		};
+
+		// Helper function to check if a value is within a range
+		const isWithinRange = (value, range) => {
+			if (!Array.isArray(range) || range.length !== 2) {
+				throw new Error("Range must be an array with two elements");
+			}
+			return value >= range[0] && value <= range[1];
+		};
+
+		// Filter the array based on the provided criteria
+		const filteredItems = itemsArray.filter((item) => {
+			for (let field of Object.keys(criteria)) {
+				const criterion = criteria[field];
+
+				if (Array.isArray(criterion) && criterion.length === 3) {
+					// Handle specific operator, value, and regex flag
+					const [operator, value, useRegex] = criterion;
+					let valueA = item[field];
+					let valueB = value;
+
+					if (useRegex && typeof valueB === "string") {
+						// Use regex for string matching
+						const regex = new RegExp(valueB);
+						return compareValues(
+							valueA.toString(),
+							regex.test(valueA),
+							operator,
+						);
+					} else {
+						// Use normal comparison
+						return compareValues(valueA, valueB, operator);
+					}
+				} else if (Array.isArray(criterion) && criterion.length === 2) {
+					const operator = criterion[0];
+					const value = criterion[1];
+
+					// Handle range match or simple equality/inequality check
+					if (typeof value === "object" && Array.isArray(value)) {
+						return isWithinRange(item[field], value);
+					} else {
+						// Simple equality/inequality check
+						return compareValues(item[field], value, operator);
+					}
+				} else {
+					throw new Error(`Invalid criterion for field: ${field}`);
+				}
+			}
+			return true;
+		});
+
+		return filteredItems;
+	}
 }
 
-User.prototype.getMemento = function(){
-	var user = {}, self = this;
-	Object.keys( this ).forEach( function( key ){
-		user[ key ] = self[ key ];
-	});
-	return user;
-};
+class User extends Component {
+	constructor(args) {
+		super();
+		// Initialize the User object with provided arguments
+		Object.assign(this, args);
+	}
+
+	getMemento() {
+		const user = {};
+		const self = this;
+		Object.keys(this).forEach((key) => {
+			user[key] = self[key];
+		});
+		return user;
+	}
+}
 
 function View(props) {
-	this.renderer = a7.model.get('a7').ui.renderer
-	this.type = 'View'
-	this.timeout
-	this.timer
-	this.element // html element the view renders into
-	this.props = props
-	this.isTransient = props.isTransient || false
-	this.state = {}
-	this.skipRender = false
-	this.children = {} // child views
-	this.components = {} // register objects external to the framework so we can address them later
-	this.config()
-	this.fireEvent('mustRegister')
+	this.renderer = a7.model.get("a7").ui.renderer;
+	this.type = "View";
+	this.timeout;
+	this.timer;
+	this.element; // html element the view renders into
+	this.props = props;
+	this.isTransient = props.isTransient || false;
+	this.state = {};
+	this.skipRender = false;
+	this.children = {}; // child views
+	this.components = {}; // register objects external to the framework so we can address them later
+	this.config();
+	this.fireEvent("mustRegister");
 }
 
 View.prototype = {
 	config: function () {
 		this.on(
-			'mustRegister',
+			"mustRegister",
 			function () {
-				a7.log.trace('mustRegister: ' + this.props.id)
-				a7.ui.register(this)
+				a7.log.trace("mustRegister: " + this.props.id);
+				a7.ui.register(this);
 				if (a7.ui.getView(this.props.parentID)) {
-					a7.ui.getView(this.props.parentID).addChild(this)
+					a7.ui.getView(this.props.parentID).addChild(this);
 				}
-			}.bind(this)
-		)
+			}.bind(this),
+		);
 
 		// mustRender is a debounced function so we can control how often views should re-render.
 		// debounce leading, so the render will be queued and subsequent requests to render will be ignored until the delay time is reached
 		// delay defaults to 18 ms, can be set in app options as ui.debounceTime
 		this.on(
-			'mustRender',
+			"mustRender",
 			a7.util.debounce(
 				function () {
-					a7.log.trace('mustRender: ' + this.props.id)
+					a7.log.trace("mustRender: " + this.props.id);
 					if (this.shouldRender()) {
-						a7.ui.enqueueForRender(this.props.id)
+						a7.ui.enqueueForRender(this.props.id);
 					} else {
-						a7.log.trace('Render cancelled: ' + this.props.id)
+						a7.log.trace("Render cancelled: " + this.props.id);
 						// undo skip, it must be explicitly set each time
-						this.skipRender = false
+						this.skipRender = false;
 					}
-				}.bind(this)
+				}.bind(this),
 			),
-			a7.model.get('a7').ui.debounceTime,
-			true
-		)
+			a7.model.get("a7").ui.debounceTime,
+			true,
+		);
 
 		this.on(
-			'rendered',
+			"rendered",
 			function () {
 				if (this.isTransient) {
 					// set the timeout
 					if (this.timer !== undefined) {
-						clearTimeout(this.timer)
+						clearTimeout(this.timer);
 					}
 					this.timer = setTimeout(
 						this.checkRenderStatus.bind(this),
-						a7.model.get('a7').ui.timeout
-					)
+						a7.model.get("a7").ui.timeout,
+					);
 				}
-				this.onRendered()
-			}.bind(this)
-		)
+				this.onRendered();
+			}.bind(this),
+		);
 
 		this.on(
-			'registered',
+			"registered",
 			function () {
 				if (this.props.parentID === undefined || this.mustRender) {
 					// only fire render event for root views, children will render in the chain
-					this.fireEvent('mustRender')
+					this.fireEvent("mustRender");
 				}
-			}.bind(this)
-		)
+			}.bind(this),
+		);
 
 		this.on(
-			'mustUnregister',
+			"mustUnregister",
 			function () {
-				a7.ui.unregister(this.props.id)
-			}.bind(this)
-		)
+				a7.ui.unregister(this.props.id);
+			}.bind(this),
+		);
 	},
 	events: [
-		'mustRender',
-		'rendered',
-		'mustRegister',
-		'registered',
-		'mustUnregister',
+		"mustRender",
+		"rendered",
+		"mustRegister",
+		"registered",
+		"mustUnregister",
 	],
 	setState: function (args) {
-		this.state = Object.assign(args)
+		if (typeof this.state === "object") {
+			this.state = Object.assign(args);
+		} else {
+			this.dataProvider.setData(args);
+		}
+
 		// setting state requires a re-render
-		this.fireEvent('mustRender')
+		this.fireEvent("mustRender");
 	},
 	getState: function () {
-		return Object.assign(this.state)
+		if (typeof this.state === "object") {
+			return Object.assign(this.state);
+		} else {
+			return this.dataProvider.getData();
+		}
+	},
+	registerDataProvider: function (dp) {
+		this.dataProvider = dp;
+	},
+	unregisterDataProvider: function () {
+		this.dataProvider = null;
 	},
 	addChild: function (view) {
-		this.children[view.props.id] = view
+		this.children[view.props.id] = view;
 		// force a render for children added
 		//this.children[ view.props.id ].mustRender = true;
 	},
 	removeChild: function (view) {
-		delete this.children[view.props.id]
+		delete this.children[view.props.id];
 	},
 	clearChildren: function () {
-		this.children = {}
+		this.children = {};
 	},
 	getParent: function () {
-		return this.props.parentID
-			? a7.ui.getView(this.props.parentID)
-			: undefined
+		return this.props.parentID ? a7.ui.getView(this.props.parentID) : undefined;
 	},
 	render: function () {
-		a7.log.info('render: ' + this.props.id)
+		a7.log.info("render: " + this.props.id);
 		if (this.element === undefined || this.element === null) {
-			this.element = document.querySelector(this.props.selector)
+			this.element = document.querySelector(this.props.selector);
 		}
 		if (!this.element) {
 			a7.log.error(
-				'The DOM element for view ' +
+				"The DOM element for view " +
 					this.props.id +
-					' was not found. The view will be removed and unregistered.'
-			)
+					" was not found. The view will be removed and unregistered.",
+			);
 			// if the component has a parent, remove the component from the parent's children
 			if (this.props.parentID !== undefined) {
-				a7.ui.getView(this.props.parentID).removeChild(this)
+				a7.ui.getView(this.props.parentID).removeChild(this);
 			}
 			// if the selector isn't in the DOM, skip rendering and unregister the view
-			this.fireEvent('mustUnregister')
-			return
+			this.fireEvent("mustUnregister");
+			return;
 		}
 		//throw( "You must define a selector for the view." );
 		this.element.innerHTML =
-			typeof this.template == 'function' ? this.template() : this.template
+			typeof this.template == "function" ? this.template() : this.template;
 
 		// create events marked with data-on* in the template
-		var eventArr = []
+		var eventArr = [];
 		a7.ui.getEvents().forEach(function (eve) {
-			eventArr.push('[data-on' + eve + ']')
-		})
-		var eles = this.element.querySelectorAll(eventArr.toString())
+			eventArr.push("[data-on" + eve + "]");
+		});
+		var eles = this.element.querySelectorAll(eventArr.toString());
 
 		eles.forEach(
 			function (sel) {
 				for (var ix = 0; ix < sel.attributes.length; ix++) {
-					var attribute = sel.attributes[ix]
-					if (attribute.name.startsWith('data-on')) {
-						var event = attribute.name.substring(
-							7,
-							attribute.name.length
-						)
+					var attribute = sel.attributes[ix];
+					if (attribute.name.startsWith("data-on")) {
+						var event = attribute.name.substring(7, attribute.name.length);
 						sel.addEventListener(
 							event,
-							this.eventHandlers[
-								sel.attributes['data-on' + event].value
-							]
-						)
+							this.eventHandlers[sel.attributes["data-on" + event].value],
+						);
 					}
 				}
-			}.bind(this)
-		)
+			}.bind(this),
+		);
 		// bind any elements marked with data-bind to the model
-		let boundEles = this.element.querySelectorAll('[data-bind]')
+		let boundEles = this.element.querySelectorAll("[data-bind]");
 		boundEles.forEach(function (ele) {
-			console.log('binding: ', ele)
-			a7.model.bind(ele.attributes['data-bind'].value, ele)
-		})
-		this.fireEvent('rendered')
+			console.log("binding: ", ele);
+			a7.model.bind(ele.attributes["data-bind"].value, ele);
+		});
+		this.fireEvent("rendered");
 	},
 	shouldRender: function () {
 		if (this.skipRender) {
-			return false
+			return false;
 		} else {
-			return true
+			return true;
 		}
 	},
 	// after rendering, render all the children of the view
 	onRendered: function () {
 		for (var child in this.children) {
 			this.children[child].element = document.querySelector(
-				this.children[child].props.selector
-			)
-			this.children[child].render()
+				this.children[child].props.selector,
+			);
+			this.children[child].render();
 		}
 	},
 	// need to add props.isTransient (default false) to make views permanent by default
 	checkRenderStatus: function () {
 		if (document.querySelector(this.props.selector) === null) {
-			a7.ui.unregister(this.id)
+			a7.ui.unregister(this.id);
 		} else {
 			if (this.isTransient) {
 				this.timer = setTimeout(
 					this.checkRenderStatus.bind(this),
-					a7.model.get('a7').ui.timeout
-				)
+					a7.model.get("a7").ui.timeout,
+				);
 			}
 		}
 	},
-}
+};
 
 return {
-  Constructor: Constructor,
-  EventBindings: EventBindings,
-  Model: Model,
-  User: User,
-  View: View
+	Component: Component,
+	Constructor: Constructor,
+	DataProvider: DataProvider,
+	Entity: Entity,
+	EventBindings: EventBindings,
+	Model: Model,
+	Service: Service,
+	User: User,
+	View: View,
 };
 }());
 //
@@ -1580,13 +2038,13 @@ a7.remote = (function () {
 	};
 })();
 
-a7.router = (function() {
-  "use strict";
+a7.router = (function () {
+	"use strict";
 
-  // url-router code from here courtesy Jiang Fengming
-  // https://github.com/jiangfengming/url-router
+	// url-router code from here courtesy Jiang Fengming
+	// https://github.com/jiangfengming/url-router
 
-  /*
+	/*
   Copyright 2015-2019 Jiang Fengming
 
   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
@@ -1596,196 +2054,203 @@ a7.router = (function() {
   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
   */
 
-  var REGEX_PARAM_DEFAULT = /^[^/]+/;
-  var REGEX_START_WITH_PARAM = /^(:\w|\()/;
-  var REGEX_INCLUDE_PARAM = /:\w|\(/;
-  var REGEX_MATCH_PARAM = /^(?::(\w+))?(?:\(([^)]+)\))?/;
+	var REGEX_PARAM_DEFAULT = /^[^/]+/;
+	var REGEX_START_WITH_PARAM = /^(:\w|\()/;
+	var REGEX_INCLUDE_PARAM = /:\w|\(/;
+	var REGEX_MATCH_PARAM = /^(?::(\w+))?(?:\(([^)]+)\))?/;
 
-  function Router(routes) {
-    var _this = this;
+	function Router(routes) {
+		var _this = this;
 
-    this.root = this._createNode();
+		this.root = this._createNode();
 
-    if (routes) {
-      routes.forEach(function (route) {
-        return _this.add.apply(_this, route);
-      });
-    }
-  }
+		if (routes) {
+			routes.forEach(function (route) {
+				return _this.add.apply(_this, route);
+			});
+		}
+	}
 
-  var _proto = Router.prototype;
+	var _proto = Router.prototype;
 
-  _proto._createNode = function _createNode(_temp) {
-    var _ref = _temp === void 0 ? {} : _temp,
-        regex = _ref.regex,
-        param = _ref.param,
-        handler = _ref.handler;
+	_proto._createNode = function _createNode(_temp) {
+		var _ref = _temp === void 0 ? {} : _temp,
+			regex = _ref.regex,
+			param = _ref.param,
+			handler = _ref.handler;
 
-    return {
-      regex: regex,
-      param: param,
-      handler: handler,
-      children: {
-        string: {},
-        regex: {}
-      }
-    };
-  };
+		return {
+			regex: regex,
+			param: param,
+			handler: handler,
+			children: {
+				string: {},
+				regex: {},
+			},
+		};
+	};
 
-  _proto.add = function add(pattern, handler) {
-    this._parseOptim(pattern, handler, this.root);
+	_proto.add = function add(pattern, handler) {
+		this._parseOptim(pattern, handler, this.root);
 
-    return this;
-  };
+		return this;
+	};
 
-  _proto._parse = function _parse(remain, handler, parent) {
-    if (REGEX_START_WITH_PARAM.test(remain)) {
-      var match = remain.match(REGEX_MATCH_PARAM);
-      var node = parent.children.regex[match[0]];
+	_proto._parse = function _parse(remain, handler, parent) {
+		if (REGEX_START_WITH_PARAM.test(remain)) {
+			var match = remain.match(REGEX_MATCH_PARAM);
+			var node = parent.children.regex[match[0]];
 
-      if (!node) {
-        node = parent.children.regex[match[0]] = this._createNode({
-          regex: match[2] ? new RegExp('^' + match[2]) : REGEX_PARAM_DEFAULT,
-          param: match[1]
-        });
-      }
+			if (!node) {
+				node = parent.children.regex[match[0]] = this._createNode({
+					regex: match[2] ? new RegExp("^" + match[2]) : REGEX_PARAM_DEFAULT,
+					param: match[1],
+				});
+			}
 
-      if (match[0].length === remain.length) {
-        node.handler = handler;
-      } else {
-        this._parseOptim(remain.slice(match[0].length), handler, node);
-      }
-    } else {
-      var _char = remain[0];
-      var _node = parent.children.string[_char];
+			if (match[0].length === remain.length) {
+				node.handler = handler;
+			} else {
+				this._parseOptim(remain.slice(match[0].length), handler, node);
+			}
+		} else {
+			var _char = remain[0];
+			var _node = parent.children.string[_char];
 
-      if (!_node) {
-        _node = parent.children.string[_char] = this._createNode();
-      }
+			if (!_node) {
+				_node = parent.children.string[_char] = this._createNode();
+			}
 
-      this._parse(remain.slice(1), handler, _node);
-    }
-  };
+			this._parse(remain.slice(1), handler, _node);
+		}
+	};
 
-  _proto._parseOptim = function _parseOptim(remain, handler, node) {
-    if (REGEX_INCLUDE_PARAM.test(remain)) {
-      this._parse(remain, handler, node);
-    } else {
-      var child = node.children.string[remain];
+	_proto._parseOptim = function _parseOptim(remain, handler, node) {
+		if (REGEX_INCLUDE_PARAM.test(remain)) {
+			this._parse(remain, handler, node);
+		} else {
+			var child = node.children.string[remain];
 
-      if (child) {
-        child.handler = handler;
-      } else {
-        node.children.string[remain] = this._createNode({
-          handler: handler
-        });
-      }
-    }
-  };
+			if (child) {
+				child.handler = handler;
+			} else {
+				node.children.string[remain] = this._createNode({
+					handler: handler,
+				});
+			}
+		}
+	};
 
-  _proto.find = function find(path) {
-    return this._findOptim(path, this.root, {});
-  };
+	_proto.find = function find(path) {
+		return this._findOptim(path, this.root, {});
+	};
 
-  _proto._findOptim = function _findOptim(remain, node, params) {
-    var child = node.children.string[remain];
+	_proto._findOptim = function _findOptim(remain, node, params) {
+		var child = node.children.string[remain];
 
-    if (child && child.handler !== undefined) {
-      return {
-        handler: child.handler,
-        params: params
-      };
-    }
+		if (child && child.handler !== undefined) {
+			return {
+				handler: child.handler,
+				params: params,
+			};
+		}
 
-    return this._find(remain, node, params);
-  };
+		return this._find(remain, node, params);
+	};
 
-  _proto._find = function _find(remain, node, params) {
-    var child = node.children.string[remain[0]];
+	_proto._find = function _find(remain, node, params) {
+		var child = node.children.string[remain[0]];
 
-    if (child) {
-      var result = this._find(remain.slice(1), child, params);
+		if (child) {
+			var result = this._find(remain.slice(1), child, params);
 
-      if (result) {
-        return result;
-      }
-    }
+			if (result) {
+				return result;
+			}
+		}
 
-    for (var k in node.children.regex) {
-      child = node.children.regex[k];
-      var match = remain.match(child.regex);
+		for (var k in node.children.regex) {
+			child = node.children.regex[k];
+			var match = remain.match(child.regex);
 
-      if (match) {
-        if (match[0].length === remain.length && child.handler !== undefined) {
-          if (child.param) {
-            params[child.param] = decodeURIComponent(match[0]);
-          }
+			if (match) {
+				if (match[0].length === remain.length && child.handler !== undefined) {
+					if (child.param) {
+						params[child.param] = decodeURIComponent(match[0]);
+					}
 
-          return {
-            handler: child.handler,
-            params: params
-          };
-        } else {
-          var _result = this._findOptim(remain.slice(match[0].length), child, params);
+					return {
+						handler: child.handler,
+						params: params,
+					};
+				} else {
+					var _result = this._findOptim(
+						remain.slice(match[0].length),
+						child,
+						params,
+					);
 
-          if (_result) {
-            if (child.param) {
-              params[child.param] = decodeURIComponent(match[0]);
-            }
+					if (_result) {
+						if (child.param) {
+							params[child.param] = decodeURIComponent(match[0]);
+						}
 
-            return _result;
-          }
-        }
-      }
-    }
+						return _result;
+					}
+				}
+			}
+		}
 
-    return null;
-  };
+		return null;
+	};
 
-// end url-router code
+	// end url-router code
 
-  var _options, _router,
-  _add = function( path, handler ){
-    _router.add( path, handler );
-  },
-  _find = function( path ){
-    return _router.find( path );
-  },
-  _open = function( path, params = {} ){
-    let result = _find( path );
-    let handler = result.handler;
-    history.pushState( JSON.parse( JSON.stringify( params ) ), '', path );
-    let combinedParams = Object.assign( params || {}, result.params || {} );
-    if( _options.useEvents && typeof handler === 'string' ){
-      a7.events.publish( handler, combinedParams );
-    }else{
-      handler( combinedParams );
-    }
-  },
-  _match = function( path ){
-    let result = _router.find( path );
-    if( _options.useEvents ){
-      a7.events.publish( result.handler, result.params );
-    }else{
-      result.handler( result.params );
-    }
-  };
+	var _options,
+		_router,
+		_add = function (path, handler) {
+			_router.add(path, handler);
+		},
+		_find = function (path) {
+			return _router.find(path);
+		},
+		_open = function (path, params = {}) {
+			let result = _find(path);
+			let handler = result.handler;
+			history.pushState(JSON.parse(JSON.stringify(params)), "", path);
+			let combinedParams = Object.assign(params || {}, result.params || {});
+			if (_options.useEvents && typeof handler === "string") {
+				a7.events.publish(handler, combinedParams);
+			} else {
+				handler(combinedParams);
+			}
+		},
+		_match = function (path, params = {}) {
+			let result = _router.find(path);
+			let combinedParams = Object.assign(params || {}, result.params || {});
+			history.pushState(JSON.parse(JSON.stringify(params)), "", path);
+			if (_options.useEvents) {
+				a7.events.publish(result.handler, combinedParams);
+			} else {
+				result.handler(combinedParams);
+			}
+		};
 
-  return {
-    open: _open,
-    add: _add,
-    find: _find,
-    match: _match,
-    init: function( options, routes ){
-      _router = new Router( routes );
-      _options = options;
-      _options.useEvents = ( _options.useEvents ? true : false );
-      window.onpopstate = function( event ){
-        //a7.log.trace( 'state: ' + JSON.stringify( event.state ) );
-        _match( document.location.pathname + document.location.search );
-      }
-    }
-  };
+	return {
+		open: _open,
+		add: _add,
+		find: _find,
+		match: _match,
+		init: function (options, routes) {
+			_router = new Router(routes);
+			_options = options;
+			_options.useEvents = _options.useEvents ? true : false;
+			window.onpopstate = function (event) {
+				//a7.log.trace( 'state: ' + JSON.stringify( event.state ) );
+				_match(document.location.pathname + document.location.search);
+			};
+		},
+	};
 })();
 
 a7.security = (function () {
@@ -1811,7 +2276,7 @@ a7.security = (function () {
 		_invalidateSession = function () {
 			clearTimeout(a7.remote.getSessionTimer());
 			a7.remote.invalidateToken();
-			var user = a7.components.Constructor(a7.components.User, _userArgs, true);
+			var user = new a7.components.User(_userArgs);
 			_setUser(user);
 		},
 		_setUser = function (user) {
@@ -1829,7 +2294,7 @@ a7.security = (function () {
 				user = mUser;
 			} else if (sessionStorage.user && sessionStorage.user !== "") {
 				suser = JSON.parse(sessionStorage.user);
-				user = a7.components.Constructor(a7.components.User, _userArgs, true);
+				user = new a7.components.User(_userArgs);
 				Object.keys(suser).map(function (key) {
 					user[key] = suser[key];
 				});
@@ -1857,6 +2322,32 @@ a7.security = (function () {
 			_userArgs = options.userArgs ? options.userArgs : [];
 			let user = _getUser(_userArgs);
 			_setUser(user);
+		},
+	};
+})();
+
+a7.services = (function () {
+	"use strict";
+
+	const _services = new Map();
+
+	return {
+		init: function (options) {
+			// init the services module
+			// add services
+			for (let service in options.services) {
+				a7.services.setService(service);
+			}
+		},
+
+		getService: function (id) {
+			return _services.get(id);
+		},
+		getAll: function () {
+			return _services;
+		},
+		register: function (service) {
+			_services.set(service.id, service);
 		},
 	};
 })();

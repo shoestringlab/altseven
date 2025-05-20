@@ -1,15 +1,16 @@
-function User(args){
-	// init User
-	// if you pass an args structure into the function, the elements of args will be added to the User object
-	
-	Object.assign( this, args );
-	return this;
-}
+class User extends Component {
+	constructor(args) {
+		super();
+		// Initialize the User object with provided arguments
+		Object.assign(this, args);
+	}
 
-User.prototype.getMemento = function(){
-	var user = {}, self = this;
-	Object.keys( this ).forEach( function( key ){
-		user[ key ] = self[ key ];
-	});
-	return user;
-};
+	getMemento() {
+		const user = {};
+		const self = this;
+		Object.keys(this).forEach((key) => {
+			user[key] = self[key];
+		});
+		return user;
+	}
+}

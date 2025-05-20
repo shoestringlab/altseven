@@ -1,53 +1,48 @@
-import {a7} from '/dist/a7.js';
+import { a7 } from "/dist/a7.js";
 
 var app = {
-  main: (function() {
-    return {
-      init: function(state) {
+	main: (function () {
+		return {
+			init: function (state) {
+				// render the hello page
+				app.components.Hello({ id: "hello", selector: "div[name='main']" });
+			},
+		};
+	})(),
+	components: (function () {
+		function Hello(props) {
+			var hello = a7.components.Constructor(a7.components.View, [props], true);
 
-        // render the hello page
-        app.components.Hello( { id: 'hello', selector: "div[name='main']" } );
+			hello.state = {
+				text: " World!",
+			};
 
-      }
-    };
-  })(),
-  components: (function() {
+			hello.template = function () {
+				return `<h3>Hello ${hello.state.text}</h3>`;
+			};
 
-    function Hello(props) {
-      var hello = a7.components.Constructor(a7.components.View, [props], true);
+			return hello;
+		}
 
-      hello.state = {
-        text: " World!"
-      };
-
-      hello.template = function(){
-        return `<h3>Hello ${hello.state.text}</h3>`;
-      };
-
-      return hello;
-    }
-
-    return {
-      Hello: Hello
-    };
-
-  })()
+		return {
+			Hello: Hello,
+		};
+	})(),
 };
 
 export var application = function init() {
+	var options = { security: { enabled: false } };
 
-  var options = {};
+	var p = new Promise(function (resolve, reject) {
+		a7.init(options, resolve, reject);
+	});
+	p.then(function (state) {
+		app.main.init();
+		a7.log.info("App init.");
+	});
+	p["catch"](function (message) {
+		console.log(message);
+	});
 
-  var p = new Promise(function(resolve, reject) {
-    a7.init(options, resolve, reject);
-  });
-  p.then(function(state) {
-	app.main.init();
-    a7.log.info("App init.");
-  });
-  p['catch'](function(message) {
-    console.log(message);
-  });
-
-  return app;
+	return app;
 };

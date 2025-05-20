@@ -44,7 +44,7 @@ var a7 = (function () {
 							logoutURL: options.remote.logoutURL ?? "",
 							refreshURL: options.remote.refreshURL ?? "",
 							useTokens: options?.auth?.useTokens ?? true,
-							tokenType: options.remote.tokenType ?? "X-Token",
+							tokenType: options.remote.tokenType ?? "X-Token", // Authorization is the other token type
 						}
 					: { useTokens: true },
 				router: options?.router

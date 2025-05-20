@@ -1,79 +1,77 @@
-import { a7 } from '/dist/a7.js'
-import { floatingpane } from '/node_modules/gadget-ui/dist/gadget-ui.es.js'
+import { a7 } from "/dist/a7.js";
+import { floatingpane } from "/node_modules/gadget-ui/dist/gadget-ui.es.js";
 
 var app = {
 	main: (function () {
-		'use strict'
+		"use strict";
 
 		return {
 			init: function (state) {
 				// cache initial selectors
-				a7.ui.setSelector('anonDiv', "div[name='anon']")
-				a7.ui.setSelector('secureDiv', "div[name='secure']")
+				a7.ui.setSelector("anonDiv", "div[name='anon']");
+				a7.ui.setSelector("secureDiv", "div[name='secure']");
 
 				// render the login form
 				app.components.LoginForm({
-					id: 'loginForm',
+					id: "loginForm",
 					selector: "div[name='anon']",
-				})
+				});
 
-				var user = a7.model.get('user')
+				let user = { username: "", password: "", firstName: "" };
+
+				a7.model.set("user", user);
 
 				app.components.Header({
-					id: 'header',
+					id: "header",
 					user: user,
 					selector: "div[name='header']",
-				})
+				});
 
 				app.components.Todo({
-					id: 'todo',
+					id: "todo",
 					selector: "div[name='app']",
-				})
+				});
 
-				a7.events.publish('app.init', { secure: state.secure })
+				a7.events.publish("app.init", { secure: state.secure });
 			},
-		}
+		};
 	})(),
 
 	auth: (function () {
-		'use strict'
+		"use strict";
 
 		var _authenticate = function () {
 			var promise = new Promise(function (resolve, reject) {
 				// check whether user is authenticated
-				a7.security.isAuthenticated(resolve, reject)
-			})
+				a7.security.isAuthenticated(resolve, reject);
+			});
 
-			promise.then(function (secure) {
-				a7.ui.views['header'].setState({ user: a7.model.get('user') })
-				app.ui.setLayout(secure)
-			})
-		}
+			promise.then(function (state) {
+				a7.ui.views["header"].setState({ user: a7.model.get("user") });
+				app.ui.setLayout(state.secure);
+			});
+		};
 
-		var _logout
+		var _logout;
 
 		return {
 			authenticate: _authenticate,
-		}
+		};
 	})(),
 	components: (function () {
 		function Todo(props) {
-			var todo = a7.components.Constructor(
-				a7.components.View,
-				[props],
-				true
-			)
+			var todo = a7.components.Constructor(a7.components.View, [props], true);
 
 			todo.state = {
-				text: '',
-			}
+				text: "",
+			};
 
 			app.components.TodoList({
-				id: 'todoList',
-				parentID: 'todo',
+				id: "todoList",
+				parentID: "todo",
 				items: [],
 				selector: "div[data-id='todoList']",
-			})
+			});
 
 			todo.template = function () {
 				return `<div name="todoForm">
@@ -83,64 +81,63 @@ var app = {
 					<input name="todoInput" value="${todo.state.text}" data-onchange="changeTodoInput" />
 					<button type="button" name="todoSubmit" data-onclick="clickSubmit">Add ${todo.children.todoList.state.items.length + 1}</button>
 				</form>
-				</div>`
-			}
+				</div>`;
+			};
 
 			todo.eventHandlers = {
 				changeTodoInput: function (event) {
-					todo.state.text = event.target.value
+					todo.state.text = event.target.value;
 				},
 				clickSubmit: function (event) {
-					event.preventDefault()
+					event.preventDefault();
 					var newItem = {
 						text: todo.state.text,
 						id: Date.now(),
-					}
+					};
 
-					todo.setState({ text: '' })
-					var items =
-						todo.children.todoList.state.items.concat(newItem)
+					todo.setState({ text: "" });
+					var items = todo.children.todoList.state.items.concat(newItem);
 					todo.children.todoList.setState({
 						items: items,
-					})
+					});
 				},
-			}
+			};
 
-			return todo
+			return todo;
 		}
 
 		function TodoList(props) {
 			var todolist = a7.components.Constructor(
 				a7.components.View,
 				[props],
-				true
-			)
+				true,
+			);
 			todolist.state = {
 				items: props.items,
-			}
+			};
 
 			todolist.template = function () {
-				var str = `<ul>`
+				var str = `<ul>`;
 				this.state.items.forEach(function (item) {
-					str += `<li>${item.text}</li>`
-				})
-				str += `</ul>`
-				return str
-			}
+					str += `<li>${item.text}</li>`;
+				});
+				str += `</ul>`;
+				return str;
+			};
 
-			return todolist
+			return todolist;
 		}
 
 		function LoginForm(props) {
 			var loginform = a7.components.Constructor(
 				a7.components.View,
 				[props],
-				true
-			)
+				true,
+			);
 			loginform.state = {
-				username: '',
-				password: '',
-			}
+				username: "",
+				password: "",
+			};
 
 			loginform.template = `<div name="loginDiv" class="pane" style="width:370px;">
 						<div class="right-align">
@@ -167,49 +164,45 @@ var app = {
 					</p>
 					<p>
 						&nbsp;&nbsp;password: password
-					</p>`
+					</p>`;
 
 			loginform.eventHandlers = {
 				handleClick: function (event) {
-					a7.router.open('/auth/login', {
+					a7.router.open("/auth/login", {
 						username: loginform.state.username,
 						password: loginform.state.password,
-						success: '/test/app',
-					})
+						success: "/test/app",
+					});
 				},
 				handleUsername: function (event) {
-					loginform.state.username = event.target.value
+					loginform.state.username = event.target.value;
 				},
 				handlePassword: function (event) {
-					loginform.state.password = event.target.value
+					loginform.state.password = event.target.value;
 				},
-			}
+			};
 
-			return loginform
+			return loginform;
 		}
 
 		function Header(props) {
-			var header = a7.components.Constructor(
-				a7.components.View,
-				[props],
-				true
-			)
+			var header = a7.components.Constructor(a7.components.View, [props], true);
 
 			header.state = {
 				user: props.user,
-			}
+			};
 
 			header.eventHandlers = {
 				logout: function () {
-					a7.router.open('/auth/logout', { success: '/test/tl.htm' })
+					a7.router.open("/auth/logout", { success: "/test/tl.htm" });
 				},
-			}
+			};
 
 			header.template = function () {
-				return `Welcome, ${header.state.user.firstName} <a name="signout" data-onclick="logout">[ Sign out ]</a>`
-			}
+				return `Welcome, ${header.state.user.firstName} <a name="signout" data-onclick="logout">[ Sign out ]</a>`;
+			};
 
-			return header
+			return header;
 		}
 
 		return {
@@ -217,34 +210,32 @@ var app = {
 			TodoList: TodoList,
 			LoginForm: LoginForm,
 			Header: Header,
-		}
+		};
 	})(),
 
 	events: (function () {
-		a7.events.subscribe('app.show', function (obj) {
-			a7.ui.views['header'].setState({ user: a7.model.get('user') })
-			app.ui.setLayout(true)
-		})
+		a7.events.subscribe("app.show", function (obj) {
+			a7.ui.views["header"].setState({ user: a7.model.get("user") });
+			app.ui.setLayout(true);
+		});
 
-		a7.events.subscribe('app.init', function (obj) {
-			app.auth.authenticate()
-		})
+		a7.events.subscribe("app.init", function (obj) {
+			app.auth.authenticate();
+		});
 	})(),
 	remote: {},
 	ui: (function () {
-		'use strict'
+		"use strict";
 
 		return {
 			//	templates: _templates,
 			setLayout: function (secure) {
-				a7.ui.getNode(secure ? 'secureDiv' : 'anonDiv').style.display =
-					'block'
-				a7.ui.getNode(!secure ? 'secureDiv' : 'anonDiv').style.display =
-					'none'
+				a7.ui.getNode(secure ? "secureDiv" : "anonDiv").style.display = "block";
+				a7.ui.getNode(!secure ? "secureDiv" : "anonDiv").style.display = "none";
 			},
-		}
+		};
 	})(),
-}
+};
 
 export var application = function init() {
 	var options = {
@@ -254,15 +245,15 @@ export var application = function init() {
 			width: 500,
 		},
 		logging: {
-			logLevel: 'INFO,ERROR,FATAL,TRACE',
+			logLevel: "INFO,ERROR,FATAL,TRACE",
 		},
 		// remote module is optional, only required if you want to use the built-in auth system / token system
 		// or if you want to use the remote module for remote calls
 		remote: {
 			modules: {},
-			loginURL: '/api/auth/login',
-			logoutURL: '/api/auth/logout',
-			refreshURL: '/api/auth/refresh',
+			loginURL: "/api/auth/login",
+			logoutURL: "/api/auth/logout",
+			refreshURL: "/api/auth/refresh",
 			useTokens: true, // defaults to true for the auth system
 		},
 		// router is optional. If you leave out the router options, it will not be initialized on app init.
@@ -270,28 +261,28 @@ export var application = function init() {
 		router: {
 			options: { useEvents: true },
 			routes: [
-				['/auth/login', 'auth.login'],
-				['/auth/logout', 'auth.logout'],
-				['/test/app', 'app.show'],
-				['/test/tl.htm', 'app.init'],
+				["/auth/login", "auth.login"],
+				["/auth/logout", "auth.logout"],
+				["/test/app", "app.show"],
+				["/test/tl.htm", "app.init"],
 			],
 		},
 		ui: {
 			debounceTime: 200,
 			timeout: 30000,
 		},
-	}
+	};
 
 	var p = new Promise(function (resolve, reject) {
-		a7.init(options, resolve, reject)
-	})
+		a7.init(options, resolve, reject);
+	});
 	p.then(function (state) {
-		app.main.init(state)
-		a7.log.info('App init.')
-	})
-	p['catch'](function (message) {
-		console.log(message)
-	})
+		app.main.init(state);
+		a7.log.info("App init.");
+	});
+	p["catch"](function (message) {
+		console.log(message);
+	});
 
-	return app
-}
+	return app;
+};

@@ -21,7 +21,7 @@ a7.security = (function () {
 		_invalidateSession = function () {
 			clearTimeout(a7.remote.getSessionTimer());
 			a7.remote.invalidateToken();
-			var user = a7.components.Constructor(a7.components.User, _userArgs, true);
+			var user = new a7.components.User(_userArgs);
 			_setUser(user);
 		},
 		_setUser = function (user) {
@@ -39,7 +39,7 @@ a7.security = (function () {
 				user = mUser;
 			} else if (sessionStorage.user && sessionStorage.user !== "") {
 				suser = JSON.parse(sessionStorage.user);
-				user = a7.components.Constructor(a7.components.User, _userArgs, true);
+				user = new a7.components.User(_userArgs);
 				Object.keys(suser).map(function (key) {
 					user[key] = suser[key];
 				});
