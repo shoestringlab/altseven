@@ -1,4 +1,3 @@
-
 export var a7 = a7;
 
 var a7 = (function () {
@@ -1451,24 +1450,25 @@ class User extends Component {
 	}
 }
 
-function View(props) {
-	this.renderer = a7.model.get("a7").ui.renderer;
-	this.type = "View";
-	this.timeout;
-	this.timer;
-	this.element; // html element the view renders into
-	this.props = props;
-	this.isTransient = props.isTransient || false;
-	this.state = {};
-	this.skipRender = false;
-	this.children = {}; // child views
-	this.components = {}; // register objects external to the framework so we can address them later
-	this.config();
-	this.fireEvent("mustRegister");
-}
+class View extends Component {
+	constructor(props) {
+		super();
+		this.renderer = a7.model.get("a7").ui.renderer;
+		this.type = "View";
+		this.timeout;
+		this.timer;
+		this.element; // HTML element the view renders into
+		this.props = props;
+		this.isTransient = props.isTransient || false;
+		this.state = {};
+		this.skipRender = false;
+		this.children = {}; // Child views
+		this.components = {}; // Register objects external to the framework so we can address them later
+		this.config();
+		this.fireEvent("mustRegister");
+	}
 
-View.prototype = {
-	config: function () {
+	config() {
 		this.on(
 			"mustRegister",
 			function () {
@@ -1480,9 +1480,6 @@ View.prototype = {
 			}.bind(this),
 		);
 
-		// mustRender is a debounced function so we can control how often views should re-render.
-		// debounce leading, so the render will be queued and subsequent requests to render will be ignored until the delay time is reached
-		// delay defaults to 18 ms, can be set in app options as ui.debounceTime
 		this.on(
 			"mustRender",
 			a7.util.debounce(
@@ -1492,7 +1489,6 @@ View.prototype = {
 						a7.ui.enqueueForRender(this.props.id);
 					} else {
 						a7.log.trace("Render cancelled: " + this.props.id);
-						// undo skip, it must be explicitly set each time
 						this.skipRender = false;
 					}
 				}.bind(this),
@@ -1505,7 +1501,6 @@ View.prototype = {
 			"rendered",
 			function () {
 				if (this.isTransient) {
-					// set the timeout
 					if (this.timer !== undefined) {
 						clearTimeout(this.timer);
 					}
@@ -1522,7 +1517,6 @@ View.prototype = {
 			"registered",
 			function () {
 				if (this.props.parentID === undefined || this.mustRender) {
-					// only fire render event for root views, children will render in the chain
 					this.fireEvent("mustRender");
 				}
 			}.bind(this),
@@ -1534,52 +1528,58 @@ View.prototype = {
 				a7.ui.unregister(this.props.id);
 			}.bind(this),
 		);
-	},
-	events: [
+	}
+
+	events = [
 		"mustRender",
 		"rendered",
 		"mustRegister",
 		"registered",
 		"mustUnregister",
-	],
-	setState: function (args) {
+	];
+
+	setState(args) {
 		if (typeof this.state === "object") {
 			this.state = Object.assign(args);
 		} else {
 			this.dataProvider.setData(args);
 		}
-
-		// setting state requires a re-render
 		this.fireEvent("mustRender");
-	},
-	getState: function () {
+	}
+
+	getState() {
 		if (typeof this.state === "object") {
 			return Object.assign(this.state);
 		} else {
 			return this.dataProvider.getData();
 		}
-	},
-	registerDataProvider: function (dp) {
+	}
+
+	registerDataProvider(dp) {
 		this.dataProvider = dp;
-	},
-	unregisterDataProvider: function () {
+	}
+
+	unregisterDataProvider() {
 		this.dataProvider = null;
-	},
-	addChild: function (view) {
+	}
+
+	addChild(view) {
 		this.children[view.props.id] = view;
-		// force a render for children added
-		//this.children[ view.props.id ].mustRender = true;
-	},
-	removeChild: function (view) {
+	}
+
+	removeChild(view) {
 		delete this.children[view.props.id];
-	},
-	clearChildren: function () {
+	}
+
+	clearChildren() {
 		this.children = {};
-	},
-	getParent: function () {
+	}
+
+	getParent() {
 		return this.props.parentID ? a7.ui.getView(this.props.parentID) : undefined;
-	},
-	render: function () {
+	}
+
+	render() {
 		a7.log.info("render: " + this.props.id);
 		if (this.element === undefined || this.element === null) {
 			this.element = document.querySelector(this.props.selector);
@@ -1590,19 +1590,16 @@ View.prototype = {
 					this.props.id +
 					" was not found. The view will be removed and unregistered.",
 			);
-			// if the component has a parent, remove the component from the parent's children
 			if (this.props.parentID !== undefined) {
 				a7.ui.getView(this.props.parentID).removeChild(this);
 			}
-			// if the selector isn't in the DOM, skip rendering and unregister the view
 			this.fireEvent("mustUnregister");
 			return;
 		}
-		//throw( "You must define a selector for the view." );
+
 		this.element.innerHTML =
 			typeof this.template == "function" ? this.template() : this.template;
 
-		// create events marked with data-on* in the template
 		var eventArr = [];
 		a7.ui.getEvents().forEach(function (eve) {
 			eventArr.push("[data-on" + eve + "]");
@@ -1623,32 +1620,32 @@ View.prototype = {
 				}
 			}.bind(this),
 		);
-		// bind any elements marked with data-bind to the model
+
 		let boundEles = this.element.querySelectorAll("[data-bind]");
 		boundEles.forEach(function (ele) {
-			console.log("binding: ", ele);
 			a7.model.bind(ele.attributes["data-bind"].value, ele);
 		});
 		this.fireEvent("rendered");
-	},
-	shouldRender: function () {
+	}
+
+	shouldRender() {
 		if (this.skipRender) {
 			return false;
 		} else {
 			return true;
 		}
-	},
-	// after rendering, render all the children of the view
-	onRendered: function () {
+	}
+
+	onRendered() {
 		for (var child in this.children) {
 			this.children[child].element = document.querySelector(
 				this.children[child].props.selector,
 			);
 			this.children[child].render();
 		}
-	},
-	// need to add props.isTransient (default false) to make views permanent by default
-	checkRenderStatus: function () {
+	}
+
+	checkRenderStatus() {
 		if (document.querySelector(this.props.selector) === null) {
 			a7.ui.unregister(this.id);
 		} else {
@@ -1659,8 +1656,8 @@ View.prototype = {
 				);
 			}
 		}
-	},
-};
+	}
+}
 
 return {
 	Component: Component,

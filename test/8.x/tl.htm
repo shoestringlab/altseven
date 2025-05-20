@@ -1,0 +1,45 @@
+<!doctype html>
+<html>
+	<head>
+		<title>alt-7</title>
+		<link href="/test/styles.css" rel="stylesheet" type="text/css" />
+		<link href="/dist/a7.css" rel="stylesheet" type="text/css" />
+		<link
+			href="/node_modules/gadget-ui/dist/gadget-ui.css"
+			rel="stylesheet"
+			type="text/css"
+		/>
+		<link
+			href="/node_modules/open-iconic/font/css/open-iconic.css"
+			rel="stylesheet"
+			type="text/css"
+		/>
+
+		<style>
+			#a7consoleDiv {
+				overflow-x: scroll;
+				height: 500px;
+				width: 800px;
+			}
+		</style>
+		<script type="module">
+			import { application } from './app.tl.js'
+
+			var app = application()
+		</script>
+	</head>
+
+	<body>
+		<div>
+			<h1>altseven Task List</h1>
+		</div>
+
+		<div name="main">
+			<div name="anon" style="display: none"></div>
+			<div name="secure" style="display: none">
+				<div name="header"></div>
+				<div name="app"></div>
+			</div>
+		</div>
+	</body>
+</html>
