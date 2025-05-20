@@ -1,3 +1,14 @@
+7.5.0
+============
+
+This release adds three new ES 6 class components- a base Component with the event bindings, a DataProvider to manage state in a View, an Entity class as a base class for data schemas, and a Service class for managing remote resources, data caching in the model, and (coming soon) data binding for automated update of View state when data changes.
+
+The User component has been re-factored as an ES6 class as well. If you have used the Constructor component to instantiate a User, you will need to update your code to use the new ES6 class.
+
+7.5.0 should be a drop-in replacement compatible with previous versions, except for the User component change. Where the User component is instantiated in the framework itself has been updated to use the new ES6 class.
+
+DataProvider, Entity, and Service are in active development and may change, so please treat these as experimental features.
+
 7.4.1
 ============
 
