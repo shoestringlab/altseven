@@ -1,6 +1,6 @@
 # altseven
 
-v 7.4.1
+v 7.5.0
 
 A JavaScript framework. Originally built as an exploration into reactive programming with JavaScript. Now a full-fledged Web framework.
 
@@ -14,12 +14,17 @@ To install dev dependencies from NPM:
     `$ npm install`
 
 
-Current Release - 7.4.0
+Current Release - 7.5.0
 --------
 
-This release adds a config option to disable the security module. By default, the security module remains enabled, but if you add  options: { security: { enabled: false} }, you will prevent the security module from being initialized on startup. Note that disabling the security module will prevent you from using the remote module with tokens. This feature is in development so be aware if you disable security that the remote module may be affected beyond the loss of tokens.
+This release adds three new ES 6 class components- a base Component with the event bindings, a DataProvider to manage state in a View, an Entity class as a base class for data schemas, and a Service class for managing remote resources, data caching in the model, and (coming soon) data binding for automated update of View state when data changes.
 
-In addition, the security module has seen some internal changes. The isAuthenticated method has been simplified to call the auth.refresh event, so it assumes tokens are active in use. Also, it has added setUser(user) and getUser() methods. setUser set the users into session storage and, if a model is in use, sets the user into the model. GetUser gets the current user, and if no use is active, returns an empty User object.
+The User component has been re-factored as an ES6 class as well. If you have used the Constructor component to instantiate a User, you will need to update your code to use the new ES6 class.
+
+7.5.0 should be a drop-in replacement compatible with previous versions, except for the User component change. Where the User component is instantiated in the framework itself has been updated to use the new ES6 class.
+
+DataProvider, Entity, and Service are in active development and may change, so please treat these as experimental features.
+
 
 ## Installation
 
