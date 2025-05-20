@@ -8,7 +8,7 @@ a7.services = (function () {
 			// init the services module
 			// add services
 			for (let service in options.services) {
-				a7.services.setService(service);
+				a7.services.register(service);
 			}
 		},
 

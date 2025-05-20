@@ -1,3 +1,8 @@
+7.5.3
+============
+
+Bug fix in a7.services where register method was not called on init.
+
 7.5.0
 ============
 

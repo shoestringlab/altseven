@@ -1,6 +1,6 @@
 # altseven
 
-v 7.5.0
+v 7.5.3
 
 A JavaScript framework. Originally built as an exploration into reactive programming with JavaScript. Now a full-fledged Web framework.
 
