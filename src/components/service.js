@@ -4,8 +4,8 @@ class Service extends Component {
 		this.id = props.id; // id of the service to register with the framework
 		this.key = props.key; // name of the Object key
 		this.remoteMethods = props.remoteMethods;
-		this.entity = props.entity;
 		this.dataProviders = new Map();
+		this.entityClass = props.entityClass;
 		this.config();
 		this.fireEvent("mustRegister");
 	}
@@ -75,6 +75,9 @@ class Service extends Component {
 
 		newItems.forEach((item) => {
 			if (item[this.key]) {
+				// if (typeof item !== this.entityClass) {
+				// 	throw "Must use the correct entity type for merge().";
+				// }
 				dataMap.set(item[this.key], item);
 			}
 		});
@@ -83,18 +86,13 @@ class Service extends Component {
 		return dataMap;
 	}
 
-	new() {
-		return Object.assign({}, this.entity);
-	}
-
 	async create(obj) {
-		let entity = obj;
 		await a7.remote
 			.invoke(this.remoteMethods.create, obj)
 			.then((response) => response.json())
 			.then((json) => {
-				this.cacheSet(json);
-				entity = json;
+				let entity = new this.entityClass(json);
+				this.cacheSet(entity);
 			});
 		return entity;
 	}
@@ -102,11 +100,12 @@ class Service extends Component {
 	async read(obj) {
 		let dataMap = this.get();
 		if (!dataMap.has(obj[this.key])) {
+			//let entity = new this.entityClass(obj);
 			await a7.remote
 				.invoke(this.remoteMethods.read, obj)
 				.then((response) => response.json())
 				.then((json) => {
-					this.cacheSet(json);
+					this.cacheSet(new this.entityClass(json));
 					dataMap = this.get();
 				});
 		}
@@ -115,35 +114,42 @@ class Service extends Component {
 	}
 
 	async update(obj) {
-		let entity = obj;
+		let entity = new this.entityClass(obj);
 		await a7.remote
-			.invoke(this.remoteMethods.update, obj)
+			.invoke(this.remoteMethods.update, entity)
 			.then((response) => response.json())
 			.then((json) => {
-				this.cacheSet(json);
-				obj = json;
+				entity = new this.entityClass(json);
+				this.cacheSet(entity);
 			});
 		return entity;
 	}
 
 	async delete(obj) {
+		let response = {};
 		await a7.remote
 			.invoke(this.remoteMethods.delete, obj)
 			.then((response) => response.json())
 			.then((json) => {
 				this.cacheDelete(obj[this.key]);
+				response = json;
 			});
-		return true;
+		return response;
 	}
 
 	async readAll(obj) {
 		let dataMap = this.get();
+		// read remote if there is nothing in the cache
 		if (!dataMap.size) {
 			await a7.remote
 				.invoke(this.remoteMethods.readAll, obj)
 				.then((response) => response.json())
 				.then((json) => {
-					this.merge(json);
+					let entities = [];
+					for (let item in json) {
+						entities.push(new this.entityClass(json[item]));
+					}
+					this.merge(entities);
 				});
 		}
 		return this.get();
@@ -184,7 +190,11 @@ class Service extends Component {
 				.then((response) => response.json())
 				.then((json) => {
 					if (Array.isArray(json)) {
-						this.merge(json);
+						let entities = [];
+						for (let item in json) {
+							entities.push(new this.entityClass(json[item]));
+						}
+						this.merge(entities);
 					}
 				});
 		}

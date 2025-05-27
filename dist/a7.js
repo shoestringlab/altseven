@@ -610,13 +610,16 @@ class Component {
 }
 
 class DataProvider extends Component {
+	#state = {};
+	#schema;
 	constructor(props) {
 		super();
-		this.schema = {};
-		this.baseState = {};
+		this.binding = props?.binding;
+		this.#state = props.state;
+		this.#schema = props.schema;
 		this.view = props.view;
-		this.id = this.view.id + "-dataProvider";
-		this.data = {};
+
+		this.id = this.view.props.id + "-dataProvider";
 		this.services = new Map();
 		this.config();
 		this.fireEvent("mustRegister");
@@ -629,41 +632,140 @@ class DataProvider extends Component {
 		this.on("mustRegister", () => {
 			this.register();
 		});
+		// bind to data
+		this.bind();
 	}
 
 	register() {
-		// Register with the view
-		this.view.registerDataProvider(this);
 		// Register with the services
 		this.services.forEach((service) => {
 			service.registerDataProvider(this);
 		});
 	}
 
-	setData(args) {
-		// Defaults to the built-in behavior of the View
-		this.data = Object.assign(args);
+	bind() {
+		if (this.binding) {
+			for (let rule in this.binding) {
+				if (this.binding[rule].filter) {
+					// bind the filter
+					console.log("Binding: ", rule);
+					// console.dir(rule);
+					console.dir(this.binding[rule]);
+					console.dir(this.#schema[rule]);
+				}
+			}
+		}
 	}
 
-	getData() {
-		return Object.assign(this.data);
+	get schema() {
+		return this.#schema;
+	}
+
+	setState(args) {
+		// Defaults to the built-in behavior of the View
+		this.#state = Object.assign(args);
+	}
+
+	getState() {
+		return Object.assign(this.#state);
 	}
 }
 
 class Entity extends Component {
+	#schema;
+	#data;
 	constructor(props) {
 		super();
-		for (item in props) {
-			this[item] = props[item];
+		this.#schema = props.schema;
+		this.#data = {};
+		if (this.#schema && this.validate()) {
+			for (const [key, descriptor] of Object.entries(this.#schema)) {
+				this._defineProperty(key);
+				this[key] = props[key];
+			}
 		}
 	}
 
+	_defineProperty(key) {
+		const propertyName = `_${key}`;
+		this.#data[propertyName] = undefined;
+
+		Object.defineProperty(this, key, {
+			get: function () {
+				return this.#data[propertyName];
+			},
+			set: function (value) {
+				const schemaDescriptor = this.#schema[key];
+
+				if (schemaDescriptor.required && value === undefined) {
+					throw new Error(`Property ${key} is required.`);
+				}
+
+				// Check data type
+				const expectedType = schemaDescriptor.type;
+				const valueType = typeof value;
+
+				if (
+					!this._isOfType(value, expectedType) &&
+					value !== null &&
+					typeof value !== "undefined"
+				) {
+					throw new Error(
+						`Invalid type for property ${key}. Expected ${expectedType}, but got ${valueType}.`,
+					);
+				}
+
+				this.#data[propertyName] = value;
+			},
+		});
+	}
+
+	_isOfType(value, expectedType) {
+		// Special case for checking if the value is an instance of a specific class
+		// if (expectedType === "date") {
+		// 	return new Date(value) instanceof Date;
+		// }
+		// if (expectedType === "array") {
+		// 	return Array.isArray(value);
+		// }
+
+		switch (expectedType) {
+			case "date":
+				return new Date(value) instanceof Date;
+				break;
+			case "array":
+				return Array.isArray(value);
+				break;
+			case "boolean":
+				return value === 0 || value === 1 || value === true || value === false
+					? true
+					: false;
+				break;
+			case "integer":
+				return Number.isInteger(value);
+				break;
+			case "float":
+				return typeof value === "number";
+				break;
+			case "string":
+				return typeof value === "string";
+				break;
+			default:
+				return true;
+				break;
+		}
+	}
+
+	get schema() {
+		return this.#schema;
+	}
+
 	validate() {
-		for (field in this.schema) {
-			if (field.required && !this[field]) {
+		for (let field in this.#schema) {
+			if (field.required && !this.#data[field]) {
 				throw new Error(`Field ${field} is required`);
 			}
-			if (field.type && typeof this[field] !== field.type) {
+			if (field.type && typeof this.#data[field] !== field.type) {
 				throw new Error(`Field ${field} must be of type ${field.type}`);
 			}
 		}
@@ -1093,8 +1195,8 @@ class Service extends Component {
 		this.id = props.id; // id of the service to register with the framework
 		this.key = props.key; // name of the Object key
 		this.remoteMethods = props.remoteMethods;
-		this.entity = props.entity;
 		this.dataProviders = new Map();
+		this.entityClass = props.entityClass;
 		this.config();
 		this.fireEvent("mustRegister");
 	}
@@ -1164,6 +1266,9 @@ class Service extends Component {
 
 		newItems.forEach((item) => {
 			if (item[this.key]) {
+				// if (typeof item !== this.entityClass) {
+				// 	throw "Must use the correct entity type for merge().";
+				// }
 				dataMap.set(item[this.key], item);
 			}
 		});
@@ -1172,18 +1277,13 @@ class Service extends Component {
 		return dataMap;
 	}
 
-	new() {
-		return Object.assign({}, this.entity);
-	}
-
 	async create(obj) {
-		let entity = obj;
 		await a7.remote
 			.invoke(this.remoteMethods.create, obj)
 			.then((response) => response.json())
 			.then((json) => {
-				this.cacheSet(json);
-				entity = json;
+				let entity = new this.entityClass(json);
+				this.cacheSet(entity);
 			});
 		return entity;
 	}
@@ -1191,11 +1291,12 @@ class Service extends Component {
 	async read(obj) {
 		let dataMap = this.get();
 		if (!dataMap.has(obj[this.key])) {
+			//let entity = new this.entityClass(obj);
 			await a7.remote
 				.invoke(this.remoteMethods.read, obj)
 				.then((response) => response.json())
 				.then((json) => {
-					this.cacheSet(json);
+					this.cacheSet(new this.entityClass(json));
 					dataMap = this.get();
 				});
 		}
@@ -1204,35 +1305,42 @@ class Service extends Component {
 	}
 
 	async update(obj) {
-		let entity = obj;
+		let entity = new this.entityClass(obj);
 		await a7.remote
-			.invoke(this.remoteMethods.update, obj)
+			.invoke(this.remoteMethods.update, entity)
 			.then((response) => response.json())
 			.then((json) => {
-				this.cacheSet(json);
-				obj = json;
+				entity = new this.entityClass(json);
+				this.cacheSet(entity);
 			});
 		return entity;
 	}
 
 	async delete(obj) {
+		let response = {};
 		await a7.remote
 			.invoke(this.remoteMethods.delete, obj)
 			.then((response) => response.json())
 			.then((json) => {
 				this.cacheDelete(obj[this.key]);
+				response = json;
 			});
-		return true;
+		return response;
 	}
 
 	async readAll(obj) {
 		let dataMap = this.get();
+		// read remote if there is nothing in the cache
 		if (!dataMap.size) {
 			await a7.remote
 				.invoke(this.remoteMethods.readAll, obj)
 				.then((response) => response.json())
 				.then((json) => {
-					this.merge(json);
+					let entities = [];
+					for (let item in json) {
+						entities.push(new this.entityClass(json[item]));
+					}
+					this.merge(entities);
 				});
 		}
 		return this.get();
@@ -1273,7 +1381,11 @@ class Service extends Component {
 				.then((response) => response.json())
 				.then((json) => {
 					if (Array.isArray(json)) {
-						this.merge(json);
+						let entities = [];
+						for (let item in json) {
+							entities.push(new this.entityClass(json[item]));
+						}
+						this.merge(entities);
 					}
 				});
 		}
@@ -1539,20 +1651,30 @@ class View extends Component {
 	];
 
 	setState(args) {
-		if (typeof this.state === "object") {
-			this.state = Object.assign(args);
+		if (this.dataProvider) {
+			this.dataProvider.setState(args);
 		} else {
-			this.dataProvider.setData(args);
+			this.state = Object.assign(args);
 		}
+		// if (typeof this.state === "object") {
+		// 	this.state = Object.assign(args);
+		// } else {
+		// 	this.dataProvider.setState(args);
+		// }
 		this.fireEvent("mustRender");
 	}
 
 	getState() {
-		if (typeof this.state === "object") {
-			return Object.assign(this.state);
+		if (this.dataProvider) {
+			return this.dataProvider.getState();
 		} else {
-			return this.dataProvider.getData();
+			return Object.assign(this.state);
 		}
+		// if (typeof this.state === "object") {
+		// 	return Object.assign(this.state);
+		// } else {
+		// 	return this.dataProvider.getState();
+		// }
 	}
 
 	registerDataProvider(dp) {

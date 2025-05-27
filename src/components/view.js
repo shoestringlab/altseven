@@ -87,20 +87,30 @@ class View extends Component {
 	];
 
 	setState(args) {
-		if (typeof this.state === "object") {
-			this.state = Object.assign(args);
+		if (this.dataProvider) {
+			this.dataProvider.setState(args);
 		} else {
-			this.dataProvider.setData(args);
+			this.state = Object.assign(args);
 		}
+		// if (typeof this.state === "object") {
+		// 	this.state = Object.assign(args);
+		// } else {
+		// 	this.dataProvider.setState(args);
+		// }
 		this.fireEvent("mustRender");
 	}
 
 	getState() {
-		if (typeof this.state === "object") {
-			return Object.assign(this.state);
+		if (this.dataProvider) {
+			return this.dataProvider.getState();
 		} else {
-			return this.dataProvider.getData();
+			return Object.assign(this.state);
 		}
+		// if (typeof this.state === "object") {
+		// 	return Object.assign(this.state);
+		// } else {
+		// 	return this.dataProvider.getState();
+		// }
 	}
 
 	registerDataProvider(dp) {
