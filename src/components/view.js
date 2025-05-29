@@ -78,13 +78,13 @@ class View extends Component {
 		);
 	}
 
-	events = [
-		"mustRender",
-		"rendered",
-		"mustRegister",
-		"registered",
-		"mustUnregister",
-	];
+	// events = [
+	// 	"mustRender",
+	// 	"rendered",
+	// 	"mustRegister",
+	// 	"registered",
+	// 	"mustUnregister",
+	// ];
 
 	setState(args) {
 		if (this.dataProvider) {

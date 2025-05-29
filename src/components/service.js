@@ -4,8 +4,10 @@ class Service extends Component {
 		this.id = props.id; // id of the service to register with the framework
 		this.key = props.key; // name of the Object key
 		this.remoteMethods = props.remoteMethods;
+		this.entityClass = props.entityClass; // Entity class to use for data operations
 		this.dataProviders = new Map();
-		this.entityClass = props.entityClass;
+		this.bindings = new Map(); // New map to store bindings
+
 		this.config();
 		this.fireEvent("mustRegister");
 	}
@@ -46,6 +48,9 @@ class Service extends Component {
 
 	// Compare itemIDs against cached items
 	compareIDs(IDs) {
+		a7.log.trace("Service: " + this.id);
+		a7.log.trace("compareIDs: " + IDs);
+
 		const dataMap = this.get();
 		const present = [];
 		const missing = [];
@@ -61,7 +66,9 @@ class Service extends Component {
 				missing.push(id);
 			}
 		});
-
+		a7.log.trace("results: " + { present, missing });
+		console.dir(present);
+		console.dir(missing);
 		return { present, missing };
 	}
 
@@ -75,37 +82,40 @@ class Service extends Component {
 
 		newItems.forEach((item) => {
 			if (item[this.key]) {
-				// if (typeof item !== this.entityClass) {
-				// 	throw "Must use the correct entity type for merge().";
-				// }
 				dataMap.set(item[this.key], item);
 			}
 		});
 
 		this.set(dataMap);
+
+		this.fireEvent("cacheChanged", { action: "refresh" });
 		return dataMap;
 	}
 
+	bind(key, filter) {
+		this.bindings.set(key, { filter: filter });
+	}
+
 	async create(obj) {
+		let entityInstance = new this.entityClass(obj);
 		await a7.remote
-			.invoke(this.remoteMethods.create, obj)
+			.invoke(this.remoteMethods.create, entityInstance)
 			.then((response) => response.json())
 			.then((json) => {
-				let entity = new this.entityClass(json);
-				this.cacheSet(entity);
+				this.cacheSet(json);
+				entityInstance = new this.entityClass(json);
 			});
-		return entity;
+		return entityInstance;
 	}
 
 	async read(obj) {
 		let dataMap = this.get();
 		if (!dataMap.has(obj[this.key])) {
-			//let entity = new this.entityClass(obj);
 			await a7.remote
 				.invoke(this.remoteMethods.read, obj)
 				.then((response) => response.json())
 				.then((json) => {
-					this.cacheSet(new this.entityClass(json));
+					this.cacheSet(json);
 					dataMap = this.get();
 				});
 		}
@@ -114,42 +124,35 @@ class Service extends Component {
 	}
 
 	async update(obj) {
-		let entity = new this.entityClass(obj);
+		let entityInstance = new this.entityClass(obj);
 		await a7.remote
-			.invoke(this.remoteMethods.update, entity)
+			.invoke(this.remoteMethods.update, obj)
 			.then((response) => response.json())
 			.then((json) => {
-				entity = new this.entityClass(json);
-				this.cacheSet(entity);
+				this.cacheSet(json);
+				entityInstance = new this.entityClass(json);
 			});
-		return entity;
+		return entityInstance;
 	}
 
 	async delete(obj) {
-		let response = {};
 		await a7.remote
 			.invoke(this.remoteMethods.delete, obj)
 			.then((response) => response.json())
 			.then((json) => {
 				this.cacheDelete(obj[this.key]);
-				response = json;
 			});
-		return response;
+		return true;
 	}
 
 	async readAll(obj) {
 		let dataMap = this.get();
-		// read remote if there is nothing in the cache
 		if (!dataMap.size) {
 			await a7.remote
 				.invoke(this.remoteMethods.readAll, obj)
 				.then((response) => response.json())
 				.then((json) => {
-					let entities = [];
-					for (let item in json) {
-						entities.push(new this.entityClass(json[item]));
-					}
-					this.merge(entities);
+					this.merge(json);
 				});
 		}
 		return this.get();
@@ -159,12 +162,22 @@ class Service extends Component {
 		let dataMap = this.get();
 		dataMap.delete(id);
 		this.set(dataMap);
+
+		// Notify bound DataProviders
+
+		this.fireEvent("cacheChanged", { action: "refresh" });
 	}
 
 	cacheSet(item) {
 		let dataMap = this.get();
 		dataMap.set(item[this.key], item);
 		this.set(dataMap);
+
+		// Notify bound DataProviders
+
+		this.fireEvent("cacheChanged", {
+			action: "refresh",
+		});
 	}
 
 	set(dataMap) {
@@ -177,11 +190,14 @@ class Service extends Component {
 
 	// Retrieve items, using cache when possible
 	async readMany(IDs) {
+		a7.log.trace("readMany: ");
+
 		// Compare requested IDs with cache
 		const { present, missing } = this.compareIDs(IDs);
 
 		// Fetch missing items if any
 
+		console.dir("Missing? " + missing.length);
 		if (missing.length > 0) {
 			let obj = { id: missing };
 
@@ -190,11 +206,7 @@ class Service extends Component {
 				.then((response) => response.json())
 				.then((json) => {
 					if (Array.isArray(json)) {
-						let entities = [];
-						for (let item in json) {
-							entities.push(new this.entityClass(json[item]));
-						}
-						this.merge(entities);
+						this.merge(json);
 					}
 				});
 		}
@@ -262,7 +274,7 @@ class Service extends Component {
 
 	filter(items, criteria) {
 		// Convert items to array if it's a Map
-		let itemsArray = items instanceof Map ? Array.from(items.values()) : items;
+		let itemsArray = Array.isArray(items) ? items : Array.from(items.values());
 
 		// Validate criteria input
 		if (
@@ -352,4 +364,19 @@ class Service extends Component {
 
 		return filteredItems;
 	}
+
+	// notifyBoundDataProviders(action, data) {
+	// 	this.bindings.forEach((binding, key) => {
+	// 		if (this.dataProviders.size > 0) {
+	// 			//const filter = binding.filter || {};
+	// 			if (binding.filter !== null) {
+	// 				data = this.filter(dataMap.values(), filter);
+	// 			}
+
+	// 			this.dataProviders.forEach((dp) =>
+	// 				dp.setState({ [key]: filteredData }),
+	// 			);
+	// 		}
+	// 	});
+	// }
 }

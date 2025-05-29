@@ -10,6 +10,7 @@ class DataProvider extends Component {
 
 		this.id = this.view.props.id + "-dataProvider";
 		this.services = new Map();
+		this.bindings = new Map(); // New map to store bindings
 		this.config();
 		this.fireEvent("mustRegister");
 	}
@@ -38,14 +39,90 @@ class DataProvider extends Component {
 				let matchingService = [...this.services.values()].find(
 					(service) => service.entityClass === this.binding[rule].entityClass,
 				);
-				if (this.binding[rule].filter) {
-					// bind the filter
+				if (matchingService) {
 					console.log("Binding: ", rule);
+					let filter = this.binding[rule].filter || null;
+					let func = this.binding[rule].func || null;
+					let dependencies = this.binding[rule].dependencies || null;
+					this.bindings.set(rule, {
+						key: rule,
+						service: matchingService,
+						filter: filter,
+						func: func,
+						dependencies: dependencies,
+					});
 
-					// console.dir(rule);
-					console.dir(this.binding[rule]);
-					console.dir(this.#schema[rule]);
+					matchingService.bind(rule, filter);
+
+					let data = matchingService.get();
+
+					if (filter !== null) {
+						data = matchingService.filter(data, filter);
+					}
+
+					this.setStateOnly({ [rule]: data });
+
+					//Listen for changes in the service cache
+					matchingService.on("cacheChanged", (service, args) => {
+						this.updateBoundState(this.bindings.get(rule), args);
+					});
 				}
+			}
+		}
+	}
+
+	async updateBoundState(binding, args) {
+		let updatedData;
+		if (binding.func !== null) {
+			// pass the filter to the func
+			args = Object.assign(args, { filter: binding.filter });
+			if (binding.func.constructor.name === "AsyncFunction") {
+				updatedData = await binding.func(args, this.getState());
+			} else {
+				updatedData = binding.func(args, this.getState());
+			}
+			//let type = binding.entityClass.type;
+			let type = this.#schema[binding.key].type;
+			if (type === "map" && Array.isArray(updatedData)) {
+				updatedData = binding.service.convertArrayToMap(updatedData);
+			}
+
+			this.view.setState({ [binding.key]: updatedData });
+		} else {
+			switch (args.action) {
+				case "setItem":
+					updatedData = binding.service.get();
+					if (binding.filter !== null) {
+						updatedData = this.filter(updatedData, binding.filter);
+					}
+
+					this.view.setState({ [binding.key]: updatedData });
+					// a7.log.trace("setItem called: ") +
+					// 	this.view.setState({
+					// 		[binding.key]: [...this.#state[binding.key], args.value],
+					// 	});
+					break;
+				case "deleteItem":
+					updatedData = binding.service.get();
+					if (binding.filter !== null) {
+						updatedData = this.filter(updatedData, binding.filter);
+					}
+
+					this.view.setState({ [binding.key]: updatedData });
+					// this.view.setState({
+					// 	[binding.key]: this.#state[binding.key].filter(
+					// 		(item) => item[this.key] !== args.id,
+					// 	),
+					// });
+					break;
+				case "refresh":
+					updatedData = binding.service.get();
+					if (binding.filter !== null) {
+						updatedData = this.filter(updatedData, binding.filter);
+					}
+
+					this.view.setState({ [binding.key]: updatedData });
+					break;
 			}
 		}
 	}
@@ -53,13 +130,30 @@ class DataProvider extends Component {
 	get schema() {
 		return this.#schema;
 	}
-
-	setState(args) {
+	setStateOnly(args) {
 		// Defaults to the built-in behavior of the View
-		this.#state = Object.assign(args);
+		this.#state = Object.assign(this.#state, args);
+	}
+	setState(args) {
+		this.setStateOnly(args);
+		let bindingsUpdated = new Map();
+		// check if the updated keys are dependencies for bound keys
+		for (let key in args) {
+			this.bindings.forEach((binding) => {
+				if (
+					binding.dependencies !== null &&
+					binding.dependencies.includes(key)
+				) {
+					if (!bindingsUpdated.has(binding)) {
+						this.updateBoundState(binding, { action: "refresh" });
+						bindingsUpdated.set(binding, "");
+					}
+				}
+			});
+		}
 	}
 
 	getState() {
-		return Object.assign(this.#state);
+		return Object.assign({}, this.#state);
 	}
 }

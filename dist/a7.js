@@ -621,6 +621,7 @@ class DataProvider extends Component {
 
 		this.id = this.view.props.id + "-dataProvider";
 		this.services = new Map();
+		this.bindings = new Map(); // New map to store bindings
 		this.config();
 		this.fireEvent("mustRegister");
 	}
@@ -646,13 +647,93 @@ class DataProvider extends Component {
 	bind() {
 		if (this.binding) {
 			for (let rule in this.binding) {
-				if (this.binding[rule].filter) {
-					// bind the filter
+				let matchingService = [...this.services.values()].find(
+					(service) => service.entityClass === this.binding[rule].entityClass,
+				);
+				if (matchingService) {
 					console.log("Binding: ", rule);
-					// console.dir(rule);
-					console.dir(this.binding[rule]);
-					console.dir(this.#schema[rule]);
+					let filter = this.binding[rule].filter || null;
+					let func = this.binding[rule].func || null;
+					let dependencies = this.binding[rule].dependencies || null;
+					this.bindings.set(rule, {
+						key: rule,
+						service: matchingService,
+						filter: filter,
+						func: func,
+						dependencies: dependencies,
+					});
+
+					matchingService.bind(rule, filter);
+
+					let data = matchingService.get();
+
+					if (filter !== null) {
+						data = matchingService.filter(data, filter);
+					}
+
+					this.setStateOnly({ [rule]: data });
+
+					//Listen for changes in the service cache
+					matchingService.on("cacheChanged", (service, args) => {
+						this.updateBoundState(this.bindings.get(rule), args);
+					});
 				}
+			}
+		}
+	}
+
+	async updateBoundState(binding, args) {
+		let updatedData;
+		if (binding.func !== null) {
+			// pass the filter to the func
+			args = Object.assign(args, { filter: binding.filter });
+			if (binding.func.constructor.name === "AsyncFunction") {
+				updatedData = await binding.func(args, this.getState());
+			} else {
+				updatedData = binding.func(args, this.getState());
+			}
+			//let type = binding.entityClass.type;
+			let type = this.#schema[binding.key].type;
+			if (type === "map" && Array.isArray(updatedData)) {
+				updatedData = binding.service.convertArrayToMap(updatedData);
+			}
+
+			this.view.setState({ [binding.key]: updatedData });
+		} else {
+			switch (args.action) {
+				case "setItem":
+					updatedData = binding.service.get();
+					if (binding.filter !== null) {
+						updatedData = this.filter(updatedData, binding.filter);
+					}
+
+					this.view.setState({ [binding.key]: updatedData });
+					// a7.log.trace("setItem called: ") +
+					// 	this.view.setState({
+					// 		[binding.key]: [...this.#state[binding.key], args.value],
+					// 	});
+					break;
+				case "deleteItem":
+					updatedData = binding.service.get();
+					if (binding.filter !== null) {
+						updatedData = this.filter(updatedData, binding.filter);
+					}
+
+					this.view.setState({ [binding.key]: updatedData });
+					// this.view.setState({
+					// 	[binding.key]: this.#state[binding.key].filter(
+					// 		(item) => item[this.key] !== args.id,
+					// 	),
+					// });
+					break;
+				case "refresh":
+					updatedData = binding.service.get();
+					if (binding.filter !== null) {
+						updatedData = this.filter(updatedData, binding.filter);
+					}
+
+					this.view.setState({ [binding.key]: updatedData });
+					break;
 			}
 		}
 	}
@@ -660,14 +741,31 @@ class DataProvider extends Component {
 	get schema() {
 		return this.#schema;
 	}
-
-	setState(args) {
+	setStateOnly(args) {
 		// Defaults to the built-in behavior of the View
-		this.#state = Object.assign(args);
+		this.#state = Object.assign(this.#state, args);
+	}
+	setState(args) {
+		this.setStateOnly(args);
+		let bindingsUpdated = new Map();
+		// check if the updated keys are dependencies for bound keys
+		for (let key in args) {
+			this.bindings.forEach((binding) => {
+				if (
+					binding.dependencies !== null &&
+					binding.dependencies.includes(key)
+				) {
+					if (!bindingsUpdated.has(binding)) {
+						this.updateBoundState(binding, { action: "refresh" });
+						bindingsUpdated.set(binding, "");
+					}
+				}
+			});
+		}
 	}
 
 	getState() {
-		return Object.assign(this.#state);
+		return Object.assign({}, this.#state);
 	}
 }
 
@@ -1195,8 +1293,10 @@ class Service extends Component {
 		this.id = props.id; // id of the service to register with the framework
 		this.key = props.key; // name of the Object key
 		this.remoteMethods = props.remoteMethods;
+		this.entityClass = props.entityClass; // Entity class to use for data operations
 		this.dataProviders = new Map();
-		this.entityClass = props.entityClass;
+		this.bindings = new Map(); // New map to store bindings
+
 		this.config();
 		this.fireEvent("mustRegister");
 	}
@@ -1237,6 +1337,9 @@ class Service extends Component {
 
 	// Compare itemIDs against cached items
 	compareIDs(IDs) {
+		a7.log.trace("Service: " + this.id);
+		a7.log.trace("compareIDs: " + IDs);
+
 		const dataMap = this.get();
 		const present = [];
 		const missing = [];
@@ -1252,7 +1355,9 @@ class Service extends Component {
 				missing.push(id);
 			}
 		});
-
+		a7.log.trace("results: " + { present, missing });
+		console.dir(present);
+		console.dir(missing);
 		return { present, missing };
 	}
 
@@ -1266,37 +1371,40 @@ class Service extends Component {
 
 		newItems.forEach((item) => {
 			if (item[this.key]) {
-				// if (typeof item !== this.entityClass) {
-				// 	throw "Must use the correct entity type for merge().";
-				// }
 				dataMap.set(item[this.key], item);
 			}
 		});
 
 		this.set(dataMap);
+
+		this.fireEvent("cacheChanged", { action: "refresh" });
 		return dataMap;
 	}
 
+	bind(key, filter) {
+		this.bindings.set(key, { filter: filter });
+	}
+
 	async create(obj) {
+		let entityInstance = new this.entityClass(obj);
 		await a7.remote
-			.invoke(this.remoteMethods.create, obj)
+			.invoke(this.remoteMethods.create, entityInstance)
 			.then((response) => response.json())
 			.then((json) => {
-				let entity = new this.entityClass(json);
-				this.cacheSet(entity);
+				this.cacheSet(json);
+				entityInstance = new this.entityClass(json);
 			});
-		return entity;
+		return entityInstance;
 	}
 
 	async read(obj) {
 		let dataMap = this.get();
 		if (!dataMap.has(obj[this.key])) {
-			//let entity = new this.entityClass(obj);
 			await a7.remote
 				.invoke(this.remoteMethods.read, obj)
 				.then((response) => response.json())
 				.then((json) => {
-					this.cacheSet(new this.entityClass(json));
+					this.cacheSet(json);
 					dataMap = this.get();
 				});
 		}
@@ -1305,42 +1413,35 @@ class Service extends Component {
 	}
 
 	async update(obj) {
-		let entity = new this.entityClass(obj);
+		let entityInstance = new this.entityClass(obj);
 		await a7.remote
-			.invoke(this.remoteMethods.update, entity)
+			.invoke(this.remoteMethods.update, obj)
 			.then((response) => response.json())
 			.then((json) => {
-				entity = new this.entityClass(json);
-				this.cacheSet(entity);
+				this.cacheSet(json);
+				entityInstance = new this.entityClass(json);
 			});
-		return entity;
+		return entityInstance;
 	}
 
 	async delete(obj) {
-		let response = {};
 		await a7.remote
 			.invoke(this.remoteMethods.delete, obj)
 			.then((response) => response.json())
 			.then((json) => {
 				this.cacheDelete(obj[this.key]);
-				response = json;
 			});
-		return response;
+		return true;
 	}
 
 	async readAll(obj) {
 		let dataMap = this.get();
-		// read remote if there is nothing in the cache
 		if (!dataMap.size) {
 			await a7.remote
 				.invoke(this.remoteMethods.readAll, obj)
 				.then((response) => response.json())
 				.then((json) => {
-					let entities = [];
-					for (let item in json) {
-						entities.push(new this.entityClass(json[item]));
-					}
-					this.merge(entities);
+					this.merge(json);
 				});
 		}
 		return this.get();
@@ -1350,12 +1451,22 @@ class Service extends Component {
 		let dataMap = this.get();
 		dataMap.delete(id);
 		this.set(dataMap);
+
+		// Notify bound DataProviders
+
+		this.fireEvent("cacheChanged", { action: "refresh" });
 	}
 
 	cacheSet(item) {
 		let dataMap = this.get();
 		dataMap.set(item[this.key], item);
 		this.set(dataMap);
+
+		// Notify bound DataProviders
+
+		this.fireEvent("cacheChanged", {
+			action: "refresh",
+		});
 	}
 
 	set(dataMap) {
@@ -1368,11 +1479,14 @@ class Service extends Component {
 
 	// Retrieve items, using cache when possible
 	async readMany(IDs) {
+		a7.log.trace("readMany: ");
+
 		// Compare requested IDs with cache
 		const { present, missing } = this.compareIDs(IDs);
 
 		// Fetch missing items if any
 
+		console.dir("Missing? " + missing.length);
 		if (missing.length > 0) {
 			let obj = { id: missing };
 
@@ -1381,11 +1495,7 @@ class Service extends Component {
 				.then((response) => response.json())
 				.then((json) => {
 					if (Array.isArray(json)) {
-						let entities = [];
-						for (let item in json) {
-							entities.push(new this.entityClass(json[item]));
-						}
-						this.merge(entities);
+						this.merge(json);
 					}
 				});
 		}
@@ -1453,7 +1563,7 @@ class Service extends Component {
 
 	filter(items, criteria) {
 		// Convert items to array if it's a Map
-		let itemsArray = items instanceof Map ? Array.from(items.values()) : items;
+		let itemsArray = Array.isArray(items) ? items : Array.from(items.values());
 
 		// Validate criteria input
 		if (
@@ -1543,6 +1653,21 @@ class Service extends Component {
 
 		return filteredItems;
 	}
+
+	// notifyBoundDataProviders(action, data) {
+	// 	this.bindings.forEach((binding, key) => {
+	// 		if (this.dataProviders.size > 0) {
+	// 			//const filter = binding.filter || {};
+	// 			if (binding.filter !== null) {
+	// 				data = this.filter(dataMap.values(), filter);
+	// 			}
+
+	// 			this.dataProviders.forEach((dp) =>
+	// 				dp.setState({ [key]: filteredData }),
+	// 			);
+	// 		}
+	// 	});
+	// }
 }
 
 class User extends Component {
@@ -1642,13 +1767,13 @@ class View extends Component {
 		);
 	}
 
-	events = [
-		"mustRender",
-		"rendered",
-		"mustRegister",
-		"registered",
-		"mustUnregister",
-	];
+	// events = [
+	// 	"mustRender",
+	// 	"rendered",
+	// 	"mustRegister",
+	// 	"registered",
+	// 	"mustUnregister",
+	// ];
 
 	setState(args) {
 		if (this.dataProvider) {
@@ -2472,339 +2597,350 @@ a7.services = (function () {
 })();
 
 a7.ui = (function () {
-    'use strict'
+	"use strict";
 
-    // browser events that can be used in templating, e.g. data-click will be added to the resulting HTML as a click event handler
-    const resourceEvents = ['cached', 'error', 'abort', 'load', 'beforeunload']
+	// browser events that can be used in templating, e.g. data-click will be added to the resulting HTML as a click event handler
+	const resourceEvents = ["cached", "error", "abort", "load", "beforeunload"];
 
-    const networkEvents = ['online', 'offline']
+	const networkEvents = ["online", "offline"];
 
-    const focusEvents = ['focus', 'blur']
+	const focusEvents = ["focus", "blur"];
 
-    const websocketEvents = ['open', 'message', 'error', 'close']
+	const websocketEvents = ["open", "message", "error", "close"];
 
-    const sessionHistoryEvents = ['pagehide', 'pageshow', 'popstate']
+	const sessionHistoryEvents = ["pagehide", "pageshow", "popstate"];
 
-    const cssAnimationEvents = [
-        'animationstart',
-        'animationend',
-        'animationiteration',
-    ]
+	const cssAnimationEvents = [
+		"animationstart",
+		"animationend",
+		"animationiteration",
+	];
 
-    const cssTransitionEvents = [
-        'transitionstart',
-        'transitioncancel',
-        'transitionend',
-        'transitionrun',
-    ]
+	const cssTransitionEvents = [
+		"transitionstart",
+		"transitioncancel",
+		"transitionend",
+		"transitionrun",
+	];
 
-    const formEvents = ['reset', 'submit']
+	const formEvents = ["reset", "submit"];
 
-    const printingEvents = ['beforeprint', 'afterprint']
+	const printingEvents = ["beforeprint", "afterprint"];
 
-    const textCompositionEvents = [
-        'compositionstart',
-        'compositionupdate',
-        'compositionend',
-    ]
+	const textCompositionEvents = [
+		"compositionstart",
+		"compositionupdate",
+		"compositionend",
+	];
 
-    const viewEvents = [
-        'fullscreenchange',
-        'fullscreenerror',
-        'resize',
-        'scroll',
-    ]
+	const viewEvents = [
+		"fullscreenchange",
+		"fullscreenerror",
+		"resize",
+		"scroll",
+	];
 
-    const clipboardEvents = ['cut', 'copy', 'paste']
+	const clipboardEvents = ["cut", "copy", "paste"];
 
-    const keyboardEvents = ['keydown', 'keypress', 'keyup']
+	const keyboardEvents = ["keydown", "keypress", "keyup"];
 
-    const mouseEvents = [
-        'auxclick',
-        'click',
-        'contextmenu',
-        'dblclick',
-        'mousedown',
-        'mousenter',
-        'mouseleave',
-        'mousemove',
-        'mouseover',
-        'mouseout',
-        'mouseup',
-        'pointerlockchange',
-        'pointerlockerror',
-        'wheel',
-    ]
+	const mouseEvents = [
+		"auxclick",
+		"click",
+		"contextmenu",
+		"dblclick",
+		"mousedown",
+		"mousenter",
+		"mouseleave",
+		"mousemove",
+		"mouseover",
+		"mouseout",
+		"mouseup",
+		"pointerlockchange",
+		"pointerlockerror",
+		"wheel",
+	];
 
-    const dragEvents = [
-        'drag',
-        'dragend',
-        'dragstart',
-        'dragleave',
-        'dragover',
-        'drop',
-    ]
+	const dragEvents = [
+		"drag",
+		"dragend",
+		"dragstart",
+		"dragleave",
+		"dragover",
+		"drop",
+	];
 
-    const mediaEvents = [
-        'audioprocess',
-        'canplay',
-        'canplaythrough',
-        'complete',
-        'durationchange',
-        'emptied',
-        'ended',
-        'loadeddata',
-        'loadedmetadata',
-        'pause',
-        'play',
-        'playing',
-        'ratechange',
-        'seeked',
-        'seeking',
-        'stalled',
-        'suspend',
-        'timeupdate',
-        'columechange',
-        'waiting',
-    ]
+	const mediaEvents = [
+		"audioprocess",
+		"canplay",
+		"canplaythrough",
+		"complete",
+		"durationchange",
+		"emptied",
+		"ended",
+		"loadeddata",
+		"loadedmetadata",
+		"pause",
+		"play",
+		"playing",
+		"ratechange",
+		"seeked",
+		"seeking",
+		"stalled",
+		"suspend",
+		"timeupdate",
+		"columechange",
+		"waiting",
+	];
 
-    const progressEvents = [
-        // duplicates from resource events
-        /* 'abort',
+	const progressEvents = [
+		// duplicates from resource events
+		/* 'abort',
 	'error',
 	'load', */
-        'loadend',
-        'loadstart',
-        'progress',
-        'timeout',
-    ]
+		"loadend",
+		"loadstart",
+		"progress",
+		"timeout",
+	];
 
-    const storageEvents = ['change', 'storage']
+	const storageEvents = ["change", "storage"];
 
-    const updateEvents = [
-        'checking',
-        'downloading',
-        /* 'error', */
-        'noupdate',
-        'obsolete',
-        'updateready',
-    ]
+	const updateEvents = [
+		"checking",
+		"downloading",
+		/* 'error', */
+		"noupdate",
+		"obsolete",
+		"updateready",
+	];
 
-    const valueChangeEvents = [
-        'broadcast',
-        'CheckBoxStateChange',
-        'hashchange',
-        'input',
-        'RadioStateChange',
-        'readystatechange',
-        'ValueChange',
-    ]
+	const valueChangeEvents = [
+		"broadcast",
+		"CheckBoxStateChange",
+		"hashchange",
+		"input",
+		"RadioStateChange",
+		"readystatechange",
+		"ValueChange",
+	];
 
-    const uncategorizedEvents = [
-        'invalid',
-        'localized',
-        /* 'message',
+	const uncategorizedEvents = [
+		"invalid",
+		"localized",
+		/* 'message',
 	'open', */
-        'show',
-    ]
+		"show",
+	];
 
-    const _standardEvents = resourceEvents
-        .concat(networkEvents)
-        .concat(focusEvents)
-        .concat(websocketEvents)
-        .concat(sessionHistoryEvents)
-        .concat(cssAnimationEvents)
-        .concat(cssTransitionEvents)
-        .concat(formEvents)
-        .concat(printingEvents)
-        .concat(textCompositionEvents)
-        .concat(viewEvents)
-        .concat(clipboardEvents)
-        .concat(keyboardEvents)
-        .concat(mouseEvents)
-        .concat(dragEvents)
-        .concat(mediaEvents)
-        .concat(progressEvents)
-        .concat(storageEvents)
-        .concat(updateEvents)
-        .concat(valueChangeEvents)
-        .concat(uncategorizedEvents)
+	const _standardEvents = resourceEvents
+		.concat(networkEvents)
+		.concat(focusEvents)
+		.concat(websocketEvents)
+		.concat(sessionHistoryEvents)
+		.concat(cssAnimationEvents)
+		.concat(cssTransitionEvents)
+		.concat(formEvents)
+		.concat(printingEvents)
+		.concat(textCompositionEvents)
+		.concat(viewEvents)
+		.concat(clipboardEvents)
+		.concat(keyboardEvents)
+		.concat(mouseEvents)
+		.concat(dragEvents)
+		.concat(mediaEvents)
+		.concat(progressEvents)
+		.concat(storageEvents)
+		.concat(updateEvents)
+		.concat(valueChangeEvents)
+		.concat(uncategorizedEvents);
 
-    var _events = [],
-        _options = {},
-        _selectors = {},
-        _nodes = {},
-        _queue = [],
-        _deferred = [],
-        _stateTransition = false,
-        //_templateMap = {},
-        _views = [],
-        // selectors are cached for easy reference later
+	let _events = [],
+		_options = {},
+		_selectors = {},
+		_nodes = {},
+		_queue = [],
+		_deferred = [],
+		_stateTransition = false,
+		//_templateMap = {},
+		_views = [],
+		// selectors are cached for easy reference later
 
-        _setSelector = function (name, selector) {
-            _selectors[name] = selector
-            _nodes[name] = document.querySelector(selector)
-        },
-        _getSelector = function (name) {
-            return _selectors[name]
-        },
-        // get an active view from the view struct
-        _getView = function (id) {
-            return _views[id]
-        },
-        _getNode = function (name) {
-            return _nodes[name]
-        },
-        // return the registered events for the application
-        _getEvents = function () {
-            return _events
-        },
-        // register a view
-        // this happens automatically when a view is instantiated
-        _register = function (view) {
-            switch (_options.renderer) {
-                case 'Handlebars':
-                case 'Mustache':
-                case 'templateLiterals':
-                    _views[view.props.id] = view
-                    view.fireEvent('registered')
-                    break
-            }
-        },
-        // unregister the view
-        _unregister = function (id) {
-            delete _views[id]
-        },
-        // get the IDs for the tree of parent views to the root view of this tree
-        _getParentViewIds = function (id) {
-            a7.log.trace('Find parents of ' + id)
-            let parentIds = []
-            let view = _views[id]
-            while (view.props.parentID !== undefined) {
-                parentIds.unshift(view.props.parentID)
-                view = _views[view.props.parentID]
-            }
-            return parentIds
-            // parentids returned in highest to lowest order
-        },
-        // get the tree of child IDs of a view
-        _getChildViewIds = function (id) {
-            a7.log.trace('Find children of ' + id)
-            let childIds = []
-            let view = _views[id]
+		_setSelector = function (name, selector) {
+			_selectors[name] = selector;
+			_nodes[name] = document.querySelector(selector);
+		},
+		_getSelector = function (name) {
+			return _selectors[name];
+		},
+		// get an active view from the view struct
+		_getView = function (id) {
+			return _views[id];
+		},
+		_getNode = function (name) {
+			return _nodes[name];
+		},
+		_setStateTransition = function (val) {
+			_stateTransition = val;
+			a7.log.trace("a7.ui.stateTransition: " + val);
+		},
+		_getStateTransition = function () {
+			return _stateTransition;
+		},
+		// return the registered events for the application
+		_getEvents = function () {
+			return _events;
+		},
+		// register a view
+		// this happens automatically when a view is instantiated
+		_register = function (view) {
+			switch (_options.renderer) {
+				case "Handlebars":
+				case "Mustache":
+				case "templateLiterals":
+					_views[view.props.id] = view;
+					view.fireEvent("registered");
+					break;
+			}
+		},
+		// unregister the view
+		_unregister = function (id) {
+			delete _views[id];
+		},
+		// get the IDs for the tree of parent views to the root view of this tree
+		_getParentViewIds = function (id) {
+			a7.log.trace("Find parents of " + id);
+			let parentIds = [];
+			let view = _views[id];
+			while (view.props.parentID !== undefined) {
+				parentIds.unshift(view.props.parentID);
+				view = _views[view.props.parentID];
+			}
+			return parentIds;
+			// parentids returned in highest to lowest order
+		},
+		// get the tree of child IDs of a view
+		_getChildViewIds = function (id) {
+			a7.log.trace("Find children of " + id);
+			let childIds = [];
+			let view = _views[id];
 
-            for (var child in view.children) {
-                let childId = view.children[child].props.id
-                if (_getView(childId) !== undefined) {
-                    childIds.push(childId)
-                    childIds.concat(_getChildViewIds(childId))
-                }
-            }
-            // returned in highest to lowest order
-            return childIds
-        },
-        // add a view to the render queue
-        _enqueueForRender = function (id) {
-            // if _stateTransition is true, the queue is being processed
-            if (!_stateTransition) {
-                a7.log.info('enqueue: ' + id)
-                if (!_queue.length) {
-                    a7.log.trace('add first view to queue: ' + id)
-                    _queue.push(id)
-                    _processRenderQueue()
-                } else {
-                    let childIds = _getChildViewIds(id)
-                    if (_views[id].props.parentID === undefined) {
-                        // if the view is a root view, it should be pushed to the front of the stack
-                        a7.log.trace('add to front of queue: ' + id)
-                        _queue.unshift(id)
-                    } else {
-                        let parentIds = _getParentViewIds(id)
+			for (var child in view.children) {
+				let childId = view.children[child].props.id;
+				if (_getView(childId) !== undefined) {
+					childIds.push(childId);
+					childIds.concat(_getChildViewIds(childId));
+				}
+			}
+			// returned in highest to lowest order
+			return childIds;
+		},
+		// add a view to the render queue
+		_enqueueForRender = function (id) {
+			// if _stateTransition is true, the queue is being processed
+			if (!_getStateTransition()) {
+				a7.log.info("enqueue: " + id);
+				if (!_queue.length) {
+					a7.log.trace("add first view to queue: " + id);
+					_queue.push(id);
+					_processRenderQueue();
+				} else {
+					let childIds = _getChildViewIds(id);
+					if (_views[id].props.parentID === undefined) {
+						// if the view is a root view, it should be pushed to the front of the stack
+						a7.log.trace("add to front of queue: " + id);
+						_queue.unshift(id);
+					} else {
+						let parentIds = _getParentViewIds(id);
 
-                        let highParent = undefined
-                        if (parentIds.length) {
-                            highParent = parentIds.find(function (parentId) {
-                                return _queue.indexOf(parentId) >= 0
-                            })
-                        }
+						let highParent = undefined;
+						if (parentIds.length) {
+							highParent = parentIds.find(function (parentId) {
+								return _queue.indexOf(parentId) >= 0;
+							});
+						}
 
-                        // only add if there is no parent in the queue, since parents will render children
-                        if (highParent === undefined) {
-                            a7.log.trace('add to end of queue: ' + id)
-                            _queue.push(id)
-                        }
-                    }
+						// only add if there is no parent in the queue, since parents will render children
+						if (highParent === undefined) {
+							a7.log.trace("add to end of queue: " + id);
+							_queue.push(id);
+						}
+					}
 
-                    // remove child views from the queue, they will be rendered by the parents
-                    childIds.forEach(function (childId) {
-                        if (_queue.indexOf(childId) >= 0) {
-                            a7.log.trace('remove child from queue: ' + childId)
-                            _queue.splice(_queue.indexOf(childId), 1)
-                        }
-                    })
-                }
-            } else {
-                _deferred.push(id)
-            }
-        },
-        // render the queue
-        _processRenderQueue = function () {
-            a7.log.trace('processing the queue')
-            _stateTransition = true
+					// remove child views from the queue, they will be rendered by the parents
+					childIds.forEach(function (childId) {
+						if (_queue.indexOf(childId) >= 0) {
+							a7.log.trace("remove child from queue: " + childId);
+							_queue.splice(_queue.indexOf(childId), 1);
+						}
+					});
+				}
+			} else {
+				_deferred.push(id);
+			}
+		},
+		// render the queue
+		_processRenderQueue = function () {
+			a7.log.trace("processing the queue");
+			_setStateTransition(true);
+			try {
+				_queue.forEach(function (id) {
+					_views[id].render();
+				});
+			} catch (err) {
+				// log rendering errors
+				a7.log.trace(err);
+			}
+			_queue = [];
+			_setStateTransition(false);
+			_deferred.forEach(function (id) {
+				_enqueueForRender(id);
+			});
+			_deferred = [];
+		},
+		_removeView = function (id) {
+			delete _views[id];
+		};
 
-            _queue.forEach(function (id) {
-                _views[id].render()
-            })
-            _queue = []
-            _stateTransition = false
-            _deferred.forEach(function (id) {
-                _enqueueForRender(id)
-            })
-            _deferred = []
-        },
-        _removeView = function (id) {
-            delete _views[id]
-        }
+	return {
+		//render: _render,
+		getEvents: _getEvents,
+		selectors: _selectors,
+		getSelector: _getSelector,
+		setSelector: _setSelector,
+		getNode: _getNode,
+		register: _register,
+		unregister: _unregister,
+		getView: _getView,
+		enqueueForRender: _enqueueForRender,
+		removeView: _removeView,
+		views: _views,
 
-    return {
-        //render: _render,
-        getEvents: _getEvents,
-        selectors: _selectors,
-        getSelector: _getSelector,
-        setSelector: _setSelector,
-        getNode: _getNode,
-        register: _register,
-        unregister: _unregister,
-        getView: _getView,
-        enqueueForRender: _enqueueForRender,
-        removeView: _removeView,
-        views: _views,
+		init: function (resolve, reject) {
+			a7.log.info("Layout initializing...");
+			_options = a7.model.get("a7").ui;
 
-        init: function (resolve, reject) {
-            a7.log.info('Layout initializing...')
-            _options = a7.model.get('a7').ui
+			// set event groups to create listeners for
+			var eventGroups = _options.eventGroups
+				? _options.eventGroups
+				: "standard";
+			switch (eventGroups) {
+				case "extended":
+					// extended events not implemented yet
+					reject("Extended events are not implemented yet.");
+				case "standard":
+					_events = _standardEvents;
+					break;
+				default:
+					_options.eventGroups.forEach(function (group) {
+						_events = _events.concat(group);
+					});
+			}
 
-            // set event groups to create listeners for
-            var eventGroups = _options.eventGroups
-                ? _options.eventGroups
-                : 'standard'
-            switch (eventGroups) {
-                case 'extended':
-                    // extended events not implemented yet
-                    reject('Extended events are not implemented yet.')
-                case 'standard':
-                    _events = _standardEvents
-                    break
-                default:
-                    _options.eventGroups.forEach(function (group) {
-                        _events = _events.concat(group)
-                    })
-            }
-
-            resolve()
-        },
-    }
-})()
+			resolve();
+		},
+	};
+})();
 
 a7.util = (function () {
 
