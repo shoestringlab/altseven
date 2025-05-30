@@ -138,7 +138,7 @@ class View extends Component {
 	}
 
 	render() {
-		a7.log.info("render: " + this.props.id);
+		a7.log.trace("render: " + this.props.id);
 		if (this.element === undefined || this.element === null) {
 			this.element = document.querySelector(this.props.selector);
 		}

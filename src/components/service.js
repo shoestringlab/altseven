@@ -8,6 +8,9 @@ class Service extends Component {
 		this.dataProviders = new Map();
 		this.bindings = new Map(); // New map to store bindings
 
+		// Queue initialization
+		this.queue = new Map();
+
 		this.config();
 		this.fireEvent("mustRegister");
 	}
@@ -66,9 +69,10 @@ class Service extends Component {
 				missing.push(id);
 			}
 		});
-		a7.log.trace("results: " + { present, missing });
-		console.dir(present);
-		console.dir(missing);
+		a7.log.trace(
+			"results: " + JSON.stringify(present) + " " + JSON.stringify(missing),
+		);
+
 		return { present, missing };
 	}
 
@@ -110,14 +114,21 @@ class Service extends Component {
 
 	async read(obj) {
 		let dataMap = this.get();
-		if (!dataMap.has(obj[this.key])) {
-			await a7.remote
-				.invoke(this.remoteMethods.read, obj)
-				.then((response) => response.json())
-				.then((json) => {
-					this.cacheSet(json);
-					dataMap = this.get();
-				});
+		const requestKey = `${this.remoteMethods.read}-${JSON.stringify(obj)}`;
+		if (this.queue.has(requestKey)) {
+			a7.log.trace("Duplicate read request detected, cancelling new request");
+			//return this.queue.get(requestKey);
+		} else {
+			if (!dataMap.has(obj[this.key])) {
+				await a7.remote
+					.invoke(this.remoteMethods.read, obj)
+					.then((response) => response.json())
+					.then((json) => {
+						this.cacheSet(json);
+						this.queue.delete(requestKey);
+						dataMap = this.get();
+					});
+			}
 		}
 
 		return dataMap.get(obj[this.key]);
@@ -146,14 +157,21 @@ class Service extends Component {
 	}
 
 	async readAll(obj) {
-		let dataMap = this.get();
-		if (!dataMap.size) {
-			await a7.remote
-				.invoke(this.remoteMethods.readAll, obj)
-				.then((response) => response.json())
-				.then((json) => {
-					this.merge(json);
-				});
+		const requestKey = `${this.remoteMethods.readAll}-${JSON.stringify(obj)}`;
+		if (this.queue.has(requestKey)) {
+			a7.log.trace("Duplicate read request detected, cancelling new request");
+			//return this.queue.get(requestKey);
+		} else {
+			let dataMap = this.get();
+			if (!dataMap.size) {
+				await a7.remote
+					.invoke(this.remoteMethods.readAll, obj)
+					.then((response) => response.json())
+					.then((json) => {
+						this.merge(json);
+						this.queue.delete(requestKey);
+					});
+			}
 		}
 		return this.get();
 	}
@@ -184,36 +202,49 @@ class Service extends Component {
 		a7.model.set(this.id, dataMap);
 	}
 
-	get() {
-		return a7.model.get(this.id);
+	get(ID) {
+		if (typeof ID === "undefined") {
+			return a7.model.get(this.id);
+		} else {
+			return a7.model.get(this.id, ID);
+		}
 	}
 
 	// Retrieve items, using cache when possible
 	async readMany(IDs) {
-		a7.log.trace("readMany: ");
-
-		// Compare requested IDs with cache
-		const { present, missing } = this.compareIDs(IDs);
-
-		// Fetch missing items if any
-
-		console.dir("Missing? " + missing.length);
-		if (missing.length > 0) {
-			let obj = { id: missing };
-
-			await a7.remote
-				.invoke(this.remoteMethods.readMany, obj)
-				.then((response) => response.json())
-				.then((json) => {
-					if (Array.isArray(json)) {
-						this.merge(json);
-					}
-				});
+		if (typeof IDs === "undefined") {
+			return new Map();
 		}
-
+		a7.log.trace("readMany: ");
 		// Get cached items
 		const itemsMap = this.get();
-		const cachedItems = present.map((id) => itemsMap.get(id));
+		const requestKey = `${this.remoteMethods.readMany}-${JSON.stringify(IDs)}`;
+		if (this.queue.has(requestKey)) {
+			a7.log.trace("Duplicate read request detected, cancelling new request");
+			//return this.queue.get(requestKey);
+		} else {
+			// Compare requested IDs with cache
+			const { present, missing } = this.compareIDs(IDs);
+
+			// Fetch missing items if any
+
+			a7.log.trace("Missing? " + missing.length);
+			if (missing.length > 0) {
+				let obj = { id: missing };
+
+				await a7.remote
+					.invoke(this.remoteMethods.readMany, obj)
+					.then((response) => response.json())
+					.then((json) => {
+						if (Array.isArray(json)) {
+							this.merge(json);
+							this.queue.delete(requestKey);
+						}
+					});
+			}
+
+			const cachedItems = present.map((id) => itemsMap.get(id));
+		}
 
 		// Return all requested items in order, filtering out nulls
 		const result = IDs.map((id) => {

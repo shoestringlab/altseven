@@ -241,7 +241,7 @@ a7.ui = (function () {
 		_enqueueForRender = function (id) {
 			// if _stateTransition is true, the queue is being processed
 			if (!_getStateTransition()) {
-				a7.log.info("enqueue: " + id);
+				a7.log.trace("enqueue: " + id);
 				if (!_queue.length) {
 					a7.log.trace("add first view to queue: " + id);
 					_queue.push(id);
@@ -319,7 +319,7 @@ a7.ui = (function () {
 		views: _views,
 
 		init: function (resolve, reject) {
-			a7.log.info("Layout initializing...");
+			a7.log.trace("Layout initializing...");
 			_options = a7.model.get("a7").ui;
 
 			// set event groups to create listeners for

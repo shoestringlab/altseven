@@ -40,7 +40,7 @@ class DataProvider extends Component {
 					(service) => service.entityClass === this.binding[rule].entityClass,
 				);
 				if (matchingService) {
-					console.log("Binding: ", rule);
+					a7.log.trace("Binding: ", rule);
 					let filter = this.binding[rule].filter || null;
 					let func = this.binding[rule].func || null;
 					let dependencies = this.binding[rule].dependencies || null;
@@ -89,41 +89,18 @@ class DataProvider extends Component {
 
 			this.view.setState({ [binding.key]: updatedData });
 		} else {
-			switch (args.action) {
-				case "setItem":
-					updatedData = binding.service.get();
-					if (binding.filter !== null) {
-						updatedData = this.filter(updatedData, binding.filter);
-					}
-
-					this.view.setState({ [binding.key]: updatedData });
-					// a7.log.trace("setItem called: ") +
-					// 	this.view.setState({
-					// 		[binding.key]: [...this.#state[binding.key], args.value],
-					// 	});
-					break;
-				case "deleteItem":
-					updatedData = binding.service.get();
-					if (binding.filter !== null) {
-						updatedData = this.filter(updatedData, binding.filter);
-					}
-
-					this.view.setState({ [binding.key]: updatedData });
-					// this.view.setState({
-					// 	[binding.key]: this.#state[binding.key].filter(
-					// 		(item) => item[this.key] !== args.id,
-					// 	),
-					// });
-					break;
-				case "refresh":
-					updatedData = binding.service.get();
-					if (binding.filter !== null) {
-						updatedData = this.filter(updatedData, binding.filter);
-					}
-
-					this.view.setState({ [binding.key]: updatedData });
-					break;
+			updatedData = binding.service.get();
+			if (binding.filter !== null) {
+				updatedData = this.filter(updatedData, binding.filter);
 			}
+			let type = this.#schema[binding.key].type;
+
+			// for object types
+			if (type === "object") {
+				updatedData = Array.from(updatedData.values());
+				updatedData = updatedData[0];
+			}
+			this.view.setState({ [binding.key]: updatedData });
 		}
 	}
 
