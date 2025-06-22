@@ -4,8 +4,13 @@ class Service extends Component {
 		this.id = props.id; // id of the service to register with the framework
 		this.key = props.key; // name of the Object key
 		this.remoteMethods = props.remoteMethods;
-		this.entity = props.entity;
+		this.entityClass = props.entityClass; // Entity class to use for data operations
 		this.dataProviders = new Map();
+		this.bindings = new Map(); // New map to store bindings
+
+		// Queue initialization
+		this.queue = new Map();
+
 		this.config();
 		this.fireEvent("mustRegister");
 	}
@@ -16,13 +21,10 @@ class Service extends Component {
 			this.set(new Map());
 		}
 
-		this.on(
-			"mustRegister",
-			function () {
-				a7.log.trace("mustRegister: Service: " + this.id);
-				a7.services.register(this);
-			}.bind(this),
-		);
+		this.on("mustRegister", () => {
+			a7.log.trace("mustRegister: Service: " + this.id);
+			a7.services.register(this);
+		});
 	}
 
 	registerDataProvider(dp) {
@@ -46,6 +48,9 @@ class Service extends Component {
 
 	// Compare itemIDs against cached items
 	compareIDs(IDs) {
+		a7.log.trace("Service: " + this.id);
+		a7.log.trace("compareIDs: " + IDs);
+
 		const dataMap = this.get();
 		const present = [];
 		const missing = [];
@@ -61,6 +66,9 @@ class Service extends Component {
 				missing.push(id);
 			}
 		});
+		a7.log.trace(
+			"results: " + JSON.stringify(present) + " " + JSON.stringify(missing),
+		);
 
 		return { present, missing };
 	}
@@ -75,55 +83,69 @@ class Service extends Component {
 
 		newItems.forEach((item) => {
 			if (item[this.key]) {
-				dataMap.set(item[this.key], item);
+				dataMap.set(item[this.key], this.format(item));
 			}
 		});
 
 		this.set(dataMap);
+
+		this.fireEvent("cacheChanged", { action: "refresh" });
 		return dataMap;
 	}
 
-	new() {
-		return Object.assign({}, this.entity);
+	bind(key, filter) {
+		this.bindings.set(key, { filter: filter });
 	}
 
 	async create(obj) {
-		let entity = obj;
+		// if obj is a plain object, create a new entity
+		let entityInstance =
+			(!obj) instanceof this.entityClass ? this.format(obj) : obj;
+
 		await a7.remote
-			.invoke(this.remoteMethods.create, obj)
+			.invoke(this.remoteMethods.create, entityInstance)
 			.then((response) => response.json())
 			.then((json) => {
-				this.cacheSet(json);
-				entity = json;
+				entityInstance = this.format(json);
+				this.cacheSet(entityInstance);
 			});
-		return entity;
+		return entityInstance;
 	}
 
 	async read(obj) {
 		let dataMap = this.get();
-		if (!dataMap.has(obj[this.key])) {
-			await a7.remote
-				.invoke(this.remoteMethods.read, obj)
-				.then((response) => response.json())
-				.then((json) => {
-					this.cacheSet(json);
-					dataMap = this.get();
-				});
+		const requestKey = `${this.remoteMethods.read}-${JSON.stringify(obj)}`;
+		if (this.queue.has(requestKey)) {
+			a7.log.trace("Duplicate read request detected, cancelling new request");
+			//return this.queue.get(requestKey);
+		} else {
+			if (!dataMap.has(obj[this.key])) {
+				let entity;
+				await a7.remote
+					.invoke(this.remoteMethods.read, obj)
+					.then((response) => response.json())
+					.then((json) => {
+						entity = json;
+					});
+				this.cacheSet(this.format(entity));
+				this.queue.delete(requestKey);
+				dataMap = this.get();
+			}
 		}
 
 		return dataMap.get(obj[this.key]);
 	}
 
 	async update(obj) {
-		let entity = obj;
+		let entityInstance = this.format(obj);
 		await a7.remote
 			.invoke(this.remoteMethods.update, obj)
 			.then((response) => response.json())
 			.then((json) => {
-				this.cacheSet(json);
-				obj = json;
+				entityInstance = this.format(json);
+				this.cacheSet(entityInstance);
 			});
-		return entity;
+		return entityInstance;
 	}
 
 	async delete(obj) {
@@ -131,71 +153,114 @@ class Service extends Component {
 			.invoke(this.remoteMethods.delete, obj)
 			.then((response) => response.json())
 			.then((json) => {
-				this.cacheDelete(obj[this.key]);
+				// nothing to do here
 			});
+		this.cacheDelete(obj[this.key]);
 		return true;
 	}
 
 	async readAll(obj) {
-		let dataMap = this.get();
-		if (!dataMap.size) {
-			await a7.remote
-				.invoke(this.remoteMethods.readAll, obj)
-				.then((response) => response.json())
-				.then((json) => {
-					this.merge(json);
-				});
+		const requestKey = `${this.remoteMethods.readAll}-${JSON.stringify(obj)}`;
+		if (this.queue.has(requestKey)) {
+			a7.log.trace("Duplicate read request detected, cancelling new request");
+			//return this.queue.get(requestKey);
+		} else {
+			let dataMap = this.get();
+			if (!dataMap.size) {
+				let entities;
+				await a7.remote
+					.invoke(this.remoteMethods.readAll, obj)
+					.then((response) => response.json())
+					.then((json) => {
+						entities = json;
+					});
+				this.merge(entities);
+				this.queue.delete(requestKey);
+			}
 		}
 		return this.get();
+	}
+
+	format(obj) {
+		return new this.entityClass(obj);
 	}
 
 	cacheDelete(id) {
 		let dataMap = this.get();
 		dataMap.delete(id);
 		this.set(dataMap);
+
+		// Notify bound DataProviders
+
+		this.fireEvent("cacheChanged", { action: "delete" });
 	}
 
 	cacheSet(item) {
-		let dataMap = this.get();
-		dataMap.set(item[this.key], item);
-		this.set(dataMap);
+		if (item instanceof this.entityClass) {
+			let dataMap = this.get();
+			dataMap.set(item[this.key], item);
+			this.set(dataMap);
+
+			// Notify bound DataProviders
+
+			this.fireEvent("cacheChanged", {
+				action: "refresh",
+			});
+		} else {
+			throw "Item must be of proper entity type.";
+		}
 	}
 
 	set(dataMap) {
 		a7.model.set(this.id, dataMap);
 	}
 
-	get() {
-		return a7.model.get(this.id);
+	get(ID) {
+		if (typeof ID === "undefined") {
+			return a7.model.get(this.id);
+		} else {
+			return a7.model.get(this.id, ID);
+		}
 	}
 
 	// Retrieve items, using cache when possible
 	async readMany(IDs) {
-		// Compare requested IDs with cache
-		const { present, missing } = this.compareIDs(IDs);
-
-		// Fetch missing items if any
-
-		if (missing.length > 0) {
-			let obj = { id: missing };
-
-			await a7.remote
-				.invoke(this.remoteMethods.readMany, obj)
-				.then((response) => response.json())
-				.then((json) => {
-					if (Array.isArray(json)) {
-						this.merge(json);
-					}
-				});
+		if (typeof IDs === "undefined") {
+			return new Map();
 		}
-
+		a7.log.trace("readMany: ");
 		// Get cached items
-		const itemsMap = this.get();
-		const cachedItems = present.map((id) => itemsMap.get(id));
+		//const itemsMap = this.get();
+		const requestKey = `${this.remoteMethods.readMany}-${JSON.stringify(IDs)}`;
+		if (this.queue.has(requestKey)) {
+			a7.log.trace("Duplicate read request detected, cancelling new request");
+			//return this.queue.get(requestKey);
+		} else {
+			// Compare requested IDs with cache
+			const { present, missing } = this.compareIDs(IDs);
 
+			// Fetch missing items if any
+
+			a7.log.trace("Missing? " + missing.length);
+			if (missing.length > 0) {
+				let obj = { id: missing };
+
+				await a7.remote
+					.invoke(this.remoteMethods.readMany, obj)
+					.then((response) => response.json())
+					.then((json) => {
+						if (Array.isArray(json)) {
+							this.merge(json);
+							this.queue.delete(requestKey);
+						}
+					});
+			}
+
+			//const cachedItems = present.map((id) => itemsMap.get(id));
+		}
 		// Return all requested items in order, filtering out nulls
 		const result = IDs.map((id) => {
-			const item = itemsMap.get(id);
+			const item = this.get(id);
 			return item || null; // Return null for items that couldn't be found
 		});
 		return result.filter((item) => item !== null); // Filter out any null values
@@ -249,10 +314,9 @@ class Service extends Component {
 
 		return itemsArray;
 	}
-
 	filter(items, criteria) {
 		// Convert items to array if it's a Map
-		let itemsArray = items instanceof Map ? Array.from(items.values()) : items;
+		let itemsArray = Array.isArray(items) ? items : Array.from(items.values());
 
 		// Validate criteria input
 		if (
@@ -308,7 +372,7 @@ class Service extends Component {
 					// Handle specific operator, value, and regex flag
 					const [operator, value, useRegex] = criterion;
 					let valueA = item[field];
-					let valueB = value;
+					let valueB = typeof value === "function" ? value() : value;
 
 					if (useRegex && typeof valueB === "string") {
 						// Use regex for string matching
@@ -324,7 +388,8 @@ class Service extends Component {
 					}
 				} else if (Array.isArray(criterion) && criterion.length === 2) {
 					const operator = criterion[0];
-					const value = criterion[1];
+					const value =
+						typeof criterion[1] === "function" ? criterion[1]() : criterion[1];
 
 					// Handle range match or simple equality/inequality check
 					if (typeof value === "object" && Array.isArray(value)) {
@@ -342,4 +407,19 @@ class Service extends Component {
 
 		return filteredItems;
 	}
+
+	// notifyBoundDataProviders(action, data) {
+	// 	this.bindings.forEach((binding, key) => {
+	// 		if (this.dataProviders.size > 0) {
+	// 			//const filter = binding.filter || {};
+	// 			if (binding.filter !== null) {
+	// 				data = this.filter(dataMap.values(), filter);
+	// 			}
+
+	// 			this.dataProviders.forEach((dp) =>
+	// 				dp.setState({ [key]: filteredData }),
+	// 			);
+	// 		}
+	// 	});
+	// }
 }

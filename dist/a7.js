@@ -1,4 +1,3 @@
-
 export var a7 = a7;
 
 var a7 = (function () {
@@ -611,14 +610,18 @@ class Component {
 }
 
 class DataProvider extends Component {
+	#state = {};
+	#schema;
 	constructor(props) {
 		super();
-		this.schema = {};
-		this.baseState = {};
+		this.binding = props?.binding;
+		this.#state = props.state;
+		this.#schema = props.schema;
 		this.view = props.view;
-		this.id = this.view.id + "-dataProvider";
-		this.data = {};
+
+		this.id = this.view.props.id + "-dataProvider";
 		this.services = new Map();
+		this.bindings = new Map(); // New map to store bindings
 		this.config();
 		this.fireEvent("mustRegister");
 	}
@@ -630,41 +633,251 @@ class DataProvider extends Component {
 		this.on("mustRegister", () => {
 			this.register();
 		});
+		// bind to data
+		this.bind();
 	}
 
 	register() {
-		// Register with the view
-		this.view.registerDataProvider(this);
 		// Register with the services
 		this.services.forEach((service) => {
 			service.registerDataProvider(this);
 		});
 	}
 
-	setData(args) {
-		// Defaults to the built-in behavior of the View
-		this.data = Object.assign(args);
+	bind() {
+		if (this.binding) {
+			for (let rule in this.binding) {
+				let dependencies = this.binding[rule].dependencies || null;
+				let matchingService = [...this.services.values()].find(
+					(service) => service.entityClass === this.binding[rule].entityClass,
+				);
+				if (matchingService) {
+					a7.log.trace("Binding: ", rule);
+					let filter = this.binding[rule].filter || null;
+					let func = this.binding[rule].func || null;
+					let sort = this.binding[rule].sort || null;
+					let id = this.binding[rule].id || null;
+					this.bindings.set(rule, {
+						key: rule,
+						service: matchingService,
+						filter: filter,
+						sort: sort,
+						func: func,
+						dependencies: dependencies,
+						id: id,
+					});
+
+					matchingService.bind(rule, filter);
+
+					let boundData = this.getBoundData(this.bindings.get(rule));
+
+					this.setStateOnly({ [rule]: boundData });
+
+					//Listen for changes in the service cache
+					matchingService.on("cacheChanged", (service, args) => {
+						//pass in the DP state
+						args.state = this.getState();
+						this.updateBoundState(this.bindings.get(rule), args);
+					});
+				}
+
+				dependencies = this.binding[rule].dependencies || [];
+				dependencies.forEach((depKey) => {
+					let key = depKey.split(".");
+					if (key.length === 1) {
+						this.on("stateChanged", (dataProvider, props) => {
+							a7.log.trace("Binding dependency");
+							if ([key] in props) {
+								a7.log.trace("updated " + key);
+								this.updateBoundState(this.bindings.get(rule), {
+									action: "refresh",
+									state: this.getState(),
+								});
+							}
+							//	this.updateBoundState(this.bindings.get(rule), { action: "refresh" });
+						});
+					} else if (key.length === 2) {
+						// if the dependency is on another view, the dependency will be listed as ${viewID}.key.
+						a7.ui.getView(key[0]).on("stateChanged", (view, props) => {
+							a7.log.trace("Binding dependency");
+							if ([key[1]] in props) {
+								a7.log.trace("updated " + key[1]);
+								this.updateBoundState(this.bindings.get(rule), {
+									action: "refresh",
+									state: this.getState(),
+									dependentState: view.getState(),
+								});
+							}
+						});
+					}
+				});
+			}
+		}
 	}
 
-	getData() {
-		return Object.assign(this.data);
+	getBoundData(binding) {
+		let updatedData;
+
+		let type = this.#schema[binding.key].type;
+		if (type === "object") {
+			updatedData = binding.service.get(binding.id);
+		} else if (type === "map") {
+			updatedData = binding.service.get();
+			if (binding.filter !== null) {
+				updatedData = binding.service.filter(updatedData, binding.filter);
+			}
+
+			if (binding.sort !== null) {
+				updatedData = binding.service.sort(updatedData, binding.sort);
+			}
+		}
+
+		return updatedData;
+	}
+
+	async updateBoundState(binding, args) {
+		let updatedData;
+		if (binding.func !== null) {
+			// pass the filter to the func
+			args = Object.assign(args, {
+				filter: binding.filter,
+				sort: binding.sort,
+			});
+			if (binding.func.constructor.name === "AsyncFunction") {
+				updatedData = await binding.func(args);
+			} else {
+				updatedData = binding.func(args);
+			}
+			//let type = binding.entityClass.type;
+			let type = this.#schema[binding.key].type;
+			if (type === "map" && Array.isArray(updatedData)) {
+				updatedData = binding.service.convertArrayToMap(updatedData);
+			}
+
+			this.view.setState({ [binding.key]: updatedData });
+		} else {
+			let updatedData = this.getBoundData(binding);
+
+			this.view.setState({ [binding.key]: updatedData });
+		}
+	}
+
+	set schema(obj) {
+		// this doesn't actually do anthing, it's just here so the runtime doesn't complain about it being missing
+	}
+	get schema() {
+		return this.#schema;
+	}
+	setStateOnly(args) {
+		// Defaults to the built-in behavior of the View
+		this.#state = Object.assign(this.#state, args);
+	}
+	setState(args) {
+		this.setStateOnly(args);
+		this.fireEvent("stateChanged", args);
+	}
+
+	getState() {
+		return Object.assign({}, this.#state);
 	}
 }
 
 class Entity extends Component {
+	#schema;
+	#data;
 	constructor(props) {
 		super();
-		for (item in props) {
-			this[item] = props[item];
+		this.#schema = props.schema;
+		this.#data = {};
+		if (this.#schema && this.validate()) {
+			for (const [key, descriptor] of Object.entries(this.#schema)) {
+				this._defineProperty(key);
+				this[key] = props[key];
+			}
 		}
 	}
 
+	_defineProperty(key) {
+		const propertyName = `_${key}`;
+		this.#data[propertyName] = undefined;
+
+		Object.defineProperty(this, key, {
+			get: function () {
+				return this.#data[propertyName];
+			},
+			set: function (value) {
+				const schemaDescriptor = this.#schema[key];
+
+				if (schemaDescriptor.required && value === undefined) {
+					throw new Error(`Property ${key} is required.`);
+				}
+
+				// Check data type
+				const expectedType = schemaDescriptor.type;
+				const valueType = typeof value;
+
+				if (
+					!this._isOfType(value, expectedType) &&
+					value !== null &&
+					typeof value !== "undefined"
+				) {
+					throw new Error(
+						`Invalid type for property ${key}. Expected ${expectedType}, but got ${valueType}.`,
+					);
+				}
+
+				this.#data[propertyName] = value;
+			},
+		});
+	}
+
+	_isOfType(value, expectedType) {
+		// Special case for checking if the value is an instance of a specific class
+		// if (expectedType === "date") {
+		// 	return new Date(value) instanceof Date;
+		// }
+		// if (expectedType === "array") {
+		// 	return Array.isArray(value);
+		// }
+
+		switch (expectedType) {
+			case "date":
+				return new Date(value) instanceof Date;
+
+			case "array":
+				return Array.isArray(value);
+
+			case "boolean":
+				return value === 0 || value === 1 || value === true || value === false
+					? true
+					: false;
+
+			case "integer":
+				return Number.isInteger(value);
+
+			case "float":
+				return typeof value === "number";
+
+			case "string":
+				return typeof value === "string";
+
+			default:
+				return true;
+		}
+	}
+
+	set schema(obj) {}
+
+	get schema() {
+		return this.#schema;
+	}
+
 	validate() {
-		for (field in this.schema) {
-			if (field.required && !this[field]) {
+		for (let field in this.#schema) {
+			if (field.required && !this.#data[field]) {
 				throw new Error(`Field ${field} is required`);
 			}
-			if (field.type && typeof this[field] !== field.type) {
+			if (field.type && typeof this.#data[field] !== field.type) {
 				throw new Error(`Field ${field} must be of type ${field.type}`);
 			}
 		}
@@ -673,302 +886,282 @@ class Entity extends Component {
 }
 
 const Model = (() => {
-	'use strict'
+	"use strict";
 
-	const modelStore = new Map()
-	const mementoStore = new Map()
-	let maxMementos = 20 // Default value
+	const modelStore = new Map();
+	const mementoStore = new Map();
+	let maxMementos = 20; // Default value
 
 	class BindableObject {
 		constructor(data, element) {
-			this.data = this.processValue(data)
-			this.elements = []
-			this.mementos = []
-			this.currentMementoIndex = -1
+			this.data = this.processValue(data);
+			this.elements = [];
+			this.mementos = [];
+			this.currentMementoIndex = -1;
 			if (element) {
-				this.bind(element)
+				this.bind(element);
 			}
-			this.saveMemento() // Save initial state
+			this.saveMemento(); // Save initial state
 		}
 
 		handleEvent(event) {
-			if (event.type !== 'change') return
+			if (event.type !== "change") return;
 
-			event.originalSource ??= 'BindableObject.handleEvent[change]'
+			event.originalSource ??= "BindableObject.handleEvent[change]";
 
 			for (const { elem, prop } of this.elements) {
 				if (
 					event.target.name === prop &&
-					event.originalSource !== 'BindableObject.updateDomElement'
+					event.originalSource !== "BindableObject.updateDomElement"
 				) {
-					const value = event.target.type.includes('select')
+					const value = event.target.type.includes("select")
 						? {
 								id: event.target.value,
-								text: event.target.options[
-									event.target.selectedIndex
-								].textContent,
+								text: event.target.options[event.target.selectedIndex]
+									.textContent,
 							}
-						: event.target.value
+						: event.target.value;
 
-					this.change(value, event, prop)
+					this.change(value, event, prop);
 				}
 			}
 		}
 
 		change(value, event, property) {
-			event.originalSource ??= 'BindableObject.change'
-			console.log(`change : Source: ${event.originalSource}`)
+			event.originalSource ??= "BindableObject.change";
+			a7.log.trace(`change : Source: ${event.originalSource}`);
 
-			const processedValue = this.processValue(value)
+			const processedValue = this.processValue(value);
 
 			if (!property) {
-				this.data = processedValue
-			} else if (typeof this.data === 'object' && this.data !== null) {
+				this.data = processedValue;
+			} else if (typeof this.data === "object" && this.data !== null) {
 				if (!(property in this.data)) {
-					throw new Error(
-						`Property '${property}' of object is undefined.`
-					)
+					throw new Error(`Property '${property}' of object is undefined.`);
 				}
-				this.data[property] = processedValue
+				this.data[property] = processedValue;
 			} else {
 				throw new Error(
-					'Attempt to treat a simple value as an object with properties.'
-				)
+					"Attempt to treat a simple value as an object with properties.",
+				);
 			}
 
-			this.saveMemento()
+			this.saveMemento();
 
 			this.elements
 				.filter(
 					({ prop, elem }) =>
-						(!property || property === prop) &&
-						elem !== event.target
+						(!property || property === prop) && elem !== event.target,
 				)
 				.forEach(({ elem }) =>
-					this.updateDomElement(event, elem, processedValue)
-				)
+					this.updateDomElement(event, elem, processedValue),
+				);
 		}
 
 		updateDom(event, value, property) {
-			event.originalSource ??= 'BindableObject.updateDom'
+			event.originalSource ??= "BindableObject.updateDom";
 
 			this.elements.forEach(({ elem, prop }) => {
 				if (!property) {
-					if (typeof value === 'object' && value !== null) {
+					if (typeof value === "object" && value !== null) {
 						if (prop in value) {
-							this.updateDomElement(event, elem, value[prop])
+							this.updateDomElement(event, elem, value[prop]);
 						}
 					} else {
-						this.updateDomElement(event, elem, value)
+						this.updateDomElement(event, elem, value);
 					}
 				} else if (prop === property) {
-					this.updateDomElement(event, elem, value)
+					this.updateDomElement(event, elem, value);
 				}
-			})
+			});
 		}
 
 		updateDomElement(event, element, value) {
-			event.originalSource ??= 'BindableObject.updateDomElement'
+			event.originalSource ??= "BindableObject.updateDomElement";
 
 			const updateOptions = () => {
-				element.innerHTML = ''
+				element.innerHTML = "";
 				const items = Array.isArray(value)
 					? value
 					: value instanceof Map
 						? Array.from(value.entries())
-						: [value]
+						: [value];
 
-				if (element.tagName === 'SELECT') {
+				if (element.tagName === "SELECT") {
 					items.forEach((item, idx) => {
-						const opt = document.createElement('option')
-						opt.value =
-							typeof item === 'object'
-								? (item.id ?? item[0])
-								: item
+						const opt = document.createElement("option");
+						opt.value = typeof item === "object" ? (item.id ?? item[0]) : item;
 						opt.textContent =
-							typeof item === 'object'
-								? (item.text ?? item[1])
-								: item
-						element.appendChild(opt)
-					})
-				} else if (['UL', 'OL'].includes(element.tagName)) {
+							typeof item === "object" ? (item.text ?? item[1]) : item;
+						element.appendChild(opt);
+					});
+				} else if (["UL", "OL"].includes(element.tagName)) {
 					items.forEach((item) => {
-						const li = document.createElement('li')
+						const li = document.createElement("li");
 						li.textContent =
-							typeof item === 'object'
-								? (item.text ?? item[1])
-								: item
-						element.appendChild(li)
-					})
+							typeof item === "object" ? (item.text ?? item[1]) : item;
+						element.appendChild(li);
+					});
 				}
-			}
+			};
 
-			const isInput = ['INPUT', 'TEXTAREA'].includes(element.tagName)
-			const isArrayElement = ['OL', 'UL', 'SELECT'].includes(
-				element.tagName
-			)
+			const isInput = ["INPUT", "TEXTAREA"].includes(element.tagName);
+			const isArrayElement = ["OL", "UL", "SELECT"].includes(element.tagName);
 			const textElements = [
-				'DIV', // Generic container, often contains text
-				'SPAN', // Inline container, typically for text styling
-				'H1', // Heading level 1
-				'H2', // Heading level 2
-				'H3', // Heading level 3
-				'H4', // Heading level 4
-				'H5', // Heading level 5
-				'H6', // Heading level 6
-				'P', // Paragraph
-				'LABEL', // Caption for form elements, displays text
-				'BUTTON', // Clickable button, often with text content
-				'A', // Anchor (hyperlink), typically contains text
-				'STRONG', // Bold text for emphasis
-				'EM', // Italic text for emphasis
-				'B', // Bold text (presentational)
-				'I', // Italic text (presentational)
-				'U', // Underlined text
-				'SMALL', // Smaller text, often for fine print
-				'SUB', // Subscript text
-				'SUP', // Superscript text
-				'Q', // Short inline quotation
-				'BLOCKQUOTE', // Long quotation
-				'CITE', // Citation or reference
-				'CODE', // Code snippet
-				'PRE', // Preformatted text
-				'ABBR', // Abbreviation with optional title attribute
-				'DFN', // Defining instance of a term
-				'SAMP', // Sample output from a program
-				'KBD', // Keyboard input
-				'VAR', // Variable in programming/math context
-				'LI', // List item (in UL or OL)
-				'DT', // Term in a description list
-				'DD', // Description in a description list
-				'TH', // Table header cell
-				'TD', // Table data cell
-				'CAPTION', // Table caption
-				'FIGCAPTION', // Caption for a figure
-				'SUMMARY', // Summary for a details element
-				'LEGEND', // Caption for a fieldset in a form
-				'TITLE', // Document title (displayed in browser tab)
-			]
-			const isTextElement = textElements.includes(element.tagName)
+				"DIV", // Generic container, often contains text
+				"SPAN", // Inline container, typically for text styling
+				"H1", // Heading level 1
+				"H2", // Heading level 2
+				"H3", // Heading level 3
+				"H4", // Heading level 4
+				"H5", // Heading level 5
+				"H6", // Heading level 6
+				"P", // Paragraph
+				"LABEL", // Caption for form elements, displays text
+				"BUTTON", // Clickable button, often with text content
+				"A", // Anchor (hyperlink), typically contains text
+				"STRONG", // Bold text for emphasis
+				"EM", // Italic text for emphasis
+				"B", // Bold text (presentational)
+				"I", // Italic text (presentational)
+				"U", // Underlined text
+				"SMALL", // Smaller text, often for fine print
+				"SUB", // Subscript text
+				"SUP", // Superscript text
+				"Q", // Short inline quotation
+				"BLOCKQUOTE", // Long quotation
+				"CITE", // Citation or reference
+				"CODE", // Code snippet
+				"PRE", // Preformatted text
+				"ABBR", // Abbreviation with optional title attribute
+				"DFN", // Defining instance of a term
+				"SAMP", // Sample output from a program
+				"KBD", // Keyboard input
+				"VAR", // Variable in programming/math context
+				"LI", // List item (in UL or OL)
+				"DT", // Term in a description list
+				"DD", // Description in a description list
+				"TH", // Table header cell
+				"TD", // Table data cell
+				"CAPTION", // Table caption
+				"FIGCAPTION", // Caption for a figure
+				"SUMMARY", // Summary for a details element
+				"LEGEND", // Caption for a fieldset in a form
+				"TITLE", // Document title (displayed in browser tab)
+			];
+			const isTextElement = textElements.includes(element.tagName);
 
-			if (typeof value === 'object' && value !== null) {
+			if (typeof value === "object" && value !== null) {
 				if (isInput)
 					element.value =
-						value.id ?? (value instanceof Map ? '' : value[0]) ?? ''
-				else if (isArrayElement) updateOptions()
+						value.id ?? (value instanceof Map ? "" : value[0]) ?? "";
+				else if (isArrayElement) updateOptions();
 				else if (isTextElement)
 					element.textContent =
-						value.text ??
-						(value instanceof Map ? '' : value[1]) ??
-						''
+						value.text ?? (value instanceof Map ? "" : value[1]) ?? "";
 			} else {
-				if (isInput) element.value = value ?? ''
-				else if (isArrayElement) updateOptions()
-				else if (isTextElement) element.textContent = value ?? ''
+				if (isInput) element.value = value ?? "";
+				else if (isArrayElement) updateOptions();
+				else if (isTextElement) element.textContent = value ?? "";
 			}
 
 			if (
-				event.originalSource !== 'model.set' &&
-				event.originalSource !== 'memento.restore'
+				event.originalSource !== "model.set" &&
+				event.originalSource !== "memento.restore"
 			) {
 				element.dispatchEvent(
-					new Event('change', {
-						originalSource: 'model.updateDomElement',
-					})
-				)
+					new Event("change", {
+						originalSource: "model.updateDomElement",
+					}),
+				);
 			}
 		}
 
 		bind(element, property) {
-			const binding = { elem: element, prop: property || '' }
-			element.value = property ? this.data[property] : this.data
+			const binding = { elem: element, prop: property || "" };
+			element.value = property ? this.data[property] : this.data;
 
-			element.addEventListener('change', this)
-			this.elements.push(binding)
+			element.addEventListener("change", this);
+			this.elements.push(binding);
 		}
 
 		processValue(value) {
 			switch (typeof value) {
-				case 'undefined':
-				case 'number':
-				case 'boolean':
-				case 'function':
-				case 'symbol':
-				case 'string':
-					return value
-				case 'object':
-					if (value === null) return null
-					if (value instanceof Map) return new Map(value)
-					return JSON.parse(JSON.stringify(value))
+				case "undefined":
+				case "number":
+				case "boolean":
+				case "function":
+				case "symbol":
+				case "string":
+					return value;
+				case "object":
+					if (value === null) return null;
+					if (value instanceof Map) return new Map(value);
+					return value;
+				//return JSON.parse(JSON.stringify(value));
 				default:
-					return value
+					return value;
 			}
 		}
 
 		saveMemento() {
 			// Remove future mementos if we're adding after an undo
 			if (this.currentMementoIndex < this.mementos.length - 1) {
-				this.mementos.splice(this.currentMementoIndex + 1)
+				this.mementos.splice(this.currentMementoIndex + 1);
 			}
 
-			const memento = this.processValue(this.data)
-			this.mementos.push(memento)
+			const memento = this.processValue(this.data);
+			this.mementos.push(memento);
 
 			if (this.mementos.length > maxMementos) {
-				this.mementos.shift() // Remove oldest memento
+				this.mementos.shift(); // Remove oldest memento
 			} else {
-				this.currentMementoIndex++
+				this.currentMementoIndex++;
 			}
 		}
 
 		undo() {
 			if (this.currentMementoIndex > 0) {
-				this.currentMementoIndex--
-				this.restoreMemento()
-				return true
+				this.currentMementoIndex--;
+				this.restoreMemento();
+				return true;
 			}
-			return false
+			return false;
 		}
 
 		redo() {
 			if (this.currentMementoIndex < this.mementos.length - 1) {
-				this.currentMementoIndex++
-				this.restoreMemento()
-				return true
+				this.currentMementoIndex++;
+				this.restoreMemento();
+				return true;
 			}
-			return false
+			return false;
 		}
 
 		rewind() {
 			if (this.currentMementoIndex > 0) {
-				this.currentMementoIndex = 0
-				this.restoreMemento()
-				return true
+				this.currentMementoIndex = 0;
+				this.restoreMemento();
+				return true;
 			}
-			return false
+			return false;
 		}
 
 		fastForward() {
 			if (this.currentMementoIndex < this.mementos.length - 1) {
-				this.currentMementoIndex = this.mementos.length - 1
-				this.restoreMemento()
-				return true
+				this.currentMementoIndex = this.mementos.length - 1;
+				this.restoreMemento();
+				return true;
 			}
-			return false
+			return false;
 		}
 
 		restoreMemento() {
-			this.data = this.processValue(
-				this.mementos[this.currentMementoIndex]
-			)
-			const event = { originalSource: 'memento.restore' }
+			this.data = this.processValue(this.mementos[this.currentMementoIndex]);
+			const event = { originalSource: "memento.restore" };
 			this.elements.forEach(({ elem, prop }) => {
-				this.updateDomElement(
-					event,
-					elem,
-					prop ? this.data[prop] : this.data
-				)
-			})
+				this.updateDomElement(event, elem, prop ? this.data[prop] : this.data);
+			});
 		}
 	}
 
@@ -976,95 +1169,104 @@ const Model = (() => {
 		BindableObject,
 
 		init(options = {}) {
-			maxMementos = options.maxMementos ?? 20
+			maxMementos = options.maxMementos ?? 20;
 		},
 
 		create(name, value, element) {
-			const processedValue = new BindableObject(value).processValue(value)
-			const bindable = new BindableObject(processedValue, element)
-			modelStore.set(name, bindable)
-			mementoStore.set(name, bindable)
+			const processedValue = new BindableObject(value).processValue(value);
+			const bindable = new BindableObject(processedValue, element);
+			modelStore.set(name, bindable);
+			mementoStore.set(name, bindable);
 		},
 
 		destroy(name) {
-			modelStore.delete(name)
-			mementoStore.delete(name)
+			modelStore.delete(name);
+			mementoStore.delete(name);
 		},
 
 		bind(name, element) {
-			const [base, prop] = name.split('.')
-			const model = modelStore.get(base)
+			const [base, prop] = name.split(".");
+			const model = modelStore.get(base);
 			if (model) {
-				model.bind(element, prop)
+				model.bind(element, prop);
 			}
 		},
 
 		exists(name) {
-			return modelStore.has(name)
+			return modelStore.has(name);
 		},
 
-		get(name) {
+		get(name, key) {
 			if (!name) {
-				console.log('Expected parameter [name] is not defined.')
-				return undefined
+				a7.log.error("Expected parameter [name] is not defined.");
+				return undefined;
 			}
 
-			const [base, prop] = name.split('.')
-			const model = modelStore.get(base)
+			const [base, prop] = name.split(".");
+			const model = modelStore.get(base);
 
 			if (!model) {
-				console.log(`Key '${base}' does not exist in the model.`)
-				return undefined
+				a7.log.error(`Key '${base}' does not exist in the model.`);
+				return undefined;
 			}
-
-			const value = prop ? model.data[prop] : model.data
-			return value instanceof Map ? new Map(value) : value
+			if (!key) {
+				const value = prop ? model.data[prop] : model.data;
+				return value instanceof Map ? new Map(value) : value;
+			} else {
+				if (model.data instanceof Map) {
+					if (!model.data.has(key)) {
+						a7.log.error(`Key '${key}' does not exist in the Map .`);
+					} else {
+						return model.data.get(key);
+					}
+				}
+			}
 		},
 
 		set(name, value) {
 			if (!name) {
-				console.log('Expected parameter [name] is not defined.')
-				return
+				a7.log.error("Expected parameter [name] is not defined.");
+				return;
 			}
 
-			const [base, prop] = name.split('.')
-			const event = { originalSource: 'model.set' }
+			const [base, prop] = name.split(".");
+			const event = { originalSource: "model.set" };
 
 			if (!modelStore.has(base)) {
 				if (!prop) {
-					this.create(base, value)
+					this.create(base, value);
 				} else {
-					throw new Error(`Object ${base} is not yet initialized.`)
+					throw new Error(`Object ${base} is not yet initialized.`);
 				}
 			} else {
-				const model = modelStore.get(base)
-				const processedValue = model.processValue(value)
-				model.change(processedValue, event, prop)
-				model.updateDom(event, processedValue, prop)
+				const model = modelStore.get(base);
+				const processedValue = model.processValue(value);
+				model.change(processedValue, event, prop);
+				model.updateDom(event, processedValue, prop);
 			}
 		},
 
 		undo(name) {
-			const model = mementoStore.get(name)
-			return model ? model.undo() : false
+			const model = mementoStore.get(name);
+			return model ? model.undo() : false;
 		},
 
 		redo(name) {
-			const model = mementoStore.get(name)
-			return model ? model.redo() : false
+			const model = mementoStore.get(name);
+			return model ? model.redo() : false;
 		},
 
 		rewind(name) {
-			const model = mementoStore.get(name)
-			return model ? model.rewind() : false
+			const model = mementoStore.get(name);
+			return model ? model.rewind() : false;
 		},
 
 		fastForward(name) {
-			const model = mementoStore.get(name)
-			return model ? model.fastForward() : false
+			const model = mementoStore.get(name);
+			return model ? model.fastForward() : false;
 		},
-	}
-})()
+	};
+})();
 
 /*
 // Initialize with custom memento limit
@@ -1094,8 +1296,13 @@ class Service extends Component {
 		this.id = props.id; // id of the service to register with the framework
 		this.key = props.key; // name of the Object key
 		this.remoteMethods = props.remoteMethods;
-		this.entity = props.entity;
+		this.entityClass = props.entityClass; // Entity class to use for data operations
 		this.dataProviders = new Map();
+		this.bindings = new Map(); // New map to store bindings
+
+		// Queue initialization
+		this.queue = new Map();
+
 		this.config();
 		this.fireEvent("mustRegister");
 	}
@@ -1106,13 +1313,10 @@ class Service extends Component {
 			this.set(new Map());
 		}
 
-		this.on(
-			"mustRegister",
-			function () {
-				a7.log.trace("mustRegister: Service: " + this.id);
-				a7.services.register(this);
-			}.bind(this),
-		);
+		this.on("mustRegister", () => {
+			a7.log.trace("mustRegister: Service: " + this.id);
+			a7.services.register(this);
+		});
 	}
 
 	registerDataProvider(dp) {
@@ -1136,6 +1340,9 @@ class Service extends Component {
 
 	// Compare itemIDs against cached items
 	compareIDs(IDs) {
+		a7.log.trace("Service: " + this.id);
+		a7.log.trace("compareIDs: " + IDs);
+
 		const dataMap = this.get();
 		const present = [];
 		const missing = [];
@@ -1151,6 +1358,9 @@ class Service extends Component {
 				missing.push(id);
 			}
 		});
+		a7.log.trace(
+			"results: " + JSON.stringify(present) + " " + JSON.stringify(missing),
+		);
 
 		return { present, missing };
 	}
@@ -1165,55 +1375,69 @@ class Service extends Component {
 
 		newItems.forEach((item) => {
 			if (item[this.key]) {
-				dataMap.set(item[this.key], item);
+				dataMap.set(item[this.key], this.format(item));
 			}
 		});
 
 		this.set(dataMap);
+
+		this.fireEvent("cacheChanged", { action: "refresh" });
 		return dataMap;
 	}
 
-	new() {
-		return Object.assign({}, this.entity);
+	bind(key, filter) {
+		this.bindings.set(key, { filter: filter });
 	}
 
 	async create(obj) {
-		let entity = obj;
+		// if obj is a plain object, create a new entity
+		let entityInstance =
+			(!obj) instanceof this.entityClass ? this.format(obj) : obj;
+
 		await a7.remote
-			.invoke(this.remoteMethods.create, obj)
+			.invoke(this.remoteMethods.create, entityInstance)
 			.then((response) => response.json())
 			.then((json) => {
-				this.cacheSet(json);
-				entity = json;
+				entityInstance = this.format(json);
+				this.cacheSet(entityInstance);
 			});
-		return entity;
+		return entityInstance;
 	}
 
 	async read(obj) {
 		let dataMap = this.get();
-		if (!dataMap.has(obj[this.key])) {
-			await a7.remote
-				.invoke(this.remoteMethods.read, obj)
-				.then((response) => response.json())
-				.then((json) => {
-					this.cacheSet(json);
-					dataMap = this.get();
-				});
+		const requestKey = `${this.remoteMethods.read}-${JSON.stringify(obj)}`;
+		if (this.queue.has(requestKey)) {
+			a7.log.trace("Duplicate read request detected, cancelling new request");
+			//return this.queue.get(requestKey);
+		} else {
+			if (!dataMap.has(obj[this.key])) {
+				let entity;
+				await a7.remote
+					.invoke(this.remoteMethods.read, obj)
+					.then((response) => response.json())
+					.then((json) => {
+						entity = json;
+					});
+				this.cacheSet(this.format(entity));
+				this.queue.delete(requestKey);
+				dataMap = this.get();
+			}
 		}
 
 		return dataMap.get(obj[this.key]);
 	}
 
 	async update(obj) {
-		let entity = obj;
+		let entityInstance = this.format(obj);
 		await a7.remote
 			.invoke(this.remoteMethods.update, obj)
 			.then((response) => response.json())
 			.then((json) => {
-				this.cacheSet(json);
-				obj = json;
+				entityInstance = this.format(json);
+				this.cacheSet(entityInstance);
 			});
-		return entity;
+		return entityInstance;
 	}
 
 	async delete(obj) {
@@ -1221,71 +1445,114 @@ class Service extends Component {
 			.invoke(this.remoteMethods.delete, obj)
 			.then((response) => response.json())
 			.then((json) => {
-				this.cacheDelete(obj[this.key]);
+				// nothing to do here
 			});
+		this.cacheDelete(obj[this.key]);
 		return true;
 	}
 
 	async readAll(obj) {
-		let dataMap = this.get();
-		if (!dataMap.size) {
-			await a7.remote
-				.invoke(this.remoteMethods.readAll, obj)
-				.then((response) => response.json())
-				.then((json) => {
-					this.merge(json);
-				});
+		const requestKey = `${this.remoteMethods.readAll}-${JSON.stringify(obj)}`;
+		if (this.queue.has(requestKey)) {
+			a7.log.trace("Duplicate read request detected, cancelling new request");
+			//return this.queue.get(requestKey);
+		} else {
+			let dataMap = this.get();
+			if (!dataMap.size) {
+				let entities;
+				await a7.remote
+					.invoke(this.remoteMethods.readAll, obj)
+					.then((response) => response.json())
+					.then((json) => {
+						entities = json;
+					});
+				this.merge(entities);
+				this.queue.delete(requestKey);
+			}
 		}
 		return this.get();
+	}
+
+	format(obj) {
+		return new this.entityClass(obj);
 	}
 
 	cacheDelete(id) {
 		let dataMap = this.get();
 		dataMap.delete(id);
 		this.set(dataMap);
+
+		// Notify bound DataProviders
+
+		this.fireEvent("cacheChanged", { action: "delete" });
 	}
 
 	cacheSet(item) {
-		let dataMap = this.get();
-		dataMap.set(item[this.key], item);
-		this.set(dataMap);
+		if (item instanceof this.entityClass) {
+			let dataMap = this.get();
+			dataMap.set(item[this.key], item);
+			this.set(dataMap);
+
+			// Notify bound DataProviders
+
+			this.fireEvent("cacheChanged", {
+				action: "refresh",
+			});
+		} else {
+			throw "Item must be of proper entity type.";
+		}
 	}
 
 	set(dataMap) {
 		a7.model.set(this.id, dataMap);
 	}
 
-	get() {
-		return a7.model.get(this.id);
+	get(ID) {
+		if (typeof ID === "undefined") {
+			return a7.model.get(this.id);
+		} else {
+			return a7.model.get(this.id, ID);
+		}
 	}
 
 	// Retrieve items, using cache when possible
 	async readMany(IDs) {
-		// Compare requested IDs with cache
-		const { present, missing } = this.compareIDs(IDs);
-
-		// Fetch missing items if any
-
-		if (missing.length > 0) {
-			let obj = { id: missing };
-
-			await a7.remote
-				.invoke(this.remoteMethods.readMany, obj)
-				.then((response) => response.json())
-				.then((json) => {
-					if (Array.isArray(json)) {
-						this.merge(json);
-					}
-				});
+		if (typeof IDs === "undefined") {
+			return new Map();
 		}
-
+		a7.log.trace("readMany: ");
 		// Get cached items
-		const itemsMap = this.get();
-		const cachedItems = present.map((id) => itemsMap.get(id));
+		//const itemsMap = this.get();
+		const requestKey = `${this.remoteMethods.readMany}-${JSON.stringify(IDs)}`;
+		if (this.queue.has(requestKey)) {
+			a7.log.trace("Duplicate read request detected, cancelling new request");
+			//return this.queue.get(requestKey);
+		} else {
+			// Compare requested IDs with cache
+			const { present, missing } = this.compareIDs(IDs);
 
+			// Fetch missing items if any
+
+			a7.log.trace("Missing? " + missing.length);
+			if (missing.length > 0) {
+				let obj = { id: missing };
+
+				await a7.remote
+					.invoke(this.remoteMethods.readMany, obj)
+					.then((response) => response.json())
+					.then((json) => {
+						if (Array.isArray(json)) {
+							this.merge(json);
+							this.queue.delete(requestKey);
+						}
+					});
+			}
+
+			//const cachedItems = present.map((id) => itemsMap.get(id));
+		}
 		// Return all requested items in order, filtering out nulls
 		const result = IDs.map((id) => {
-			const item = itemsMap.get(id);
+			const item = this.get(id);
 			return item || null; // Return null for items that couldn't be found
 		});
 		return result.filter((item) => item !== null); // Filter out any null values
@@ -1339,10 +1606,9 @@ class Service extends Component {
 
 		return itemsArray;
 	}
-
 	filter(items, criteria) {
 		// Convert items to array if it's a Map
-		let itemsArray = items instanceof Map ? Array.from(items.values()) : items;
+		let itemsArray = Array.isArray(items) ? items : Array.from(items.values());
 
 		// Validate criteria input
 		if (
@@ -1398,7 +1664,7 @@ class Service extends Component {
 					// Handle specific operator, value, and regex flag
 					const [operator, value, useRegex] = criterion;
 					let valueA = item[field];
-					let valueB = value;
+					let valueB = typeof value === "function" ? value() : value;
 
 					if (useRegex && typeof valueB === "string") {
 						// Use regex for string matching
@@ -1414,7 +1680,8 @@ class Service extends Component {
 					}
 				} else if (Array.isArray(criterion) && criterion.length === 2) {
 					const operator = criterion[0];
-					const value = criterion[1];
+					const value =
+						typeof criterion[1] === "function" ? criterion[1]() : criterion[1];
 
 					// Handle range match or simple equality/inequality check
 					if (typeof value === "object" && Array.isArray(value)) {
@@ -1432,6 +1699,21 @@ class Service extends Component {
 
 		return filteredItems;
 	}
+
+	// notifyBoundDataProviders(action, data) {
+	// 	this.bindings.forEach((binding, key) => {
+	// 		if (this.dataProviders.size > 0) {
+	// 			//const filter = binding.filter || {};
+	// 			if (binding.filter !== null) {
+	// 				data = this.filter(dataMap.values(), filter);
+	// 			}
+
+	// 			this.dataProviders.forEach((dp) =>
+	// 				dp.setState({ [key]: filteredData }),
+	// 			);
+	// 		}
+	// 	});
+	// }
 }
 
 class User extends Component {
@@ -1451,24 +1733,25 @@ class User extends Component {
 	}
 }
 
-function View(props) {
-	this.renderer = a7.model.get("a7").ui.renderer;
-	this.type = "View";
-	this.timeout;
-	this.timer;
-	this.element; // html element the view renders into
-	this.props = props;
-	this.isTransient = props.isTransient || false;
-	this.state = {};
-	this.skipRender = false;
-	this.children = {}; // child views
-	this.components = {}; // register objects external to the framework so we can address them later
-	this.config();
-	this.fireEvent("mustRegister");
-}
+class View extends Component {
+	constructor(props) {
+		super();
+		this.renderer = a7.model.get("a7").ui.renderer;
+		this.type = "View";
+		this.timeout;
+		this.timer;
+		this.element; // HTML element the view renders into
+		this.props = props;
+		this.isTransient = props.isTransient || false;
+		this.state = {};
+		this.skipRender = false;
+		this.children = {}; // Child views
+		this.components = {}; // Register objects external to the framework so we can address them later
+		this.config();
+		this.fireEvent("mustRegister");
+	}
 
-View.prototype = {
-	config: function () {
+	config() {
 		this.on(
 			"mustRegister",
 			function () {
@@ -1480,9 +1763,6 @@ View.prototype = {
 			}.bind(this),
 		);
 
-		// mustRender is a debounced function so we can control how often views should re-render.
-		// debounce leading, so the render will be queued and subsequent requests to render will be ignored until the delay time is reached
-		// delay defaults to 18 ms, can be set in app options as ui.debounceTime
 		this.on(
 			"mustRender",
 			a7.util.debounce(
@@ -1492,7 +1772,6 @@ View.prototype = {
 						a7.ui.enqueueForRender(this.props.id);
 					} else {
 						a7.log.trace("Render cancelled: " + this.props.id);
-						// undo skip, it must be explicitly set each time
 						this.skipRender = false;
 					}
 				}.bind(this),
@@ -1505,7 +1784,6 @@ View.prototype = {
 			"rendered",
 			function () {
 				if (this.isTransient) {
-					// set the timeout
 					if (this.timer !== undefined) {
 						clearTimeout(this.timer);
 					}
@@ -1522,7 +1800,6 @@ View.prototype = {
 			"registered",
 			function () {
 				if (this.props.parentID === undefined || this.mustRender) {
-					// only fire render event for root views, children will render in the chain
 					this.fireEvent("mustRender");
 				}
 			}.bind(this),
@@ -1534,53 +1811,66 @@ View.prototype = {
 				a7.ui.unregister(this.props.id);
 			}.bind(this),
 		);
-	},
-	events: [
-		"mustRender",
-		"rendered",
-		"mustRegister",
-		"registered",
-		"mustUnregister",
-	],
-	setState: function (args) {
-		if (typeof this.state === "object") {
-			this.state = Object.assign(args);
+	}
+
+	// events = [
+	// 	"mustRender",
+	// 	"rendered",
+	// 	"mustRegister",
+	// 	"registered",
+	// 	"mustUnregister",
+	// ];
+
+	setState(args) {
+		if (this.dataProvider) {
+			this.dataProvider.setState(args);
 		} else {
-			this.dataProvider.setData(args);
+			this.state = Object.assign(args);
+			// if there is no dataProvider, fire stateChanged here, otherwise wait for the dataProvider (see registerDataProvider())
+			this.fireEvent("stateChanged", args);
 		}
 
-		// setting state requires a re-render
 		this.fireEvent("mustRender");
-	},
-	getState: function () {
-		if (typeof this.state === "object") {
-			return Object.assign(this.state);
+	}
+
+	getState() {
+		if (this.dataProvider) {
+			return this.dataProvider.getState();
 		} else {
-			return this.dataProvider.getData();
+			return Object.assign(this.state);
 		}
-	},
-	registerDataProvider: function (dp) {
+	}
+
+	registerDataProvider(dp) {
 		this.dataProvider = dp;
-	},
-	unregisterDataProvider: function () {
+		// listen for the dataProvider to fire its stateChanged event, then fire
+		this.dataProvider.on("stateChanged", (dataProvider, args) => {
+			this.fireEvent("stateChanged", args);
+		});
+	}
+
+	unregisterDataProvider() {
 		this.dataProvider = null;
-	},
-	addChild: function (view) {
+	}
+
+	addChild(view) {
 		this.children[view.props.id] = view;
-		// force a render for children added
-		//this.children[ view.props.id ].mustRender = true;
-	},
-	removeChild: function (view) {
+	}
+
+	removeChild(view) {
 		delete this.children[view.props.id];
-	},
-	clearChildren: function () {
+	}
+
+	clearChildren() {
 		this.children = {};
-	},
-	getParent: function () {
+	}
+
+	getParent() {
 		return this.props.parentID ? a7.ui.getView(this.props.parentID) : undefined;
-	},
-	render: function () {
-		a7.log.info("render: " + this.props.id);
+	}
+
+	render() {
+		a7.log.trace("render: " + this.props.id);
 		if (this.element === undefined || this.element === null) {
 			this.element = document.querySelector(this.props.selector);
 		}
@@ -1590,19 +1880,16 @@ View.prototype = {
 					this.props.id +
 					" was not found. The view will be removed and unregistered.",
 			);
-			// if the component has a parent, remove the component from the parent's children
 			if (this.props.parentID !== undefined) {
 				a7.ui.getView(this.props.parentID).removeChild(this);
 			}
-			// if the selector isn't in the DOM, skip rendering and unregister the view
 			this.fireEvent("mustUnregister");
 			return;
 		}
-		//throw( "You must define a selector for the view." );
+
 		this.element.innerHTML =
 			typeof this.template == "function" ? this.template() : this.template;
 
-		// create events marked with data-on* in the template
 		var eventArr = [];
 		a7.ui.getEvents().forEach(function (eve) {
 			eventArr.push("[data-on" + eve + "]");
@@ -1623,32 +1910,32 @@ View.prototype = {
 				}
 			}.bind(this),
 		);
-		// bind any elements marked with data-bind to the model
+
 		let boundEles = this.element.querySelectorAll("[data-bind]");
 		boundEles.forEach(function (ele) {
-			console.log("binding: ", ele);
 			a7.model.bind(ele.attributes["data-bind"].value, ele);
 		});
 		this.fireEvent("rendered");
-	},
-	shouldRender: function () {
+	}
+
+	shouldRender() {
 		if (this.skipRender) {
 			return false;
 		} else {
 			return true;
 		}
-	},
-	// after rendering, render all the children of the view
-	onRendered: function () {
+	}
+
+	onRendered() {
 		for (var child in this.children) {
 			this.children[child].element = document.querySelector(
 				this.children[child].props.selector,
 			);
 			this.children[child].render();
 		}
-	},
-	// need to add props.isTransient (default false) to make views permanent by default
-	checkRenderStatus: function () {
+	}
+
+	checkRenderStatus() {
 		if (document.querySelector(this.props.selector) === null) {
 			a7.ui.unregister(this.id);
 		} else {
@@ -1659,8 +1946,8 @@ View.prototype = {
 				);
 			}
 		}
-	},
-};
+	}
+}
 
 return {
 	Component: Component,
@@ -2353,339 +2640,350 @@ a7.services = (function () {
 })();
 
 a7.ui = (function () {
-    'use strict'
+	"use strict";
 
-    // browser events that can be used in templating, e.g. data-click will be added to the resulting HTML as a click event handler
-    const resourceEvents = ['cached', 'error', 'abort', 'load', 'beforeunload']
+	// browser events that can be used in templating, e.g. data-click will be added to the resulting HTML as a click event handler
+	const resourceEvents = ["cached", "error", "abort", "load", "beforeunload"];
 
-    const networkEvents = ['online', 'offline']
+	const networkEvents = ["online", "offline"];
 
-    const focusEvents = ['focus', 'blur']
+	const focusEvents = ["focus", "blur"];
 
-    const websocketEvents = ['open', 'message', 'error', 'close']
+	const websocketEvents = ["open", "message", "error", "close"];
 
-    const sessionHistoryEvents = ['pagehide', 'pageshow', 'popstate']
+	const sessionHistoryEvents = ["pagehide", "pageshow", "popstate"];
 
-    const cssAnimationEvents = [
-        'animationstart',
-        'animationend',
-        'animationiteration',
-    ]
+	const cssAnimationEvents = [
+		"animationstart",
+		"animationend",
+		"animationiteration",
+	];
 
-    const cssTransitionEvents = [
-        'transitionstart',
-        'transitioncancel',
-        'transitionend',
-        'transitionrun',
-    ]
+	const cssTransitionEvents = [
+		"transitionstart",
+		"transitioncancel",
+		"transitionend",
+		"transitionrun",
+	];
 
-    const formEvents = ['reset', 'submit']
+	const formEvents = ["reset", "submit"];
 
-    const printingEvents = ['beforeprint', 'afterprint']
+	const printingEvents = ["beforeprint", "afterprint"];
 
-    const textCompositionEvents = [
-        'compositionstart',
-        'compositionupdate',
-        'compositionend',
-    ]
+	const textCompositionEvents = [
+		"compositionstart",
+		"compositionupdate",
+		"compositionend",
+	];
 
-    const viewEvents = [
-        'fullscreenchange',
-        'fullscreenerror',
-        'resize',
-        'scroll',
-    ]
+	const viewEvents = [
+		"fullscreenchange",
+		"fullscreenerror",
+		"resize",
+		"scroll",
+	];
 
-    const clipboardEvents = ['cut', 'copy', 'paste']
+	const clipboardEvents = ["cut", "copy", "paste"];
 
-    const keyboardEvents = ['keydown', 'keypress', 'keyup']
+	const keyboardEvents = ["keydown", "keypress", "keyup"];
 
-    const mouseEvents = [
-        'auxclick',
-        'click',
-        'contextmenu',
-        'dblclick',
-        'mousedown',
-        'mousenter',
-        'mouseleave',
-        'mousemove',
-        'mouseover',
-        'mouseout',
-        'mouseup',
-        'pointerlockchange',
-        'pointerlockerror',
-        'wheel',
-    ]
+	const mouseEvents = [
+		"auxclick",
+		"click",
+		"contextmenu",
+		"dblclick",
+		"mousedown",
+		"mousenter",
+		"mouseleave",
+		"mousemove",
+		"mouseover",
+		"mouseout",
+		"mouseup",
+		"pointerlockchange",
+		"pointerlockerror",
+		"wheel",
+	];
 
-    const dragEvents = [
-        'drag',
-        'dragend',
-        'dragstart',
-        'dragleave',
-        'dragover',
-        'drop',
-    ]
+	const dragEvents = [
+		"drag",
+		"dragend",
+		"dragstart",
+		"dragleave",
+		"dragover",
+		"drop",
+	];
 
-    const mediaEvents = [
-        'audioprocess',
-        'canplay',
-        'canplaythrough',
-        'complete',
-        'durationchange',
-        'emptied',
-        'ended',
-        'loadeddata',
-        'loadedmetadata',
-        'pause',
-        'play',
-        'playing',
-        'ratechange',
-        'seeked',
-        'seeking',
-        'stalled',
-        'suspend',
-        'timeupdate',
-        'columechange',
-        'waiting',
-    ]
+	const mediaEvents = [
+		"audioprocess",
+		"canplay",
+		"canplaythrough",
+		"complete",
+		"durationchange",
+		"emptied",
+		"ended",
+		"loadeddata",
+		"loadedmetadata",
+		"pause",
+		"play",
+		"playing",
+		"ratechange",
+		"seeked",
+		"seeking",
+		"stalled",
+		"suspend",
+		"timeupdate",
+		"columechange",
+		"waiting",
+	];
 
-    const progressEvents = [
-        // duplicates from resource events
-        /* 'abort',
+	const progressEvents = [
+		// duplicates from resource events
+		/* 'abort',
 	'error',
 	'load', */
-        'loadend',
-        'loadstart',
-        'progress',
-        'timeout',
-    ]
+		"loadend",
+		"loadstart",
+		"progress",
+		"timeout",
+	];
 
-    const storageEvents = ['change', 'storage']
+	const storageEvents = ["change", "storage"];
 
-    const updateEvents = [
-        'checking',
-        'downloading',
-        /* 'error', */
-        'noupdate',
-        'obsolete',
-        'updateready',
-    ]
+	const updateEvents = [
+		"checking",
+		"downloading",
+		/* 'error', */
+		"noupdate",
+		"obsolete",
+		"updateready",
+	];
 
-    const valueChangeEvents = [
-        'broadcast',
-        'CheckBoxStateChange',
-        'hashchange',
-        'input',
-        'RadioStateChange',
-        'readystatechange',
-        'ValueChange',
-    ]
+	const valueChangeEvents = [
+		"broadcast",
+		"CheckBoxStateChange",
+		"hashchange",
+		"input",
+		"RadioStateChange",
+		"readystatechange",
+		"ValueChange",
+	];
 
-    const uncategorizedEvents = [
-        'invalid',
-        'localized',
-        /* 'message',
+	const uncategorizedEvents = [
+		"invalid",
+		"localized",
+		/* 'message',
 	'open', */
-        'show',
-    ]
+		"show",
+	];
 
-    const _standardEvents = resourceEvents
-        .concat(networkEvents)
-        .concat(focusEvents)
-        .concat(websocketEvents)
-        .concat(sessionHistoryEvents)
-        .concat(cssAnimationEvents)
-        .concat(cssTransitionEvents)
-        .concat(formEvents)
-        .concat(printingEvents)
-        .concat(textCompositionEvents)
-        .concat(viewEvents)
-        .concat(clipboardEvents)
-        .concat(keyboardEvents)
-        .concat(mouseEvents)
-        .concat(dragEvents)
-        .concat(mediaEvents)
-        .concat(progressEvents)
-        .concat(storageEvents)
-        .concat(updateEvents)
-        .concat(valueChangeEvents)
-        .concat(uncategorizedEvents)
+	const _standardEvents = resourceEvents
+		.concat(networkEvents)
+		.concat(focusEvents)
+		.concat(websocketEvents)
+		.concat(sessionHistoryEvents)
+		.concat(cssAnimationEvents)
+		.concat(cssTransitionEvents)
+		.concat(formEvents)
+		.concat(printingEvents)
+		.concat(textCompositionEvents)
+		.concat(viewEvents)
+		.concat(clipboardEvents)
+		.concat(keyboardEvents)
+		.concat(mouseEvents)
+		.concat(dragEvents)
+		.concat(mediaEvents)
+		.concat(progressEvents)
+		.concat(storageEvents)
+		.concat(updateEvents)
+		.concat(valueChangeEvents)
+		.concat(uncategorizedEvents);
 
-    var _events = [],
-        _options = {},
-        _selectors = {},
-        _nodes = {},
-        _queue = [],
-        _deferred = [],
-        _stateTransition = false,
-        //_templateMap = {},
-        _views = [],
-        // selectors are cached for easy reference later
+	let _events = [],
+		_options = {},
+		_selectors = {},
+		_nodes = {},
+		_queue = [],
+		_deferred = [],
+		_stateTransition = false,
+		//_templateMap = {},
+		_views = [],
+		// selectors are cached for easy reference later
 
-        _setSelector = function (name, selector) {
-            _selectors[name] = selector
-            _nodes[name] = document.querySelector(selector)
-        },
-        _getSelector = function (name) {
-            return _selectors[name]
-        },
-        // get an active view from the view struct
-        _getView = function (id) {
-            return _views[id]
-        },
-        _getNode = function (name) {
-            return _nodes[name]
-        },
-        // return the registered events for the application
-        _getEvents = function () {
-            return _events
-        },
-        // register a view
-        // this happens automatically when a view is instantiated
-        _register = function (view) {
-            switch (_options.renderer) {
-                case 'Handlebars':
-                case 'Mustache':
-                case 'templateLiterals':
-                    _views[view.props.id] = view
-                    view.fireEvent('registered')
-                    break
-            }
-        },
-        // unregister the view
-        _unregister = function (id) {
-            delete _views[id]
-        },
-        // get the IDs for the tree of parent views to the root view of this tree
-        _getParentViewIds = function (id) {
-            a7.log.trace('Find parents of ' + id)
-            let parentIds = []
-            let view = _views[id]
-            while (view.props.parentID !== undefined) {
-                parentIds.unshift(view.props.parentID)
-                view = _views[view.props.parentID]
-            }
-            return parentIds
-            // parentids returned in highest to lowest order
-        },
-        // get the tree of child IDs of a view
-        _getChildViewIds = function (id) {
-            a7.log.trace('Find children of ' + id)
-            let childIds = []
-            let view = _views[id]
+		_setSelector = function (name, selector) {
+			_selectors[name] = selector;
+			_nodes[name] = document.querySelector(selector);
+		},
+		_getSelector = function (name) {
+			return _selectors[name];
+		},
+		// get an active view from the view struct
+		_getView = function (id) {
+			return _views[id];
+		},
+		_getNode = function (name) {
+			return _nodes[name];
+		},
+		_setStateTransition = function (val) {
+			_stateTransition = val;
+			a7.log.trace("a7.ui.stateTransition: " + val);
+		},
+		_getStateTransition = function () {
+			return _stateTransition;
+		},
+		// return the registered events for the application
+		_getEvents = function () {
+			return _events;
+		},
+		// register a view
+		// this happens automatically when a view is instantiated
+		_register = function (view) {
+			switch (_options.renderer) {
+				case "Handlebars":
+				case "Mustache":
+				case "templateLiterals":
+					_views[view.props.id] = view;
+					view.fireEvent("registered");
+					break;
+			}
+		},
+		// unregister the view
+		_unregister = function (id) {
+			delete _views[id];
+		},
+		// get the IDs for the tree of parent views to the root view of this tree
+		_getParentViewIds = function (id) {
+			a7.log.trace("Find parents of " + id);
+			let parentIds = [];
+			let view = _views[id];
+			while (view.props.parentID !== undefined) {
+				parentIds.unshift(view.props.parentID);
+				view = _views[view.props.parentID];
+			}
+			return parentIds;
+			// parentids returned in highest to lowest order
+		},
+		// get the tree of child IDs of a view
+		_getChildViewIds = function (id) {
+			a7.log.trace("Find children of " + id);
+			let childIds = [];
+			let view = _views[id];
 
-            for (var child in view.children) {
-                let childId = view.children[child].props.id
-                if (_getView(childId) !== undefined) {
-                    childIds.push(childId)
-                    childIds.concat(_getChildViewIds(childId))
-                }
-            }
-            // returned in highest to lowest order
-            return childIds
-        },
-        // add a view to the render queue
-        _enqueueForRender = function (id) {
-            // if _stateTransition is true, the queue is being processed
-            if (!_stateTransition) {
-                a7.log.info('enqueue: ' + id)
-                if (!_queue.length) {
-                    a7.log.trace('add first view to queue: ' + id)
-                    _queue.push(id)
-                    _processRenderQueue()
-                } else {
-                    let childIds = _getChildViewIds(id)
-                    if (_views[id].props.parentID === undefined) {
-                        // if the view is a root view, it should be pushed to the front of the stack
-                        a7.log.trace('add to front of queue: ' + id)
-                        _queue.unshift(id)
-                    } else {
-                        let parentIds = _getParentViewIds(id)
+			for (var child in view.children) {
+				let childId = view.children[child].props.id;
+				if (_getView(childId) !== undefined) {
+					childIds.push(childId);
+					childIds.concat(_getChildViewIds(childId));
+				}
+			}
+			// returned in highest to lowest order
+			return childIds;
+		},
+		// add a view to the render queue
+		_enqueueForRender = function (id) {
+			// if _stateTransition is true, the queue is being processed
+			if (!_getStateTransition()) {
+				a7.log.trace("enqueue: " + id);
+				if (!_queue.length) {
+					a7.log.trace("add first view to queue: " + id);
+					_queue.push(id);
+					_processRenderQueue();
+				} else {
+					let childIds = _getChildViewIds(id);
+					if (_views[id].props.parentID === undefined) {
+						// if the view is a root view, it should be pushed to the front of the stack
+						a7.log.trace("add to front of queue: " + id);
+						_queue.unshift(id);
+					} else {
+						let parentIds = _getParentViewIds(id);
 
-                        let highParent = undefined
-                        if (parentIds.length) {
-                            highParent = parentIds.find(function (parentId) {
-                                return _queue.indexOf(parentId) >= 0
-                            })
-                        }
+						let highParent = undefined;
+						if (parentIds.length) {
+							highParent = parentIds.find(function (parentId) {
+								return _queue.indexOf(parentId) >= 0;
+							});
+						}
 
-                        // only add if there is no parent in the queue, since parents will render children
-                        if (highParent === undefined) {
-                            a7.log.trace('add to end of queue: ' + id)
-                            _queue.push(id)
-                        }
-                    }
+						// only add if there is no parent in the queue, since parents will render children
+						if (highParent === undefined) {
+							a7.log.trace("add to end of queue: " + id);
+							_queue.push(id);
+						}
+					}
 
-                    // remove child views from the queue, they will be rendered by the parents
-                    childIds.forEach(function (childId) {
-                        if (_queue.indexOf(childId) >= 0) {
-                            a7.log.trace('remove child from queue: ' + childId)
-                            _queue.splice(_queue.indexOf(childId), 1)
-                        }
-                    })
-                }
-            } else {
-                _deferred.push(id)
-            }
-        },
-        // render the queue
-        _processRenderQueue = function () {
-            a7.log.trace('processing the queue')
-            _stateTransition = true
+					// remove child views from the queue, they will be rendered by the parents
+					childIds.forEach(function (childId) {
+						if (_queue.indexOf(childId) >= 0) {
+							a7.log.trace("remove child from queue: " + childId);
+							_queue.splice(_queue.indexOf(childId), 1);
+						}
+					});
+				}
+			} else {
+				_deferred.push(id);
+			}
+		},
+		// render the queue
+		_processRenderQueue = function () {
+			a7.log.trace("processing the queue");
+			_setStateTransition(true);
+			try {
+				_queue.forEach(function (id) {
+					_views[id].render();
+				});
+			} catch (err) {
+				// log rendering errors
+				a7.log.trace(err);
+			}
+			_queue = [];
+			_setStateTransition(false);
+			_deferred.forEach(function (id) {
+				_enqueueForRender(id);
+			});
+			_deferred = [];
+		},
+		_removeView = function (id) {
+			delete _views[id];
+		};
 
-            _queue.forEach(function (id) {
-                _views[id].render()
-            })
-            _queue = []
-            _stateTransition = false
-            _deferred.forEach(function (id) {
-                _enqueueForRender(id)
-            })
-            _deferred = []
-        },
-        _removeView = function (id) {
-            delete _views[id]
-        }
+	return {
+		//render: _render,
+		getEvents: _getEvents,
+		selectors: _selectors,
+		getSelector: _getSelector,
+		setSelector: _setSelector,
+		getNode: _getNode,
+		register: _register,
+		unregister: _unregister,
+		getView: _getView,
+		enqueueForRender: _enqueueForRender,
+		removeView: _removeView,
+		views: _views,
 
-    return {
-        //render: _render,
-        getEvents: _getEvents,
-        selectors: _selectors,
-        getSelector: _getSelector,
-        setSelector: _setSelector,
-        getNode: _getNode,
-        register: _register,
-        unregister: _unregister,
-        getView: _getView,
-        enqueueForRender: _enqueueForRender,
-        removeView: _removeView,
-        views: _views,
+		init: function (resolve, reject) {
+			a7.log.trace("Layout initializing...");
+			_options = a7.model.get("a7").ui;
 
-        init: function (resolve, reject) {
-            a7.log.info('Layout initializing...')
-            _options = a7.model.get('a7').ui
+			// set event groups to create listeners for
+			var eventGroups = _options.eventGroups
+				? _options.eventGroups
+				: "standard";
+			switch (eventGroups) {
+				case "extended":
+					// extended events not implemented yet
+					reject("Extended events are not implemented yet.");
+				case "standard":
+					_events = _standardEvents;
+					break;
+				default:
+					_options.eventGroups.forEach(function (group) {
+						_events = _events.concat(group);
+					});
+			}
 
-            // set event groups to create listeners for
-            var eventGroups = _options.eventGroups
-                ? _options.eventGroups
-                : 'standard'
-            switch (eventGroups) {
-                case 'extended':
-                    // extended events not implemented yet
-                    reject('Extended events are not implemented yet.')
-                case 'standard':
-                    _events = _standardEvents
-                    break
-                default:
-                    _options.eventGroups.forEach(function (group) {
-                        _events = _events.concat(group)
-                    })
-            }
-
-            resolve()
-        },
-    }
-})()
+			resolve();
+		},
+	};
+})();
 
 a7.util = (function () {
 
