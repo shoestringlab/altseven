@@ -210,7 +210,8 @@ const Model = (() => {
 				case "object":
 					if (value === null) return null;
 					if (value instanceof Map) return new Map(value);
-					return JSON.parse(JSON.stringify(value));
+					return value;
+				//return JSON.parse(JSON.stringify(value));
 				default:
 					return value;
 			}

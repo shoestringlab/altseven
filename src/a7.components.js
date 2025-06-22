@@ -157,6 +157,7 @@ class DataProvider extends Component {
 	bind() {
 		if (this.binding) {
 			for (let rule in this.binding) {
+				let dependencies = this.binding[rule].dependencies || null;
 				let matchingService = [...this.services.values()].find(
 					(service) => service.entityClass === this.binding[rule].entityClass,
 				);
@@ -164,43 +165,98 @@ class DataProvider extends Component {
 					a7.log.trace("Binding: ", rule);
 					let filter = this.binding[rule].filter || null;
 					let func = this.binding[rule].func || null;
-					let dependencies = this.binding[rule].dependencies || null;
+					let sort = this.binding[rule].sort || null;
+					let id = this.binding[rule].id || null;
 					this.bindings.set(rule, {
 						key: rule,
 						service: matchingService,
 						filter: filter,
+						sort: sort,
 						func: func,
 						dependencies: dependencies,
+						id: id,
 					});
 
 					matchingService.bind(rule, filter);
 
-					let data = matchingService.get();
+					let boundData = this.getBoundData(this.bindings.get(rule));
 
-					if (filter !== null) {
-						data = matchingService.filter(data, filter);
-					}
-
-					this.setStateOnly({ [rule]: data });
+					this.setStateOnly({ [rule]: boundData });
 
 					//Listen for changes in the service cache
 					matchingService.on("cacheChanged", (service, args) => {
+						//pass in the DP state
+						args.state = this.getState();
 						this.updateBoundState(this.bindings.get(rule), args);
 					});
 				}
+
+				dependencies = this.binding[rule].dependencies || [];
+				dependencies.forEach((depKey) => {
+					let key = depKey.split(".");
+					if (key.length === 1) {
+						this.on("stateChanged", (dataProvider, props) => {
+							a7.log.trace("Binding dependency");
+							if ([key] in props) {
+								a7.log.trace("updated " + key);
+								this.updateBoundState(this.bindings.get(rule), {
+									action: "refresh",
+									state: this.getState(),
+								});
+							}
+							//	this.updateBoundState(this.bindings.get(rule), { action: "refresh" });
+						});
+					} else if (key.length === 2) {
+						// if the dependency is on another view, the dependency will be listed as ${viewID}.key.
+						a7.ui.getView(key[0]).on("stateChanged", (view, props) => {
+							a7.log.trace("Binding dependency");
+							if ([key[1]] in props) {
+								a7.log.trace("updated " + key[1]);
+								this.updateBoundState(this.bindings.get(rule), {
+									action: "refresh",
+									state: this.getState(),
+									dependentState: view.getState(),
+								});
+							}
+						});
+					}
+				});
 			}
 		}
+	}
+
+	getBoundData(binding) {
+		let updatedData;
+
+		let type = this.#schema[binding.key].type;
+		if (type === "object") {
+			updatedData = binding.service.get(binding.id);
+		} else if (type === "map") {
+			updatedData = binding.service.get();
+			if (binding.filter !== null) {
+				updatedData = binding.service.filter(updatedData, binding.filter);
+			}
+
+			if (binding.sort !== null) {
+				updatedData = binding.service.sort(updatedData, binding.sort);
+			}
+		}
+
+		return updatedData;
 	}
 
 	async updateBoundState(binding, args) {
 		let updatedData;
 		if (binding.func !== null) {
 			// pass the filter to the func
-			args = Object.assign(args, { filter: binding.filter });
+			args = Object.assign(args, {
+				filter: binding.filter,
+				sort: binding.sort,
+			});
 			if (binding.func.constructor.name === "AsyncFunction") {
-				updatedData = await binding.func(args, this.getState());
+				updatedData = await binding.func(args);
 			} else {
-				updatedData = binding.func(args, this.getState());
+				updatedData = binding.func(args);
 			}
 			//let type = binding.entityClass.type;
 			let type = this.#schema[binding.key].type;
@@ -210,21 +266,15 @@ class DataProvider extends Component {
 
 			this.view.setState({ [binding.key]: updatedData });
 		} else {
-			updatedData = binding.service.get();
-			if (binding.filter !== null) {
-				updatedData = this.filter(updatedData, binding.filter);
-			}
-			let type = this.#schema[binding.key].type;
+			let updatedData = this.getBoundData(binding);
 
-			// for object types
-			if (type === "object") {
-				updatedData = Array.from(updatedData.values());
-				updatedData = updatedData[0];
-			}
 			this.view.setState({ [binding.key]: updatedData });
 		}
 	}
 
+	set schema(obj) {
+		// this doesn't actually do anthing, it's just here so the runtime doesn't complain about it being missing
+	}
 	get schema() {
 		return this.#schema;
 	}
@@ -234,21 +284,7 @@ class DataProvider extends Component {
 	}
 	setState(args) {
 		this.setStateOnly(args);
-		let bindingsUpdated = new Map();
-		// check if the updated keys are dependencies for bound keys
-		for (let key in args) {
-			this.bindings.forEach((binding) => {
-				if (
-					binding.dependencies !== null &&
-					binding.dependencies.includes(key)
-				) {
-					if (!bindingsUpdated.has(binding)) {
-						this.updateBoundState(binding, { action: "refresh" });
-						bindingsUpdated.set(binding, "");
-					}
-				}
-			});
-		}
+		this.fireEvent("stateChanged", args);
 	}
 
 	getState() {
@@ -317,29 +353,30 @@ class Entity extends Component {
 		switch (expectedType) {
 			case "date":
 				return new Date(value) instanceof Date;
-				break;
+
 			case "array":
 				return Array.isArray(value);
-				break;
+
 			case "boolean":
 				return value === 0 || value === 1 || value === true || value === false
 					? true
 					: false;
-				break;
+
 			case "integer":
 				return Number.isInteger(value);
-				break;
+
 			case "float":
 				return typeof value === "number";
-				break;
+
 			case "string":
 				return typeof value === "string";
-				break;
+
 			default:
 				return true;
-				break;
 		}
 	}
+
+	set schema(obj) {}
 
 	get schema() {
 		return this.#schema;
@@ -570,7 +607,8 @@ const Model = (() => {
 				case "object":
 					if (value === null) return null;
 					if (value instanceof Map) return new Map(value);
-					return JSON.parse(JSON.stringify(value));
+					return value;
+				//return JSON.parse(JSON.stringify(value));
 				default:
 					return value;
 			}
@@ -785,13 +823,10 @@ class Service extends Component {
 			this.set(new Map());
 		}
 
-		this.on(
-			"mustRegister",
-			function () {
-				a7.log.trace("mustRegister: Service: " + this.id);
-				a7.services.register(this);
-			}.bind(this),
-		);
+		this.on("mustRegister", () => {
+			a7.log.trace("mustRegister: Service: " + this.id);
+			a7.services.register(this);
+		});
 	}
 
 	registerDataProvider(dp) {
@@ -850,7 +885,7 @@ class Service extends Component {
 
 		newItems.forEach((item) => {
 			if (item[this.key]) {
-				dataMap.set(item[this.key], item);
+				dataMap.set(item[this.key], this.format(item));
 			}
 		});
 
@@ -865,13 +900,16 @@ class Service extends Component {
 	}
 
 	async create(obj) {
-		let entityInstance = new this.entityClass(obj);
+		// if obj is a plain object, create a new entity
+		let entityInstance =
+			(!obj) instanceof this.entityClass ? this.format(obj) : obj;
+
 		await a7.remote
 			.invoke(this.remoteMethods.create, entityInstance)
 			.then((response) => response.json())
 			.then((json) => {
-				this.cacheSet(json);
-				entityInstance = new this.entityClass(json);
+				entityInstance = this.format(json);
+				this.cacheSet(entityInstance);
 			});
 		return entityInstance;
 	}
@@ -884,14 +922,16 @@ class Service extends Component {
 			//return this.queue.get(requestKey);
 		} else {
 			if (!dataMap.has(obj[this.key])) {
+				let entity;
 				await a7.remote
 					.invoke(this.remoteMethods.read, obj)
 					.then((response) => response.json())
 					.then((json) => {
-						this.cacheSet(json);
-						this.queue.delete(requestKey);
-						dataMap = this.get();
+						entity = json;
 					});
+				this.cacheSet(this.format(entity));
+				this.queue.delete(requestKey);
+				dataMap = this.get();
 			}
 		}
 
@@ -899,13 +939,13 @@ class Service extends Component {
 	}
 
 	async update(obj) {
-		let entityInstance = new this.entityClass(obj);
+		let entityInstance = this.format(obj);
 		await a7.remote
 			.invoke(this.remoteMethods.update, obj)
 			.then((response) => response.json())
 			.then((json) => {
-				this.cacheSet(json);
-				entityInstance = new this.entityClass(json);
+				entityInstance = this.format(json);
+				this.cacheSet(entityInstance);
 			});
 		return entityInstance;
 	}
@@ -915,8 +955,9 @@ class Service extends Component {
 			.invoke(this.remoteMethods.delete, obj)
 			.then((response) => response.json())
 			.then((json) => {
-				this.cacheDelete(obj[this.key]);
+				// nothing to do here
 			});
+		this.cacheDelete(obj[this.key]);
 		return true;
 	}
 
@@ -928,16 +969,22 @@ class Service extends Component {
 		} else {
 			let dataMap = this.get();
 			if (!dataMap.size) {
+				let entities;
 				await a7.remote
 					.invoke(this.remoteMethods.readAll, obj)
 					.then((response) => response.json())
 					.then((json) => {
-						this.merge(json);
-						this.queue.delete(requestKey);
+						entities = json;
 					});
+				this.merge(entities);
+				this.queue.delete(requestKey);
 			}
 		}
 		return this.get();
+	}
+
+	format(obj) {
+		return new this.entityClass(obj);
 	}
 
 	cacheDelete(id) {
@@ -947,19 +994,23 @@ class Service extends Component {
 
 		// Notify bound DataProviders
 
-		this.fireEvent("cacheChanged", { action: "refresh" });
+		this.fireEvent("cacheChanged", { action: "delete" });
 	}
 
 	cacheSet(item) {
-		let dataMap = this.get();
-		dataMap.set(item[this.key], item);
-		this.set(dataMap);
+		if (item instanceof this.entityClass) {
+			let dataMap = this.get();
+			dataMap.set(item[this.key], item);
+			this.set(dataMap);
 
-		// Notify bound DataProviders
+			// Notify bound DataProviders
 
-		this.fireEvent("cacheChanged", {
-			action: "refresh",
-		});
+			this.fireEvent("cacheChanged", {
+				action: "refresh",
+			});
+		} else {
+			throw "Item must be of proper entity type.";
+		}
 	}
 
 	set(dataMap) {
@@ -981,7 +1032,7 @@ class Service extends Component {
 		}
 		a7.log.trace("readMany: ");
 		// Get cached items
-		const itemsMap = this.get();
+		//const itemsMap = this.get();
 		const requestKey = `${this.remoteMethods.readMany}-${JSON.stringify(IDs)}`;
 		if (this.queue.has(requestKey)) {
 			a7.log.trace("Duplicate read request detected, cancelling new request");
@@ -1007,12 +1058,11 @@ class Service extends Component {
 					});
 			}
 
-			const cachedItems = present.map((id) => itemsMap.get(id));
+			//const cachedItems = present.map((id) => itemsMap.get(id));
 		}
-
 		// Return all requested items in order, filtering out nulls
 		const result = IDs.map((id) => {
-			const item = itemsMap.get(id);
+			const item = this.get(id);
 			return item || null; // Return null for items that couldn't be found
 		});
 		return result.filter((item) => item !== null); // Filter out any null values
@@ -1066,7 +1116,6 @@ class Service extends Component {
 
 		return itemsArray;
 	}
-
 	filter(items, criteria) {
 		// Convert items to array if it's a Map
 		let itemsArray = Array.isArray(items) ? items : Array.from(items.values());
@@ -1125,7 +1174,7 @@ class Service extends Component {
 					// Handle specific operator, value, and regex flag
 					const [operator, value, useRegex] = criterion;
 					let valueA = item[field];
-					let valueB = value;
+					let valueB = typeof value === "function" ? value() : value;
 
 					if (useRegex && typeof valueB === "string") {
 						// Use regex for string matching
@@ -1141,7 +1190,8 @@ class Service extends Component {
 					}
 				} else if (Array.isArray(criterion) && criterion.length === 2) {
 					const operator = criterion[0];
-					const value = criterion[1];
+					const value =
+						typeof criterion[1] === "function" ? criterion[1]() : criterion[1];
 
 					// Handle range match or simple equality/inequality check
 					if (typeof value === "object" && Array.isArray(value)) {
@@ -1286,12 +1336,10 @@ class View extends Component {
 			this.dataProvider.setState(args);
 		} else {
 			this.state = Object.assign(args);
+			// if there is no dataProvider, fire stateChanged here, otherwise wait for the dataProvider (see registerDataProvider())
+			this.fireEvent("stateChanged", args);
 		}
-		// if (typeof this.state === "object") {
-		// 	this.state = Object.assign(args);
-		// } else {
-		// 	this.dataProvider.setState(args);
-		// }
+
 		this.fireEvent("mustRender");
 	}
 
@@ -1301,15 +1349,14 @@ class View extends Component {
 		} else {
 			return Object.assign(this.state);
 		}
-		// if (typeof this.state === "object") {
-		// 	return Object.assign(this.state);
-		// } else {
-		// 	return this.dataProvider.getState();
-		// }
 	}
 
 	registerDataProvider(dp) {
 		this.dataProvider = dp;
+		// listen for the dataProvider to fire its stateChanged event, then fire
+		this.dataProvider.on("stateChanged", (dataProvider, args) => {
+			this.fireEvent("stateChanged", args);
+		});
 	}
 
 	unregisterDataProvider() {

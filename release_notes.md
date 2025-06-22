@@ -1,3 +1,8 @@
+8.0.0-alpha.1
+============
+
+8.0.x represents the formalization of the ES6 class components and the new features of the DataProvider, Entity, and Service, as well as the modules that support them. Notable in this release are significant updates to the View component as well. In particular, the setState method now only updates the keys of the object passed to it and does not replace the previous state in its entirety. This release should be relatively stable, but there may be changes as these features are still under active development, hence the -alpha.1 release.
+
 7.5.3
 ============
 

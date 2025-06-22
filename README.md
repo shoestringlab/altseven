@@ -1,4 +1,4 @@
-# altseven
+# 8.0.0-alpha.1
 
 v 7.5.3
 
@@ -13,18 +13,11 @@ To install dev dependencies from NPM:
 
     `$ npm install`
 
+## Current Version - 8.0.0-alpha.1
 
-Current Release - 7.5.0
---------
+8.0.x represents the formalization of the ES6 class components and the new features of the DataProvider, Entity, and Service, as well as the modules that support them. Notable in this release are significant updates to the View component as well. In particular, the setState method now only updates the keys of the object passed to it and does not replace the previous state in its entirety. This release should be relatively stable, but there may be changes as these features are still under active development, hence the -alpha.1 release.
 
-This release adds three new ES 6 class components- a base Component with the event bindings, a DataProvider to manage state in a View, an Entity class as a base class for data schemas, and a Service class for managing remote resources, data caching in the model, and (coming soon) data binding for automated update of View state when data changes.
-
-The User component has been re-factored as an ES6 class as well. If you have used the Constructor component to instantiate a User, you will need to update your code to use the new ES6 class.
-
-7.5.0 should be a drop-in replacement compatible with previous versions, except for the User component change. Where the User component is instantiated in the framework itself has been updated to use the new ES6 class.
-
-DataProvider, Entity, and Service are in active development and may change, so please treat these as experimental features.
-
+In general, existing applications should be compatible with this release. However, there may be some changes to the API that may require updates to your code. If you experience issues with this release running an existing application, look through the release notes. In particular, check the changes around the security module and token use if you are using the built-in securicty mechanism.
 
 ## Installation
 
@@ -37,7 +30,7 @@ You only need to install dependencies from npm to work on the altseven framework
 
 gadget-ui can be used for the FloatingPane as a container for the debugging console.
 
-    $ npm install gadget-ui
+    $ npm install altseven
 
 Handlebars can be used as the templating engine.
 
@@ -49,8 +42,11 @@ modlazy can be used as a module/dependency loader if you use Handlebars or Musta
 
 ## Documentation
 
+Documentation for 7.3.0 is available at:
+
 https://altseven.shoestringlab.com
 
+8.0.x documentation is under development.
 
 ## Running the Sample App
 

@@ -21,13 +21,10 @@ class Service extends Component {
 			this.set(new Map());
 		}
 
-		this.on(
-			"mustRegister",
-			function () {
-				a7.log.trace("mustRegister: Service: " + this.id);
-				a7.services.register(this);
-			}.bind(this),
-		);
+		this.on("mustRegister", () => {
+			a7.log.trace("mustRegister: Service: " + this.id);
+			a7.services.register(this);
+		});
 	}
 
 	registerDataProvider(dp) {
@@ -86,7 +83,7 @@ class Service extends Component {
 
 		newItems.forEach((item) => {
 			if (item[this.key]) {
-				dataMap.set(item[this.key], item);
+				dataMap.set(item[this.key], this.format(item));
 			}
 		});
 
@@ -101,13 +98,16 @@ class Service extends Component {
 	}
 
 	async create(obj) {
-		let entityInstance = new this.entityClass(obj);
+		// if obj is a plain object, create a new entity
+		let entityInstance =
+			(!obj) instanceof this.entityClass ? this.format(obj) : obj;
+
 		await a7.remote
 			.invoke(this.remoteMethods.create, entityInstance)
 			.then((response) => response.json())
 			.then((json) => {
-				this.cacheSet(json);
-				entityInstance = new this.entityClass(json);
+				entityInstance = this.format(json);
+				this.cacheSet(entityInstance);
 			});
 		return entityInstance;
 	}
@@ -120,14 +120,16 @@ class Service extends Component {
 			//return this.queue.get(requestKey);
 		} else {
 			if (!dataMap.has(obj[this.key])) {
+				let entity;
 				await a7.remote
 					.invoke(this.remoteMethods.read, obj)
 					.then((response) => response.json())
 					.then((json) => {
-						this.cacheSet(json);
-						this.queue.delete(requestKey);
-						dataMap = this.get();
+						entity = json;
 					});
+				this.cacheSet(this.format(entity));
+				this.queue.delete(requestKey);
+				dataMap = this.get();
 			}
 		}
 
@@ -135,13 +137,13 @@ class Service extends Component {
 	}
 
 	async update(obj) {
-		let entityInstance = new this.entityClass(obj);
+		let entityInstance = this.format(obj);
 		await a7.remote
 			.invoke(this.remoteMethods.update, obj)
 			.then((response) => response.json())
 			.then((json) => {
-				this.cacheSet(json);
-				entityInstance = new this.entityClass(json);
+				entityInstance = this.format(json);
+				this.cacheSet(entityInstance);
 			});
 		return entityInstance;
 	}
@@ -151,8 +153,9 @@ class Service extends Component {
 			.invoke(this.remoteMethods.delete, obj)
 			.then((response) => response.json())
 			.then((json) => {
-				this.cacheDelete(obj[this.key]);
+				// nothing to do here
 			});
+		this.cacheDelete(obj[this.key]);
 		return true;
 	}
 
@@ -164,16 +167,22 @@ class Service extends Component {
 		} else {
 			let dataMap = this.get();
 			if (!dataMap.size) {
+				let entities;
 				await a7.remote
 					.invoke(this.remoteMethods.readAll, obj)
 					.then((response) => response.json())
 					.then((json) => {
-						this.merge(json);
-						this.queue.delete(requestKey);
+						entities = json;
 					});
+				this.merge(entities);
+				this.queue.delete(requestKey);
 			}
 		}
 		return this.get();
+	}
+
+	format(obj) {
+		return new this.entityClass(obj);
 	}
 
 	cacheDelete(id) {
@@ -183,19 +192,23 @@ class Service extends Component {
 
 		// Notify bound DataProviders
 
-		this.fireEvent("cacheChanged", { action: "refresh" });
+		this.fireEvent("cacheChanged", { action: "delete" });
 	}
 
 	cacheSet(item) {
-		let dataMap = this.get();
-		dataMap.set(item[this.key], item);
-		this.set(dataMap);
+		if (item instanceof this.entityClass) {
+			let dataMap = this.get();
+			dataMap.set(item[this.key], item);
+			this.set(dataMap);
 
-		// Notify bound DataProviders
+			// Notify bound DataProviders
 
-		this.fireEvent("cacheChanged", {
-			action: "refresh",
-		});
+			this.fireEvent("cacheChanged", {
+				action: "refresh",
+			});
+		} else {
+			throw "Item must be of proper entity type.";
+		}
 	}
 
 	set(dataMap) {
@@ -217,7 +230,7 @@ class Service extends Component {
 		}
 		a7.log.trace("readMany: ");
 		// Get cached items
-		const itemsMap = this.get();
+		//const itemsMap = this.get();
 		const requestKey = `${this.remoteMethods.readMany}-${JSON.stringify(IDs)}`;
 		if (this.queue.has(requestKey)) {
 			a7.log.trace("Duplicate read request detected, cancelling new request");
@@ -243,12 +256,11 @@ class Service extends Component {
 					});
 			}
 
-			const cachedItems = present.map((id) => itemsMap.get(id));
+			//const cachedItems = present.map((id) => itemsMap.get(id));
 		}
-
 		// Return all requested items in order, filtering out nulls
 		const result = IDs.map((id) => {
-			const item = itemsMap.get(id);
+			const item = this.get(id);
 			return item || null; // Return null for items that couldn't be found
 		});
 		return result.filter((item) => item !== null); // Filter out any null values
@@ -302,7 +314,6 @@ class Service extends Component {
 
 		return itemsArray;
 	}
-
 	filter(items, criteria) {
 		// Convert items to array if it's a Map
 		let itemsArray = Array.isArray(items) ? items : Array.from(items.values());
@@ -361,7 +372,7 @@ class Service extends Component {
 					// Handle specific operator, value, and regex flag
 					const [operator, value, useRegex] = criterion;
 					let valueA = item[field];
-					let valueB = value;
+					let valueB = typeof value === "function" ? value() : value;
 
 					if (useRegex && typeof valueB === "string") {
 						// Use regex for string matching
@@ -377,7 +388,8 @@ class Service extends Component {
 					}
 				} else if (Array.isArray(criterion) && criterion.length === 2) {
 					const operator = criterion[0];
-					const value = criterion[1];
+					const value =
+						typeof criterion[1] === "function" ? criterion[1]() : criterion[1];
 
 					// Handle range match or simple equality/inequality check
 					if (typeof value === "object" && Array.isArray(value)) {

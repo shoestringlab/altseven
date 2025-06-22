@@ -59,29 +59,30 @@ class Entity extends Component {
 		switch (expectedType) {
 			case "date":
 				return new Date(value) instanceof Date;
-				break;
+
 			case "array":
 				return Array.isArray(value);
-				break;
+
 			case "boolean":
 				return value === 0 || value === 1 || value === true || value === false
 					? true
 					: false;
-				break;
+
 			case "integer":
 				return Number.isInteger(value);
-				break;
+
 			case "float":
 				return typeof value === "number";
-				break;
+
 			case "string":
 				return typeof value === "string";
-				break;
+
 			default:
 				return true;
-				break;
 		}
 	}
+
+	set schema(obj) {}
 
 	get schema() {
 		return this.#schema;

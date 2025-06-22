@@ -91,12 +91,10 @@ class View extends Component {
 			this.dataProvider.setState(args);
 		} else {
 			this.state = Object.assign(args);
+			// if there is no dataProvider, fire stateChanged here, otherwise wait for the dataProvider (see registerDataProvider())
+			this.fireEvent("stateChanged", args);
 		}
-		// if (typeof this.state === "object") {
-		// 	this.state = Object.assign(args);
-		// } else {
-		// 	this.dataProvider.setState(args);
-		// }
+
 		this.fireEvent("mustRender");
 	}
 
@@ -106,15 +104,14 @@ class View extends Component {
 		} else {
 			return Object.assign(this.state);
 		}
-		// if (typeof this.state === "object") {
-		// 	return Object.assign(this.state);
-		// } else {
-		// 	return this.dataProvider.getState();
-		// }
 	}
 
 	registerDataProvider(dp) {
 		this.dataProvider = dp;
+		// listen for the dataProvider to fire its stateChanged event, then fire
+		this.dataProvider.on("stateChanged", (dataProvider, args) => {
+			this.fireEvent("stateChanged", args);
+		});
 	}
 
 	unregisterDataProvider() {

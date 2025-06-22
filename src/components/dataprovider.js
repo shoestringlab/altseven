@@ -36,6 +36,7 @@ class DataProvider extends Component {
 	bind() {
 		if (this.binding) {
 			for (let rule in this.binding) {
+				let dependencies = this.binding[rule].dependencies || null;
 				let matchingService = [...this.services.values()].find(
 					(service) => service.entityClass === this.binding[rule].entityClass,
 				);
@@ -43,43 +44,98 @@ class DataProvider extends Component {
 					a7.log.trace("Binding: ", rule);
 					let filter = this.binding[rule].filter || null;
 					let func = this.binding[rule].func || null;
-					let dependencies = this.binding[rule].dependencies || null;
+					let sort = this.binding[rule].sort || null;
+					let id = this.binding[rule].id || null;
 					this.bindings.set(rule, {
 						key: rule,
 						service: matchingService,
 						filter: filter,
+						sort: sort,
 						func: func,
 						dependencies: dependencies,
+						id: id,
 					});
 
 					matchingService.bind(rule, filter);
 
-					let data = matchingService.get();
+					let boundData = this.getBoundData(this.bindings.get(rule));
 
-					if (filter !== null) {
-						data = matchingService.filter(data, filter);
-					}
-
-					this.setStateOnly({ [rule]: data });
+					this.setStateOnly({ [rule]: boundData });
 
 					//Listen for changes in the service cache
 					matchingService.on("cacheChanged", (service, args) => {
+						//pass in the DP state
+						args.state = this.getState();
 						this.updateBoundState(this.bindings.get(rule), args);
 					});
 				}
+
+				dependencies = this.binding[rule].dependencies || [];
+				dependencies.forEach((depKey) => {
+					let key = depKey.split(".");
+					if (key.length === 1) {
+						this.on("stateChanged", (dataProvider, props) => {
+							a7.log.trace("Binding dependency");
+							if ([key] in props) {
+								a7.log.trace("updated " + key);
+								this.updateBoundState(this.bindings.get(rule), {
+									action: "refresh",
+									state: this.getState(),
+								});
+							}
+							//	this.updateBoundState(this.bindings.get(rule), { action: "refresh" });
+						});
+					} else if (key.length === 2) {
+						// if the dependency is on another view, the dependency will be listed as ${viewID}.key.
+						a7.ui.getView(key[0]).on("stateChanged", (view, props) => {
+							a7.log.trace("Binding dependency");
+							if ([key[1]] in props) {
+								a7.log.trace("updated " + key[1]);
+								this.updateBoundState(this.bindings.get(rule), {
+									action: "refresh",
+									state: this.getState(),
+									dependentState: view.getState(),
+								});
+							}
+						});
+					}
+				});
 			}
 		}
+	}
+
+	getBoundData(binding) {
+		let updatedData;
+
+		let type = this.#schema[binding.key].type;
+		if (type === "object") {
+			updatedData = binding.service.get(binding.id);
+		} else if (type === "map") {
+			updatedData = binding.service.get();
+			if (binding.filter !== null) {
+				updatedData = binding.service.filter(updatedData, binding.filter);
+			}
+
+			if (binding.sort !== null) {
+				updatedData = binding.service.sort(updatedData, binding.sort);
+			}
+		}
+
+		return updatedData;
 	}
 
 	async updateBoundState(binding, args) {
 		let updatedData;
 		if (binding.func !== null) {
 			// pass the filter to the func
-			args = Object.assign(args, { filter: binding.filter });
+			args = Object.assign(args, {
+				filter: binding.filter,
+				sort: binding.sort,
+			});
 			if (binding.func.constructor.name === "AsyncFunction") {
-				updatedData = await binding.func(args, this.getState());
+				updatedData = await binding.func(args);
 			} else {
-				updatedData = binding.func(args, this.getState());
+				updatedData = binding.func(args);
 			}
 			//let type = binding.entityClass.type;
 			let type = this.#schema[binding.key].type;
@@ -89,21 +145,15 @@ class DataProvider extends Component {
 
 			this.view.setState({ [binding.key]: updatedData });
 		} else {
-			updatedData = binding.service.get();
-			if (binding.filter !== null) {
-				updatedData = this.filter(updatedData, binding.filter);
-			}
-			let type = this.#schema[binding.key].type;
+			let updatedData = this.getBoundData(binding);
 
-			// for object types
-			if (type === "object") {
-				updatedData = Array.from(updatedData.values());
-				updatedData = updatedData[0];
-			}
 			this.view.setState({ [binding.key]: updatedData });
 		}
 	}
 
+	set schema(obj) {
+		// this doesn't actually do anthing, it's just here so the runtime doesn't complain about it being missing
+	}
 	get schema() {
 		return this.#schema;
 	}
@@ -113,21 +163,7 @@ class DataProvider extends Component {
 	}
 	setState(args) {
 		this.setStateOnly(args);
-		let bindingsUpdated = new Map();
-		// check if the updated keys are dependencies for bound keys
-		for (let key in args) {
-			this.bindings.forEach((binding) => {
-				if (
-					binding.dependencies !== null &&
-					binding.dependencies.includes(key)
-				) {
-					if (!bindingsUpdated.has(binding)) {
-						this.updateBoundState(binding, { action: "refresh" });
-						bindingsUpdated.set(binding, "");
-					}
-				}
-			});
-		}
+		this.fireEvent("stateChanged", args);
 	}
 
 	getState() {
