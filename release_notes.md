@@ -1,3 +1,13 @@
+
+8.0.0-alpha.2
+============
+
+One significant change required to existing apps is to convert the calls to the Constructor component in Views to use the new ES6 View class.
+
+``` javascript
+const message = new a7.components.View(props);
+```
+
 8.0.0-alpha.1
 ============
 

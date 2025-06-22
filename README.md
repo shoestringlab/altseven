@@ -1,4 +1,4 @@
-# 8.0.0-alpha.1
+# 8.0.0-alpha.2
 
 v 7.5.3
 
@@ -13,11 +13,17 @@ To install dev dependencies from NPM:
 
     `$ npm install`
 
-## Current Version - 8.0.0-alpha.1
+## Current Version - 8.0.0-alpha.2
 
 8.0.x represents the formalization of the ES6 class components and the new features of the DataProvider, Entity, and Service, as well as the modules that support them. Notable in this release are significant updates to the View component as well. In particular, the setState method now only updates the keys of the object passed to it and does not replace the previous state in its entirety. This release should be relatively stable, but there may be changes as these features are still under active development, hence the -alpha.1 release.
 
 In general, existing applications should be compatible with this release. However, there may be some changes to the API that may require updates to your code. If you experience issues with this release running an existing application, look through the release notes. In particular, check the changes around the security module and token use if you are using the built-in securicty mechanism.
+
+One significant change required to existing apps is to convert the calls to the Constructor component in Views to use the new ES6 View class.
+
+``` javascript
+const message = new a7.components.View(props);
+```
 
 ## Installation
 
