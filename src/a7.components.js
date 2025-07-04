@@ -1275,7 +1275,7 @@ class View extends Component {
 
 		this.on(
 			"mustRender",
-			a7.util.debounce(
+			this.app.util.debounce(
 				function () {
 					a7.log.trace("mustRender: " + this.props.id);
 					if (this.shouldRender()) {

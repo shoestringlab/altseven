@@ -2,6 +2,7 @@ export class Application extends Component {
 	constructor(options) {
 		super();
 		this.options = this._initializeOptions(options);
+		this.util = new Util();
 		this.components = {
 			Component: Component,
 			Constructor: Constructor,
