@@ -1,25 +1,24 @@
 class EventManager extends Component {
-	constructor(app) {
+	constructor() {
 		super();
 
-		this.app = app;
 		this.topics = {};
 		this.hasProp = this.topics.hasOwnProperty;
 
 		subscribe("auth.login", function (params) {
-			this.app.remote.invoke("auth.login", params);
+			a7.remote.invoke("auth.login", params);
 		});
 		subscribe("auth.logout", function (params) {
-			this.app.remote.invoke("auth.logout", params);
+			a7.remote.invoke("auth.logout", params);
 		});
 		subscribe("auth.refresh", function (params) {
-			this.app.remote.invoke("auth.refresh", params);
+			a7.remote.invoke("auth.refresh", params);
 		});
 		subscribe("auth.sessionTimeout", function () {
-			this.app.security.invalidateSession();
+			a7.security.invalidateSession();
 		});
 		subscribe("auth.invalidateSession", function () {
-			this.app.security.invalidateSession();
+			a7.security.invalidateSession();
 		});
 	}
 
@@ -41,7 +40,7 @@ class EventManager extends Component {
 	}
 
 	publish(topic, info) {
-		this.app.log.trace("event: " + topic);
+		a7.log.trace("event: " + topic);
 		// If the topic doesn't exist, or there's no listeners in queue,
 		// just leave
 		if (!this.hasProp.call(this.topics, topic)) {

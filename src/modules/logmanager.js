@@ -1,13 +1,12 @@
 class LogManager extends Component {
-	constructor(app) {
+	constructor(options) {
 		super();
-		this.app = app;
 
 		this._ready = false;
 		this._deferred = [];
-		this.logLevel = this.app.options.logging.logLevel;
-		this._toBrowserConsole = this.app.options.logging.toBrowserConsole;
-		this._consoleEnabled = this.app.options.console.enabled;
+		this.logLevel = options.logging.logLevel;
+		this._toBrowserConsole = options.logging.toBrowserConsole;
+		this._consoleEnabled = options.console.enabled;
 		this._ready = true;
 
 		// Log any deferred messages
@@ -48,7 +47,7 @@ class LogManager extends Component {
 			this.logLevel.indexOf("ALL") >= 0
 		) {
 			if (this._consoleEnabled) {
-				this.app.console.addMessage(message, new Date(), "local", level);
+				a7.console.addMessage(message, new Date(), "local", level);
 			}
 			if (this._toBrowserConsole) {
 				console.log(message);

@@ -1,26 +1,25 @@
 class ModelManager extends Component {
-	constructor(app) {
+	constructor(options) {
 		super();
-		this.app = app;
 		this._model = null;
 		this._methods = {};
-		this.app.log.info("Model initializing... ");
+		a7.log.info("Model initializing... ");
 
-		if (typeof this.app.options.model === "string") {
-			switch (this.app.options.model) {
+		if (typeof options.model === "string") {
+			switch (options.model) {
 				case "altseven":
-					this._model = this.app.components.Model;
-					this._model.init(this.app.options);
+					this._model = a7.components.Model;
+					this._model.init(options);
 					break;
 				case "gadgetui":
 					this._model = gadgetui.model;
 					break;
 			}
-		} else if (typeof this.app.options.model === "object") {
-			this._model = this.app.options.model;
+		} else if (typeof options.model === "object") {
+			this._model = options.model;
 		}
 
-		this.app.log.trace("Model set: " + this._model);
+		a7.log.trace("Model set: " + this._model);
 
 		// gadgetui maps directly, so we can loop on the keys
 		Object.keys(this._model).forEach((key) => {

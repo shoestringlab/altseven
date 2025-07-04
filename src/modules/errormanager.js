@@ -1,20 +1,20 @@
 class ErrorManager extends Component {
-	constructor(app) {
+	constructor() {
 		super();
-		this.app = app;
+
 		window.onerror = (msg, url, lineNo, columnNo, error) => {
 			this.captureError(msg, url, lineNo, columnNo, error);
 			return false;
 		};
 
-		this.app.log.info("ErrorManager initialized...");
+		a7.log.info("ErrorManager initialized...");
 	}
 
 	captureError(msg, url, lineNo, columnNo, error) {
 		var string = msg.toLowerCase();
 		var substring = "script error";
 		if (string.indexOf(substring) > -1) {
-			this.app.log.error("Script Error: See Browser Console for Detail");
+			a7.log.error("Script Error: See Browser Console for Detail");
 		} else {
 			var message = [
 				"Message: " + msg,
@@ -25,7 +25,7 @@ class ErrorManager extends Component {
 			].join(" - ");
 
 			this.fireEvent("scriptError", [msg, url, lineNo, columnNo, error]);
-			this.app.log.error(message);
+			a7.log.error(message);
 		}
 	}
 }

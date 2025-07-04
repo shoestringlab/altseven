@@ -1,21 +1,18 @@
 class SecurityManager extends Component {
-	constructor(app) {
+	constructor(options) {
 		super();
-		this.app = app;
 
-		this.app.log.info("Security initializing...");
-		this.useModel = this.app.options.model.length > 0 ? true : false;
-		this.userArgs = this.app.options.security.userArgs
-			? this.app.options.security.userArgs
-			: [];
+		a7.log.info("Security initializing...");
+		this.useModel = options.model.length > 0 ? true : false;
+		this.userArgs = options.security.userArgs ? options.security.userArgs : [];
 		let user = this.getUser();
 		this.setUser(user);
 	}
 
 	async isAuthenticated(resolve, reject) {
-		this.app.log.info("Checking authenticated state.. ");
+		a7.log.info("Checking authenticated state.. ");
 		let response = await new Promise((resolve, reject) => {
-			this.app.remote.invoke("auth.refresh", {
+			a7.remote.invoke("auth.refresh", {
 				resolve: resolve,
 				reject: reject,
 			});
@@ -28,27 +25,27 @@ class SecurityManager extends Component {
 	}
 
 	invalidateSession() {
-		clearTimeout(this.app.remote.getSessionTimer());
-		this.app.remote.invalidateToken();
-		let user = new this.app.components.User(this.userArgs);
+		clearTimeout(a7.remote.getSessionTimer());
+		a7.remote.invalidateToken();
+		let user = new a7.components.User(this.userArgs);
 		this.setUser(user);
 	}
 
 	setUser(user) {
 		if (this.useModel) {
-			this.app.model.set("user", user);
+			a7.model.set("user", user);
 		}
 		sessionStorage.user = JSON.stringify(user);
 	}
 
 	getUser() {
 		let suser, user;
-		let mUser = this.useModel ? this.app.model.get("user") : null;
+		let mUser = this.useModel ? a7.model.get("user") : null;
 		if (typeof mUser !== "undefined" && mUser !== "" && mUser !== null) {
 			user = mUser;
 		} else if (sessionStorage.user && sessionStorage.user !== "") {
 			suser = JSON.parse(sessionStorage.user);
-			user = new this.app.components.User(this.userArgs);
+			user = new a7.components.User(this.userArgs);
 			Object.keys(suser).map((key) => (user[key] = suser[key]));
 		}
 		return user;

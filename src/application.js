@@ -88,48 +88,45 @@ export class Application extends Component {
 	}
 
 	async init() {
-		this.log = new LogManager(this);
+		this.log = new LogManager(this.options);
 		this.log.trace("application log init");
 
 		this.log.trace("application services init");
-		this.services = new ServiceManager(this);
+		this.services = new ServiceManager(this.options);
 
 		this.log.trace("application model init");
-		this.model = new ModelManager(this);
+		this.model = new ModelManager(this.options);
 		//await a7.model.init(this.options);
 		// if there is an applicationName set, use that for the options store
 		this.model.set(this.options?.applicationName ?? "a7", this.options);
 
 		if (this.options.console.enabled) {
 			this.log.trace("application console init");
-			this.console = new Console(this);
+			this.console = new Console(this.options);
 		}
 
 		if (this.options.security.enabled) {
 			this.log.trace("application security init");
 			// init user state
 			// pass security options if they were defined
-			this.security = new SecurityManager(this);
+			this.security = new SecurityManager(this.options);
 		}
 
 		this.log.trace("application remote init");
 		//pass remote modules if they were defined
-		this.remote = new RemoteManager(this);
+		this.remote = new RemoteManager(this.options);
 
 		this.log.trace("application events init");
-		this.events = new EventManager(this);
+		this.events = new EventManager(this.options);
 
 		if (this.options.router) {
 			this.log.trace("application router init");
-			this.router = new RouterManager(
-				this.options.router.options,
-				this.options.router.routes,
-			);
+			this.router = new RouterManager(this.options);
 		}
 
 		this.log.trace("application ui init");
 		// initialize templating engine
-		this.ui = new UIManager();
+		this.ui = new UIManager(this.options);
 
 		if (this.options.security.enabled) {
 			this.log.trace("application security init");

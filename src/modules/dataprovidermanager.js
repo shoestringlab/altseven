@@ -1,10 +1,9 @@
 class DataProviderManager extends Component {
-	constructor(app) {
+	constructor() {
 		super();
-		this.app = app;
 
 		this._dataproviders = new Map();
-		this.app.log.info("DataProviderManager initialized...");
+		a7.log.info("DataProviderManager initialized...");
 	}
 
 	getDataProvider(id) {
@@ -17,7 +16,7 @@ class DataProviderManager extends Component {
 
 	register(dataprovider) {
 		this._dataproviders.set(dataprovider.id, dataprovider);
-		this.app.log.info(`DataProvider "${dataprovider.id}" registered.`);
+		a7.log.info(`DataProvider "${dataprovider.id}" registered.`);
 	}
 }
 

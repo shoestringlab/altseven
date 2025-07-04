@@ -1,7 +1,6 @@
 class ServiceManager extends Component {
-	constructor(app) {
+	constructor() {
 		super();
-		this.app = app;
 		this.services = new Map();
 	}
 

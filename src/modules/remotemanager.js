@@ -1,8 +1,8 @@
 class RemoteManager extends Component {
-	constructor(app) {
+	constructor(options) {
 		super();
 		this.connections = {};
-		this.app = app;
+
 		this.options =
 			app.options.remote && app.options.remote.modules
 				? app.options.remote.modules
@@ -12,7 +12,7 @@ class RemoteManager extends Component {
 		this.modules = {};
 
 		this.token;
-		this.app.log.info("RemoteManager initializing... ");
+		a7.log.info("RemoteManager initializing... ");
 	}
 
 	setModule(key, module) {
@@ -23,23 +23,23 @@ class RemoteManager extends Component {
 		const socket = new WebSocket(url);
 
 		socket.onopen = () => {
-			this.app.log.info(`WebSocket connection to ${url} established.`);
+			a7.log.info(`WebSocket connection to ${url} established.`);
 			this.fireEvent("webSocketOpen", [socket]);
 		};
 
 		socket.onerror = (error) => {
-			this.app.log.error(`WebSocket error:`, error);
+			a7.log.error(`WebSocket error:`, error);
 			this.fireEvent("webSocketError", [error]);
 		};
 
 		socket.onclose = () => {
-			this.app.log.info(`WebSocket connection to ${url} closed.`);
+			a7.log.info(`WebSocket connection to ${url} closed.`);
 			this.fireEvent("webSocketClose", []);
 		};
 
 		socket.onmessage = (event) => {
 			const data = JSON.parse(event.data);
-			this.app.log.trace(`Received message:`, data);
+			a7.log.trace(`Received message:`, data);
 			handleMessage(data);
 			this.fireEvent("webSocketMessage", [data]);
 		};
@@ -56,7 +56,7 @@ class RemoteManager extends Component {
 		if (this.connections[url]) {
 			this.connections[url].close();
 			delete this.connections[url];
-			this.app.log.info(`WebSocket connection to ${url} closed.`);
+			a7.log.info(`WebSocket connection to ${url} closed.`);
 		}
 	}
 
@@ -68,7 +68,7 @@ class RemoteManager extends Component {
 
 	refreshClientSession() {
 		var promise = new Promise(function (resolve, reject) {
-			this.app.remote.invoke("auth.refresh", {
+			a7.remote.invoke("auth.refresh", {
 				resolve: resolve,
 				reject: reject,
 			});
@@ -78,11 +78,11 @@ class RemoteManager extends Component {
 			.then(function (response) {
 				if (response.authenticated) {
 					// session is still active, no need to do anything else
-					this.app.log.trace("Still logged in.");
+					a7.log.trace("Still logged in.");
 				}
 			})
 			.catch(function (error) {
-				this.app.events.publish(c);
+				a7.events.publish(c);
 			});
 	}
 
@@ -104,8 +104,8 @@ class RemoteManager extends Component {
 	}
 
 	init(modules) {
-		let auth = this.app.model.get("a7").auth;
-		this.options = this.app.model.get("a7").remote;
+		let auth = a7.model.get("a7").auth;
+		this.options = a7.model.get("a7").remote;
 
 		this.options.sessionTimeout = auth.sessionTimeout;
 		// set token if valid
@@ -119,14 +119,14 @@ class RemoteManager extends Component {
 
 		let authModule = {
 			login: function (params) {
-				this.app.log.trace("remote call: auth.login");
+				a7.log.trace("remote call: auth.login");
 				var request,
 					args = {
 						method: "POST",
 						headers: {
 							Authorization:
 								"Basic " +
-								this.app.util.base64.encode64(
+								a7.util.base64.encode64(
 									params.username + ":" + params.password,
 								),
 							Accept:
@@ -157,33 +157,33 @@ class RemoteManager extends Component {
 					})
 					.then(function (json) {
 						if (json.success) {
-							var user = this.app.model.get("user");
+							var user = a7.model.get("user");
 							// map the response object into the user object
 							Object.keys(json.user).map(function (key) {
 								user[key] = json.user[key];
 							});
 							// set the user into the sessionStorage and the model
 							sessionStorage.user = JSON.stringify(user);
-							this.app.model.set("user", user);
+							a7.model.set("user", user);
 
 							// handler/function/route based on success
 							if (params.success !== undefined) {
 								if (typeof params.success === "function") {
 									params.success(json);
-								} else if (this.app.model.get("a7").router) {
-									this.app.router.open(params.success, json);
+								} else if (a7.model.get("a7").router) {
+									a7.router.open(params.success, json);
 								} else {
-									this.app.events.publish(params.success, json);
+									a7.events.publish(params.success, json);
 								}
 							}
 						} else if (params.failure !== undefined) {
 							// if login failed
 							if (typeof params.failure === "function") {
 								params.failure(json);
-							} else if (this.app.model.get("a7").router) {
-								this.app.router.open(params.failure, json);
+							} else if (a7.model.get("a7").router) {
+								a7.router.open(params.failure, json);
 							} else {
-								this.app.events.publish(params.failure, json);
+								a7.events.publish(params.failure, json);
 							}
 						}
 						if (params.callback !== undefined) {
@@ -192,14 +192,14 @@ class RemoteManager extends Component {
 					});
 			},
 			logout: function (params) {
-				this.app.log.trace("remote call: auth.logout");
+				a7.log.trace("remote call: auth.logout");
 				var request,
 					args = {
 						method: "POST",
 						headers: {
 							Authorization:
 								"Basic " +
-								this.app.util.base64.encode64(
+								a7.util.base64.encode64(
 									params.username + ":" + params.password,
 								),
 						},
@@ -215,24 +215,24 @@ class RemoteManager extends Component {
 					})
 					.then(function (json) {
 						if (json.success) {
-							this.app.security.invalidateSession();
+							a7.security.invalidateSession();
 							if (params.success !== undefined) {
 								if (typeof params.success === "function") {
 									params.success(json);
-								} else if (this.app.model.get("a7").router) {
-									this.app.router.open(params.success, json);
+								} else if (a7.model.get("a7").router) {
+									a7.router.open(params.success, json);
 								} else {
-									this.app.events.publish(params.success, json);
+									a7.events.publish(params.success, json);
 								}
 							}
 						} else if (params.failure !== undefined) {
 							// if logout failed
 							if (typeof params.failure === "function") {
 								params.failure(json);
-							} else if (this.app.model.get("a7").router) {
-								this.app.router.open(params.failure, json);
+							} else if (a7.model.get("a7").router) {
+								a7.router.open(params.failure, json);
 							} else {
-								this.app.events.publish(params.failure, json);
+								a7.events.publish(params.failure, json);
 							}
 						}
 
@@ -243,7 +243,7 @@ class RemoteManager extends Component {
 			},
 			refresh: function (params) {
 				// refresh keeps the client session alive
-				this.app.remote
+				a7.remote
 					.fetch(this.options.refreshURL, {}, true)
 					// initial fetch needs to parse response
 					.then(function (response) {
@@ -277,7 +277,7 @@ class RemoteManager extends Component {
 	}
 
 	fetch(uri, params, secure) {
-		this.app.log.info("fetch: " + uri);
+		a7.log.info("fetch: " + uri);
 		var request, promise;
 
 		//if secure and tokens, we need to check timeout and add Authorization header
@@ -288,7 +288,7 @@ class RemoteManager extends Component {
 
 			if (minutes > this.options.sessionTimeout) {
 				// timeout
-				this.app.events.publish("auth.sessionTimeout");
+				a7.events.publish("auth.sessionTimeout");
 				return;
 			} else if (this.token !== undefined && this.token !== null) {
 				// set Authorization: Bearer header
@@ -339,12 +339,12 @@ class RemoteManager extends Component {
 							this.options.sessionTimeout,
 						);
 					} else {
-						this.app.events.publish("auth.sessionTimeout");
+						a7.events.publish("auth.sessionTimeout");
 					}
 				}
 			})
 			.catch(function (error) {
-				this.app.log.error(error);
+				a7.log.error(error);
 			});
 
 		return promise;
@@ -354,7 +354,7 @@ class RemoteManager extends Component {
 		var mA = moduleAction.split(".");
 		// if no action specified, return the list of actions
 		if (mA.length < 2) {
-			this.app.log.error(
+			a7.log.error(
 				"No action specified. Valid actions are: " +
 					Object.keys(this.modules[mA[0]]).toString(),
 			);

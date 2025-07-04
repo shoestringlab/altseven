@@ -1,7 +1,7 @@
 class UIManager extends Component {
-	constructor(app) {
+	constructor(options) {
 		super();
-		this.app = app;
+		this.options = options;
 		this.events = [];
 		this.selectors = {};
 		this.nodes = {};
@@ -9,10 +9,10 @@ class UIManager extends Component {
 		this.deferred = [];
 		this.stateTransition = false;
 		this.views = [];
-		this.app.log.trace("Layout initializing...");
+		a7.log.trace("Layout initializing...");
 
-		let eventGroups = this.app.options.ui.eventGroups
-			? this.app.options.ui.eventGroups
+		let eventGroups = this.options.ui.eventGroups
+			? this.options.ui.eventGroups
 			: "standard";
 
 		switch (eventGroups) {
@@ -22,7 +22,7 @@ class UIManager extends Component {
 				this.events = _standardEvents;
 				break;
 			default:
-				this.app.options.ui.eventGroups.forEach((group) =>
+				this.options.ui.eventGroups.forEach((group) =>
 					this.events.concat(group),
 				);
 		}
@@ -43,7 +43,7 @@ class UIManager extends Component {
 
 	setStateTransition(val) {
 		this.stateTransition = val;
-		this.app.log.trace("this.app.ui.stateTransition: " + val);
+		a7.log.trace("a7.ui.stateTransition: " + val);
 	}
 
 	getStateTransition() {
@@ -55,7 +55,7 @@ class UIManager extends Component {
 	}
 
 	register(view) {
-		switch (this.app.options.ui.renderer) {
+		switch (this.options.ui.renderer) {
 			case "Handlebars":
 			case "Mustache":
 			case "templateLiterals":
@@ -70,7 +70,7 @@ class UIManager extends Component {
 	}
 
 	getParentViewIds(id) {
-		this.app.log.trace("Find parents of " + id);
+		a7.log.trace("Find parents of " + id);
 		let parentIds = [];
 		let view = this.views[id];
 		while (view.props.parentID !== undefined) {
@@ -81,7 +81,7 @@ class UIManager extends Component {
 	}
 
 	getChildViewIds(id) {
-		this.app.log.trace("Find children of " + id);
+		a7.log.trace("Find children of " + id);
 		let childIds = [];
 		let view = this.views[id];
 
@@ -97,15 +97,15 @@ class UIManager extends Component {
 
 	enqueueForRender(id) {
 		if (!this.getStateTransition()) {
-			this.app.log.trace("enqueue: " + id);
+			a7.log.trace("enqueue: " + id);
 			if (!this.queue.length) {
-				this.app.log.trace("add first view to queue: " + id);
+				a7.log.trace("add first view to queue: " + id);
 				this.queue.push(id);
 				this.processRenderQueue();
 			} else {
 				let childIds = this.getChildViewIds(id);
 				if (this.views[id].props.parentID === undefined) {
-					this.app.log.trace("add to front of queue: " + id);
+					a7.log.trace("add to front of queue: " + id);
 					this.queue.unshift(id);
 				} else {
 					let parentIds = this.getParentViewIds(id);
@@ -118,14 +118,14 @@ class UIManager extends Component {
 					}
 
 					if (highParent === undefined) {
-						this.app.log.trace("add to end of queue: " + id);
+						a7.log.trace("add to end of queue: " + id);
 						this.queue.push(id);
 					}
 				}
 
 				childIds.forEach((childId) => {
 					if (this.queue.indexOf(childId) >= 0) {
-						this.app.log.trace("remove child from queue: " + childId);
+						a7.log.trace("remove child from queue: " + childId);
 						this.queue.splice(this.queue.indexOf(childId), 1);
 					}
 				});
@@ -136,12 +136,12 @@ class UIManager extends Component {
 	}
 
 	processRenderQueue() {
-		this.app.log.trace("processing the queue");
+		a7.log.trace("processing the queue");
 		this.setStateTransition(true);
 		try {
 			this.queue.forEach((id) => this.views[id].render());
 		} catch (err) {
-			this.app.log.trace(err);
+			a7.log.trace(err);
 		}
 		this.queue = [];
 		this.setStateTransition(false);

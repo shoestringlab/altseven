@@ -1,15 +1,14 @@
 class RouterManager extends Component {
-	constructor(app) {
+	constructor(options, routes) {
 		super();
-		this.app = app;
 		this.router = new Router(routes);
-		this.app.options.useEvents = this.app.options.useEvents ? true : false;
+		this.useEvents = options.router.useEvents ? true : false;
 
 		window.onpopstate = (event) => {
 			this.match(document.location.pathname + document.location.search);
 		};
 
-		this.app.log.info("RouterManager initialized...");
+		a7.log.info("RouterManager initialized...");
 	}
 
 	add(path, handler) {
@@ -24,14 +23,14 @@ class RouterManager extends Component {
 	open(path, params = {}) {
 		let result = this.find(path);
 		if (!result || !result.handler) {
-			this.app.log.error(`No route found for path: ${path}`);
+			a7.log.error(`No route found for path: ${path}`);
 			return;
 		}
 
 		history.pushState(JSON.parse(JSON.stringify(params)), "", path);
 		let combinedParams = Object.assign(params || {}, result.params || {});
-		if (this.app.options.useEvents && typeof result.handler === "string") {
-			this.app.events.publish(result.handler, combinedParams);
+		if (this.useEvents && typeof result.handler === "string") {
+			a7.events.publish(result.handler, combinedParams);
 		} else {
 			result.handler(combinedParams);
 		}
@@ -40,14 +39,14 @@ class RouterManager extends Component {
 	match(path, params = {}) {
 		let result = this.find(path);
 		if (!result || !result.handler) {
-			this.app.log.error(`No route found for path: ${path}`);
+			a7.log.error(`No route found for path: ${path}`);
 			return;
 		}
 
 		history.pushState(JSON.parse(JSON.stringify(params)), "", path);
 		let combinedParams = Object.assign(params || {}, result.params || {});
-		if (this.app.options.useEvents) {
-			this.app.events.publish(result.handler, combinedParams);
+		if (this.useEvents) {
+			a7.events.publish(result.handler, combinedParams);
 		} else {
 			result.handler(combinedParams);
 		}

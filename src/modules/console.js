@@ -1,5 +1,5 @@
 class Console extends Component {
-	constructor(app) {
+	constructor(options) {
 		super();
 		this.title = "Console Window";
 		this.consoleDiv = null;
@@ -9,12 +9,12 @@ class Console extends Component {
 		this.reject = reject;
 		this.options = this.app.options.console;
 
-		if (this.options.container === "") {
-			this.reject(
-				"You must specify a container object for the console display.",
-			);
-			return;
-		}
+		// if (this.options.container === "") {
+		// 	this.reject(
+		// 		"You must specify a container object for the console display.",
+		// 	);
+		// 	return;
+		// }
 
 		if (this.options.enabled) {
 			this.active = true;
@@ -23,7 +23,7 @@ class Console extends Component {
 			this.consoleDiv.setAttribute("class", "a7-console");
 			document.body.appendChild(this.consoleDiv);
 
-			var fp = this.app.components.Constructor(
+			var fp = a7.components.Constructor(
 				this.options.container,
 				[
 					this.consoleDiv,
@@ -42,14 +42,14 @@ class Console extends Component {
 			if (fp.element) fp.element.setAttribute("right", 0);
 
 			if (this.options.wsServer) {
-				var connection = this.app.remote.webSocket(
+				var connection = a7.remote.webSocket(
 					this.options.wsServer,
 					this.handleMessage.bind(this),
 				);
 			}
 
-			this.app.console.addMessage = this.addMessage.bind(this);
-			this.app.log.info("Console initializing...");
+			a7.console.addMessage = this.addMessage.bind(this);
+			a7.log.info("Console initializing...");
 			this.resolve();
 		} else {
 			this.reject(
@@ -90,7 +90,7 @@ class Console extends Component {
 		} else if (json.type === "message") {
 			this.addMessage(json.data.text, new Date(json.data.time), "websocket");
 		} else {
-			this.app.log.error("This doesn't look like valid JSON: ", json);
+			a7.log.error("This doesn't look like valid JSON: ", json);
 		}
 	}
 }
