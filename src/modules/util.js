@@ -1,4 +1,4 @@
-export class Util {
+class Util {
 	// split by commas, used below
 	split(val) {
 		return val.split(/,\s*/);
