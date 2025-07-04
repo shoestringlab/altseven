@@ -10,7 +10,7 @@ class ModelManager extends Component {
 			switch (this.app.options.model) {
 				case "altseven":
 					this._model = this.app.components.Model;
-					this._model.init(this.app.options);
+					this._model.init(this.app.options, this.app.log);
 					break;
 				case "gadgetui":
 					this._model = gadgetui.model;
