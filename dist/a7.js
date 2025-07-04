@@ -57,12 +57,14 @@ var a7 = (function () {
 							routes: options.router.routes,
 						}
 					: undefined,
+				// security.userArgs: { userID: "" }, etc..
 				security: options?.security
 					? {
 							enabled: options.security.enabled ?? true,
 							options: options.security.options ?? {},
 						}
 					: { enabled: true, options: {} },
+
 				ui: {
 					renderer:
 						options?.ui?.renderer ??
