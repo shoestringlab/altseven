@@ -121,19 +121,16 @@ export class Application extends Component {
 
 		if (this.options.router) {
 			this.log.trace("application router init");
-			this.router = new RouterManager(
-				this.options.router.options,
-				this.options.router.routes,
-			);
+			this.router = new RouterManager(this);
 		}
 
 		this.log.trace("application ui init");
 		// initialize templating engine
-		this.ui = new UIManager();
+		this.ui = new UIManager(this);
 
 		if (this.options.security.enabled) {
 			this.log.trace("application security init");
-			this.security = new SecurityManager(this.options);
+			this.security = new SecurityManager(this);
 
 			// check whether user is authenticated
 			const response = this.security.isAuthenticated();
