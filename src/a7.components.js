@@ -128,148 +128,9 @@ class DataProvider extends Component {
 		this.#state = props.state;
 		this.#schema = props.schema;
 		this.view = props.view;
-
 		this.id = this.view.props.id + "-dataProvider";
 		this.services = new Map();
 		this.bindings = new Map(); // New map to store bindings
-		this.config();
-		this.fireEvent("mustRegister");
-	}
-
-	config() {
-		// Config setup
-		// Get the services registered in the app
-		this.services = a7.services.getAll();
-		this.on("mustRegister", () => {
-			this.register();
-		});
-		// bind to data
-		this.bind();
-	}
-
-	register() {
-		// Register with the services
-		this.services.forEach((service) => {
-			service.registerDataProvider(this);
-		});
-	}
-
-	bind() {
-		if (this.binding) {
-			for (let rule in this.binding) {
-				let dependencies = this.binding[rule].dependencies || null;
-				let matchingService = [...this.services.values()].find(
-					(service) => service.entityClass === this.binding[rule].entityClass,
-				);
-				if (matchingService) {
-					a7.log.trace("Binding: ", rule);
-					let filter = this.binding[rule].filter || null;
-					let func = this.binding[rule].func || null;
-					let sort = this.binding[rule].sort || null;
-					let id = this.binding[rule].id || null;
-					this.bindings.set(rule, {
-						key: rule,
-						service: matchingService,
-						filter: filter,
-						sort: sort,
-						func: func,
-						dependencies: dependencies,
-						id: id,
-					});
-
-					matchingService.bind(rule, filter);
-
-					let boundData = this.getBoundData(this.bindings.get(rule));
-
-					this.setStateOnly({ [rule]: boundData });
-
-					//Listen for changes in the service cache
-					matchingService.on("cacheChanged", (service, args) => {
-						//pass in the DP state
-						args.state = this.getState();
-						this.updateBoundState(this.bindings.get(rule), args);
-					});
-				}
-
-				dependencies = this.binding[rule].dependencies || [];
-				dependencies.forEach((depKey) => {
-					let key = depKey.split(".");
-					if (key.length === 1) {
-						this.on("stateChanged", (dataProvider, props) => {
-							a7.log.trace("Binding dependency");
-							if ([key] in props) {
-								a7.log.trace("updated " + key);
-								this.updateBoundState(this.bindings.get(rule), {
-									action: "refresh",
-									state: this.getState(),
-								});
-							}
-							//	this.updateBoundState(this.bindings.get(rule), { action: "refresh" });
-						});
-					} else if (key.length === 2) {
-						// if the dependency is on another view, the dependency will be listed as ${viewID}.key.
-						a7.ui.getView(key[0]).on("stateChanged", (view, props) => {
-							a7.log.trace("Binding dependency");
-							if ([key[1]] in props) {
-								a7.log.trace("updated " + key[1]);
-								this.updateBoundState(this.bindings.get(rule), {
-									action: "refresh",
-									state: this.getState(),
-									dependentState: view.getState(),
-								});
-							}
-						});
-					}
-				});
-			}
-		}
-	}
-
-	getBoundData(binding) {
-		let updatedData;
-
-		let type = this.#schema[binding.key].type;
-		if (type === "object") {
-			updatedData = binding.service.get(binding.id);
-		} else if (type === "map") {
-			updatedData = binding.service.get();
-			if (binding.filter !== null) {
-				updatedData = binding.service.filter(updatedData, binding.filter);
-			}
-
-			if (binding.sort !== null) {
-				updatedData = binding.service.sort(updatedData, binding.sort);
-			}
-		}
-
-		return updatedData;
-	}
-
-	async updateBoundState(binding, args) {
-		let updatedData;
-		if (binding.func !== null) {
-			// pass the filter to the func
-			args = Object.assign(args, {
-				filter: binding.filter,
-				sort: binding.sort,
-			});
-			if (binding.func.constructor.name === "AsyncFunction") {
-				updatedData = await binding.func(args);
-			} else {
-				updatedData = binding.func(args);
-			}
-			//let type = binding.entityClass.type;
-			let type = this.#schema[binding.key].type;
-			if (type === "map" && Array.isArray(updatedData)) {
-				updatedData = binding.service.convertArrayToMap(updatedData);
-			}
-
-			this.view.setState({ [binding.key]: updatedData });
-		} else {
-			let updatedData = this.getBoundData(binding);
-
-			this.view.setState({ [binding.key]: updatedData });
-		}
 	}
 
 	set schema(obj) {
@@ -401,6 +262,7 @@ const Model = (() => {
 	const modelStore = new Map();
 	const mementoStore = new Map();
 	let maxMementos = 20; // Default value
+	let _log;
 
 	class BindableObject {
 		constructor(data, element) {
@@ -439,7 +301,7 @@ const Model = (() => {
 
 		change(value, event, property) {
 			event.originalSource ??= "BindableObject.change";
-			a7.log.trace(`change : Source: ${event.originalSource}`);
+			_log.trace(`change : Source: ${event.originalSource}`);
 
 			const processedValue = this.processValue(value);
 
@@ -678,8 +540,9 @@ const Model = (() => {
 	return {
 		BindableObject,
 
-		init(options = {}) {
+		init(options = {}, log) {
 			maxMementos = options.maxMementos ?? 20;
+			_log = log;
 		},
 
 		create(name, value, element) {
@@ -708,7 +571,7 @@ const Model = (() => {
 
 		get(name, key) {
 			if (!name) {
-				a7.log.error("Expected parameter [name] is not defined.");
+				_log.error("Expected parameter [name] is not defined.");
 				return undefined;
 			}
 
@@ -716,7 +579,7 @@ const Model = (() => {
 			const model = modelStore.get(base);
 
 			if (!model) {
-				a7.log.error(`Key '${base}' does not exist in the model.`);
+				_log.error(`Key '${base}' does not exist in the model.`);
 				return undefined;
 			}
 			if (!key) {
@@ -725,7 +588,7 @@ const Model = (() => {
 			} else {
 				if (model.data instanceof Map) {
 					if (!model.data.has(key)) {
-						a7.log.error(`Key '${key}' does not exist in the Map .`);
+						_log.error(`Key '${key}' does not exist in the Map .`);
 					} else {
 						return model.data.get(key);
 					}
@@ -735,7 +598,7 @@ const Model = (() => {
 
 		set(name, value) {
 			if (!name) {
-				a7.log.error("Expected parameter [name] is not defined.");
+				_log.error("Expected parameter [name] is not defined.");
 				return;
 			}
 
@@ -809,7 +672,9 @@ class Service extends Component {
 		this.entityClass = props.entityClass; // Entity class to use for data operations
 		this.dataProviders = new Map();
 		this.bindings = new Map(); // New map to store bindings
-
+		this.log;
+		this.model;
+		this.remote;
 		// Queue initialization
 		this.queue = new Map();
 
@@ -822,16 +687,29 @@ class Service extends Component {
 		if (!dataMap || !(dataMap instanceof Map)) {
 			this.set(new Map());
 		}
+		// TODO: remove a7 references
+		// this.on("mustRegister", () => {
+		// 	this.log.trace("mustRegister: Service: " + this.id);
+		// 	a7.services.register(this);
+		// });
+	}
 
-		this.on("mustRegister", () => {
-			a7.log.trace("mustRegister: Service: " + this.id);
-			a7.services.register(this);
-		});
+	set log(log) {
+		this.log = log;
+	}
+
+	set model(model) {
+		this.model = model;
+	}
+
+	set remote(remote) {
+		this.remote = remote;
 	}
 
 	registerDataProvider(dp) {
 		// Register the new data provider
 		this.dataProviders.set(dp.id, dp);
+		dp.log = this.log;
 	}
 
 	convertArrayToMap(dataArray) {
@@ -850,8 +728,8 @@ class Service extends Component {
 
 	// Compare itemIDs against cached items
 	compareIDs(IDs) {
-		a7.log.trace("Service: " + this.id);
-		a7.log.trace("compareIDs: " + IDs);
+		this.log.trace("Service: " + this.id);
+		this.log.trace("compareIDs: " + IDs);
 
 		const dataMap = this.get();
 		const present = [];
@@ -868,7 +746,7 @@ class Service extends Component {
 				missing.push(id);
 			}
 		});
-		a7.log.trace(
+		this.log.trace(
 			"results: " + JSON.stringify(present) + " " + JSON.stringify(missing),
 		);
 
@@ -904,7 +782,7 @@ class Service extends Component {
 		let entityInstance =
 			(!obj) instanceof this.entityClass ? this.format(obj) : obj;
 
-		await a7.remote
+		await this.remote
 			.invoke(this.remoteMethods.create, entityInstance)
 			.then((response) => response.json())
 			.then((json) => {
@@ -918,12 +796,12 @@ class Service extends Component {
 		let dataMap = this.get();
 		const requestKey = `${this.remoteMethods.read}-${JSON.stringify(obj)}`;
 		if (this.queue.has(requestKey)) {
-			a7.log.trace("Duplicate read request detected, cancelling new request");
+			this.log.trace("Duplicate read request detected, cancelling new request");
 			//return this.queue.get(requestKey);
 		} else {
 			if (!dataMap.has(obj[this.key])) {
 				let entity;
-				await a7.remote
+				await this.remote
 					.invoke(this.remoteMethods.read, obj)
 					.then((response) => response.json())
 					.then((json) => {
@@ -940,7 +818,7 @@ class Service extends Component {
 
 	async update(obj) {
 		let entityInstance = this.format(obj);
-		await a7.remote
+		await this.remote
 			.invoke(this.remoteMethods.update, obj)
 			.then((response) => response.json())
 			.then((json) => {
@@ -951,7 +829,7 @@ class Service extends Component {
 	}
 
 	async delete(obj) {
-		await a7.remote
+		await this.remote
 			.invoke(this.remoteMethods.delete, obj)
 			.then((response) => response.json())
 			.then((json) => {
@@ -964,13 +842,13 @@ class Service extends Component {
 	async readAll(obj) {
 		const requestKey = `${this.remoteMethods.readAll}-${JSON.stringify(obj)}`;
 		if (this.queue.has(requestKey)) {
-			a7.log.trace("Duplicate read request detected, cancelling new request");
+			this.log.trace("Duplicate read request detected, cancelling new request");
 			//return this.queue.get(requestKey);
 		} else {
 			let dataMap = this.get();
 			if (!dataMap.size) {
 				let entities;
-				await a7.remote
+				await this.remote
 					.invoke(this.remoteMethods.readAll, obj)
 					.then((response) => response.json())
 					.then((json) => {
@@ -1014,14 +892,14 @@ class Service extends Component {
 	}
 
 	set(dataMap) {
-		a7.model.set(this.id, dataMap);
+		this.model.set(this.id, dataMap);
 	}
 
 	get(ID) {
 		if (typeof ID === "undefined") {
-			return a7.model.get(this.id);
+			return this.model.get(this.id);
 		} else {
-			return a7.model.get(this.id, ID);
+			return this.model.get(this.id, ID);
 		}
 	}
 
@@ -1030,12 +908,12 @@ class Service extends Component {
 		if (typeof IDs === "undefined") {
 			return new Map();
 		}
-		a7.log.trace("readMany: ");
+		this.log.trace("readMany: ");
 		// Get cached items
 		//const itemsMap = this.get();
 		const requestKey = `${this.remoteMethods.readMany}-${JSON.stringify(IDs)}`;
 		if (this.queue.has(requestKey)) {
-			a7.log.trace("Duplicate read request detected, cancelling new request");
+			this.log.trace("Duplicate read request detected, cancelling new request");
 			//return this.queue.get(requestKey);
 		} else {
 			// Compare requested IDs with cache
@@ -1043,11 +921,11 @@ class Service extends Component {
 
 			// Fetch missing items if any
 
-			a7.log.trace("Missing? " + missing.length);
+			this.log.trace("Missing? " + missing.length);
 			if (missing.length > 0) {
 				let obj = { id: missing };
 
-				await a7.remote
+				await this.remote
 					.invoke(this.remoteMethods.readMany, obj)
 					.then((response) => response.json())
 					.then((json) => {
@@ -1246,12 +1124,15 @@ class User extends Component {
 class View extends Component {
 	constructor(props) {
 		super();
-		this.renderer = a7.model.get("a7").ui.renderer;
+		this.renderer = this.model.get("a7").ui.renderer;
 		this.type = "View";
 		this.timeout;
 		this.timer;
 		this.element; // HTML element the view renders into
 		this.props = props;
+		this.log;
+		this.model;
+		this.ui;
 		this.isTransient = props.isTransient || false;
 		this.state = {};
 		this.skipRender = false;
@@ -1261,32 +1142,44 @@ class View extends Component {
 		this.fireEvent("mustRegister");
 	}
 
-	config() {
-		this.on(
-			"mustRegister",
-			function () {
-				a7.log.trace("mustRegister: " + this.props.id);
-				a7.ui.register(this);
-				if (a7.ui.getView(this.props.parentID)) {
-					a7.ui.getView(this.props.parentID).addChild(this);
-				}
-			}.bind(this),
-		);
+	set log(log) {
+		this.log = log;
+	}
 
+	set model(model) {
+		this.model = model;
+	}
+
+	set ui(ui) {
+		this.ui = ui;
+	}
+
+	config() {
+		// this.on(
+		// 	"mustRegister",
+		// 	function () {
+		// 		this.log.trace("mustRegister: " + this.props.id);
+		// 		this.ui.register(this);
+		// 		if (this.ui.getView(this.props.parentID)) {
+		// 			this.ui.getView(this.props.parentID).addChild(this);
+		// 		}
+		// 	}.bind(this),
+		// );
+		// TODO: remove a7 references
 		this.on(
 			"mustRender",
 			this.app.util.debounce(
 				function () {
-					a7.log.trace("mustRender: " + this.props.id);
+					this.log.trace("mustRender: " + this.props.id);
 					if (this.shouldRender()) {
-						a7.ui.enqueueForRender(this.props.id);
+						this.ui.enqueueForRender(this.props.id);
 					} else {
-						a7.log.trace("Render cancelled: " + this.props.id);
+						this.log.trace("Render cancelled: " + this.props.id);
 						this.skipRender = false;
 					}
 				}.bind(this),
 			),
-			a7.model.get("a7").ui.debounceTime,
+			this.model.get("a7").ui.debounceTime,
 			true,
 		);
 
@@ -1299,7 +1192,7 @@ class View extends Component {
 					}
 					this.timer = setTimeout(
 						this.checkRenderStatus.bind(this),
-						a7.model.get("a7").ui.timeout,
+						this.model.get("a7").ui.timeout,
 					);
 				}
 				this.onRendered();
@@ -1318,7 +1211,7 @@ class View extends Component {
 		this.on(
 			"mustUnregister",
 			function () {
-				a7.ui.unregister(this.props.id);
+				this.ui.unregister(this.props.id);
 			}.bind(this),
 		);
 	}
@@ -1376,22 +1269,24 @@ class View extends Component {
 	}
 
 	getParent() {
-		return this.props.parentID ? a7.ui.getView(this.props.parentID) : undefined;
+		return this.props.parentID
+			? this.ui.getView(this.props.parentID)
+			: undefined;
 	}
 
 	render() {
-		a7.log.trace("render: " + this.props.id);
+		this.log.trace("render: " + this.props.id);
 		if (this.element === undefined || this.element === null) {
 			this.element = document.querySelector(this.props.selector);
 		}
 		if (!this.element) {
-			a7.log.error(
+			this.log.error(
 				"The DOM element for view " +
 					this.props.id +
 					" was not found. The view will be removed and unregistered.",
 			);
 			if (this.props.parentID !== undefined) {
-				a7.ui.getView(this.props.parentID).removeChild(this);
+				this.ui.getView(this.props.parentID).removeChild(this);
 			}
 			this.fireEvent("mustUnregister");
 			return;
@@ -1401,7 +1296,7 @@ class View extends Component {
 			typeof this.template == "function" ? this.template() : this.template;
 
 		var eventArr = [];
-		a7.ui.getEvents().forEach(function (eve) {
+		this.ui.getEvents().forEach(function (eve) {
 			eventArr.push("[data-on" + eve + "]");
 		});
 		var eles = this.element.querySelectorAll(eventArr.toString());
@@ -1423,7 +1318,7 @@ class View extends Component {
 
 		let boundEles = this.element.querySelectorAll("[data-bind]");
 		boundEles.forEach(function (ele) {
-			a7.model.bind(ele.attributes["data-bind"].value, ele);
+			this.model.bind(ele.attributes["data-bind"].value, ele);
 		});
 		this.fireEvent("rendered");
 	}
@@ -1447,12 +1342,12 @@ class View extends Component {
 
 	checkRenderStatus() {
 		if (document.querySelector(this.props.selector) === null) {
-			a7.ui.unregister(this.id);
+			this.ui.unregister(this.id);
 		} else {
 			if (this.isTransient) {
 				this.timer = setTimeout(
 					this.checkRenderStatus.bind(this),
-					a7.model.get("a7").ui.timeout,
+					this.model.get("a7").ui.timeout,
 				);
 			}
 		}

@@ -21,7 +21,6 @@ module.exports = {
 			"src/components/model.js",
 			"src/components/service.js",
 			"src/components/user.js",
-			"src/components/util.js",
 			"src/components/view.js",
 
 			//	"src/components/components.js",
@@ -34,9 +33,8 @@ module.exports = {
 		},
 		src: [
 			"src/a7.components.js",
-			"src/application.js",
-
 			"src/modules/console.js",
+			"src/modules/dataprovidermanager.js",
 			"src/modules/errormanager.js",
 			"src/modules/eventmanager.js",
 			"src/modules/logmanager.js",
@@ -46,7 +44,8 @@ module.exports = {
 			"src/modules/securitymanager.js",
 			"src/modules/servicemanager.js",
 			"src/modules/uimanager.js",
-
+			"src/modules/util.js",
+			"src/application.js",
 			// "src/a7.js",
 			// "src/a7.console.js",
 			// "src/a7.error.js",
