@@ -59,7 +59,14 @@ class UIManager extends Component {
 			case "Handlebars":
 			case "Mustache":
 			case "templateLiterals":
+				view.log = this.app.log;
+				view.model = this.app.model;
+				view.ui = this.app.ui;
 				this.views[view.props.id] = view;
+				// register as a child of the parent
+				if (this.getView(view.props.parentID)) {
+					this.getView(view.props.parentID).addChild(view);
+				}
 				view.fireEvent("registered");
 				break;
 		}
