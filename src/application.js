@@ -94,6 +94,9 @@ export class Application extends Component {
 		this.log.trace("application services init");
 		this.services = new ServiceManager(this);
 
+		this.log.trace("application dataproviders init");
+		this.dataproviders = new DataProviderManager(this);
+
 		this.log.trace("application model init");
 		this.model = new ModelManager(this);
 		//await a7.model.init(this.options);
