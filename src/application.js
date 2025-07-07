@@ -2,6 +2,7 @@ export class Application extends Component {
 	constructor(options) {
 		super();
 		this.options = this._initializeOptions(options);
+		this.name = this.options.name;
 		this.util = new Util();
 		this.components = {
 			Component: Component,
@@ -15,13 +16,8 @@ export class Application extends Component {
 			View: View,
 		};
 
-		this.init()
-			.then(() => {
-				this.log.info("Application initialized...");
-			})
-			.catch((message) => {
-				this.log.error(message);
-			});
+		this.init();
+		this.log.info("Application initialized...");
 	}
 
 	_initializeOptions(options) {
@@ -49,6 +45,7 @@ export class Application extends Component {
 				toBrowserConsole: options?.logging?.toBrowserConsole ?? false,
 			},
 			model: options?.model ?? "altseven",
+			name: options?.name ?? "a7",
 			remote: options?.remote
 				? {
 						loginURL: options.remote.loginURL ?? "",
@@ -87,7 +84,7 @@ export class Application extends Component {
 		};
 	}
 
-	async init() {
+	init() {
 		this.log = new LogManager(this);
 		this.log.trace("application log init");
 
@@ -145,6 +142,3 @@ export class Application extends Component {
 		return {};
 	}
 }
-
-// Usage example:
-// const a7Manager = new A7Manager({ /* your options here */ });

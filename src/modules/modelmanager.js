@@ -26,8 +26,6 @@ class ModelManager extends Component {
 		Object.keys(this._model).forEach((key) => {
 			this._methods[key] = this._model[key];
 		});
-
-		resolve();
 	}
 
 	destroy(...args) {

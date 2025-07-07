@@ -1,7 +1,6 @@
 class View extends Component {
 	constructor(props) {
 		super();
-		this.renderer = this.model.get("a7").ui.renderer;
 		this.type = "View";
 		this.timeout;
 		this.timer;
@@ -19,16 +18,16 @@ class View extends Component {
 		this.fireEvent("mustRegister");
 	}
 
-	set log(log) {
-		this.log = log;
+	setLog(logger) {
+		this.log = logger;
 	}
 
-	set model(model) {
-		this.model = model;
+	setModel(_model) {
+		this.model = _model;
 	}
 
-	set ui(ui) {
-		this.ui = ui;
+	setUI(_ui) {
+		this.ui = _ui;
 	}
 
 	config() {
@@ -45,8 +44,9 @@ class View extends Component {
 		// TODO: remove a7 references
 		this.on(
 			"mustRender",
-			this.app.util.debounce(
+			this.debounce(
 				function () {
+					this.renderer = this.model.get("a7").ui.renderer;
 					this.log.trace("mustRender: " + this.props.id);
 					if (this.shouldRender()) {
 						this.ui.enqueueForRender(this.props.id);
@@ -56,7 +56,8 @@ class View extends Component {
 					}
 				}.bind(this),
 			),
-			this.model.get("a7").ui.debounceTime,
+			18,
+			//this.model.get("a7").ui.debounceTime,
 			true,
 		);
 
@@ -69,7 +70,8 @@ class View extends Component {
 					}
 					this.timer = setTimeout(
 						this.checkRenderStatus.bind(this),
-						this.model.get("a7").ui.timeout,
+						600000,
+						//this.model.get("a7").ui.timeout,
 					);
 				}
 				this.onRendered();
@@ -228,5 +230,42 @@ class View extends Component {
 				);
 			}
 		}
+	}
+
+	/**
+	 * Creates a debounced function that delays invoking `func` until after `wait` milliseconds
+	 * have elapsed since the last time the debounced function was invoked.
+	 *
+	 * @param {Function} func - The function to debounce.
+	 * @param {number} wait - The number of milliseconds to delay.
+	 * @param {boolean} [immediate=false] - Trigger the function on the leading edge, instead of the trailing.
+	 * @return {Function} A new debounced function.
+	 */
+	debounce(func, wait, immediate = false) {
+		let timeout;
+
+		return function executedFunction() {
+			// Save the context and arguments for later invocation
+			const context = this;
+			const args = arguments;
+
+			// Define the function that will actually call `func`
+			const later = function () {
+				timeout = null;
+				if (!immediate) func.apply(context, args);
+			};
+
+			const callNow = immediate && !timeout;
+
+			// Clear the previous timeout
+			clearTimeout(timeout);
+
+			// Set a new timeout
+			timeout = setTimeout(later, wait);
+
+			// If 'immediate' is true and this is the first time the function has been called,
+			// execute it right away
+			if (callNow) func.apply(context, args);
+		};
 	}
 }

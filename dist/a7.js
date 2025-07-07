@@ -1124,7 +1124,6 @@ class User extends Component {
 class View extends Component {
 	constructor(props) {
 		super();
-		this.renderer = this.model.get("a7").ui.renderer;
 		this.type = "View";
 		this.timeout;
 		this.timer;
@@ -1142,16 +1141,16 @@ class View extends Component {
 		this.fireEvent("mustRegister");
 	}
 
-	set log(log) {
-		this.log = log;
+	setLog(logger) {
+		this.log = logger;
 	}
 
-	set model(model) {
-		this.model = model;
+	setModel(_model) {
+		this.model = _model;
 	}
 
-	set ui(ui) {
-		this.ui = ui;
+	setUI(_ui) {
+		this.ui = _ui;
 	}
 
 	config() {
@@ -1168,8 +1167,9 @@ class View extends Component {
 		// TODO: remove a7 references
 		this.on(
 			"mustRender",
-			this.app.util.debounce(
+			this.debounce(
 				function () {
+					this.renderer = this.model.get("a7").ui.renderer;
 					this.log.trace("mustRender: " + this.props.id);
 					if (this.shouldRender()) {
 						this.ui.enqueueForRender(this.props.id);
@@ -1179,7 +1179,8 @@ class View extends Component {
 					}
 				}.bind(this),
 			),
-			this.model.get("a7").ui.debounceTime,
+			18,
+			//this.model.get("a7").ui.debounceTime,
 			true,
 		);
 
@@ -1192,7 +1193,8 @@ class View extends Component {
 					}
 					this.timer = setTimeout(
 						this.checkRenderStatus.bind(this),
-						this.model.get("a7").ui.timeout,
+						600000,
+						//this.model.get("a7").ui.timeout,
 					);
 				}
 				this.onRendered();
@@ -1351,6 +1353,43 @@ class View extends Component {
 				);
 			}
 		}
+	}
+
+	/**
+	 * Creates a debounced function that delays invoking `func` until after `wait` milliseconds
+	 * have elapsed since the last time the debounced function was invoked.
+	 *
+	 * @param {Function} func - The function to debounce.
+	 * @param {number} wait - The number of milliseconds to delay.
+	 * @param {boolean} [immediate=false] - Trigger the function on the leading edge, instead of the trailing.
+	 * @return {Function} A new debounced function.
+	 */
+	debounce(func, wait, immediate = false) {
+		let timeout;
+
+		return function executedFunction() {
+			// Save the context and arguments for later invocation
+			const context = this;
+			const args = arguments;
+
+			// Define the function that will actually call `func`
+			const later = function () {
+				timeout = null;
+				if (!immediate) func.apply(context, args);
+			};
+
+			const callNow = immediate && !timeout;
+
+			// Clear the previous timeout
+			clearTimeout(timeout);
+
+			// Set a new timeout
+			timeout = setTimeout(later, wait);
+
+			// If 'immediate' is true and this is the first time the function has been called,
+			// execute it right away
+			if (callNow) func.apply(context, args);
+		};
 	}
 }
 
@@ -1650,19 +1689,19 @@ class EventManager extends Component {
 		this.topics = {};
 		this.hasProp = this.topics.hasOwnProperty;
 
-		subscribe("auth.login", function (params) {
+		this.subscribe("auth.login", function (params) {
 			this.app.remote.invoke("auth.login", params);
 		});
-		subscribe("auth.logout", function (params) {
+		this.subscribe("auth.logout", function (params) {
 			this.app.remote.invoke("auth.logout", params);
 		});
-		subscribe("auth.refresh", function (params) {
+		this.subscribe("auth.refresh", function (params) {
 			this.app.remote.invoke("auth.refresh", params);
 		});
-		subscribe("auth.sessionTimeout", function () {
+		this.subscribe("auth.sessionTimeout", function () {
 			this.app.security.invalidateSession();
 		});
-		subscribe("auth.invalidateSession", function () {
+		this.subscribe("auth.invalidateSession", function () {
 			this.app.security.invalidateSession();
 		});
 	}
@@ -1797,8 +1836,6 @@ class ModelManager extends Component {
 		Object.keys(this._model).forEach((key) => {
 			this._methods[key] = this._model[key];
 		});
-
-		resolve();
 	}
 
 	destroy(...args) {
@@ -2517,17 +2554,178 @@ class UIManager extends Component {
 			? this.app.options.ui.eventGroups
 			: "standard";
 
+		this.config();
+
 		switch (eventGroups) {
 			case "extended":
-				reject("Extended events are not implemented yet.");
+				break;
+			//	reject("Extended events are not implemented yet.");
 			case "standard":
-				this.events = _standardEvents;
+				this.events = this.standardEvents;
 				break;
 			default:
 				this.app.options.ui.eventGroups.forEach((group) =>
 					this.events.concat(group),
 				);
 		}
+	}
+
+	config() {
+		// browser events that can be used in templating, e.g. data-click will be added to the resulting HTML as a click event handler
+		const resourceEvents = ["cached", "error", "abort", "load", "beforeunload"];
+
+		const networkEvents = ["online", "offline"];
+
+		const focusEvents = ["focus", "blur"];
+
+		const websocketEvents = ["open", "message", "error", "close"];
+
+		const sessionHistoryEvents = ["pagehide", "pageshow", "popstate"];
+
+		const cssAnimationEvents = [
+			"animationstart",
+			"animationend",
+			"animationiteration",
+		];
+
+		const cssTransitionEvents = [
+			"transitionstart",
+			"transitioncancel",
+			"transitionend",
+			"transitionrun",
+		];
+
+		const formEvents = ["reset", "submit"];
+
+		const printingEvents = ["beforeprint", "afterprint"];
+
+		const textCompositionEvents = [
+			"compositionstart",
+			"compositionupdate",
+			"compositionend",
+		];
+
+		const viewEvents = [
+			"fullscreenchange",
+			"fullscreenerror",
+			"resize",
+			"scroll",
+		];
+
+		const clipboardEvents = ["cut", "copy", "paste"];
+
+		const keyboardEvents = ["keydown", "keypress", "keyup"];
+
+		const mouseEvents = [
+			"auxclick",
+			"click",
+			"contextmenu",
+			"dblclick",
+			"mousedown",
+			"mousenter",
+			"mouseleave",
+			"mousemove",
+			"mouseover",
+			"mouseout",
+			"mouseup",
+			"pointerlockchange",
+			"pointerlockerror",
+			"wheel",
+		];
+
+		const dragEvents = [
+			"drag",
+			"dragend",
+			"dragstart",
+			"dragleave",
+			"dragover",
+			"drop",
+		];
+
+		const mediaEvents = [
+			"audioprocess",
+			"canplay",
+			"canplaythrough",
+			"complete",
+			"durationchange",
+			"emptied",
+			"ended",
+			"loadeddata",
+			"loadedmetadata",
+			"pause",
+			"play",
+			"playing",
+			"ratechange",
+			"seeked",
+			"seeking",
+			"stalled",
+			"suspend",
+			"timeupdate",
+			"columechange",
+			"waiting",
+		];
+
+		const progressEvents = [
+			// duplicates from resource events
+			/* 'abort',
+		'error',
+		'load', */
+			"loadend",
+			"loadstart",
+			"progress",
+			"timeout",
+		];
+
+		const storageEvents = ["change", "storage"];
+
+		const updateEvents = [
+			"checking",
+			"downloading",
+			/* 'error', */
+			"noupdate",
+			"obsolete",
+			"updateready",
+		];
+
+		const valueChangeEvents = [
+			"broadcast",
+			"CheckBoxStateChange",
+			"hashchange",
+			"input",
+			"RadioStateChange",
+			"readystatechange",
+			"ValueChange",
+		];
+
+		const uncategorizedEvents = [
+			"invalid",
+			"localized",
+			/* 'message',
+		'open', */
+			"show",
+		];
+
+		this.standardEvents = resourceEvents
+			.concat(networkEvents)
+			.concat(focusEvents)
+			.concat(websocketEvents)
+			.concat(sessionHistoryEvents)
+			.concat(cssAnimationEvents)
+			.concat(cssTransitionEvents)
+			.concat(formEvents)
+			.concat(printingEvents)
+			.concat(textCompositionEvents)
+			.concat(viewEvents)
+			.concat(clipboardEvents)
+			.concat(keyboardEvents)
+			.concat(mouseEvents)
+			.concat(dragEvents)
+			.concat(mediaEvents)
+			.concat(progressEvents)
+			.concat(storageEvents)
+			.concat(updateEvents)
+			.concat(valueChangeEvents)
+			.concat(uncategorizedEvents);
 	}
 
 	setSelector(name, selector) {
@@ -2541,6 +2739,10 @@ class UIManager extends Component {
 
 	getNode(name) {
 		return this.nodes[name];
+	}
+
+	getView(id) {
+		return this.views[id];
 	}
 
 	setStateTransition(val) {
@@ -2561,9 +2763,9 @@ class UIManager extends Component {
 			case "Handlebars":
 			case "Mustache":
 			case "templateLiterals":
-				view.log = this.app.log;
-				view.model = this.app.model;
-				view.ui = this.app.ui;
+				view.setLog(this.app.log);
+				view.setModel(this.app.model);
+				view.setUI(this.app.ui);
 				this.views[view.props.id] = view;
 				// register as a child of the parent
 				if (this.getView(view.props.parentID)) {
@@ -2893,13 +3095,16 @@ export class Application extends Component {
 			View: View,
 		};
 
-		this.init()
-			.then(() => {
-				this.log.info("Application initialized...");
-			})
-			.catch((message) => {
-				this.log.error(message);
-			});
+		this.init();
+		this.log.info("Application initialized...");
+
+		// .then(() => {
+		// 	this.log.info("Application initialized...");
+		// 	resolve(this);
+		// })
+		// .catch((message) => {
+		// 	this.log.error(message);
+		// });
 	}
 
 	_initializeOptions(options) {
@@ -2965,7 +3170,7 @@ export class Application extends Component {
 		};
 	}
 
-	async init() {
+	init() {
 		this.log = new LogManager(this);
 		this.log.trace("application log init");
 

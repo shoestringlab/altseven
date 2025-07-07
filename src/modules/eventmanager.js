@@ -6,19 +6,19 @@ class EventManager extends Component {
 		this.topics = {};
 		this.hasProp = this.topics.hasOwnProperty;
 
-		subscribe("auth.login", function (params) {
+		this.subscribe("auth.login", function (params) {
 			this.app.remote.invoke("auth.login", params);
 		});
-		subscribe("auth.logout", function (params) {
+		this.subscribe("auth.logout", function (params) {
 			this.app.remote.invoke("auth.logout", params);
 		});
-		subscribe("auth.refresh", function (params) {
+		this.subscribe("auth.refresh", function (params) {
 			this.app.remote.invoke("auth.refresh", params);
 		});
-		subscribe("auth.sessionTimeout", function () {
+		this.subscribe("auth.sessionTimeout", function () {
 			this.app.security.invalidateSession();
 		});
-		subscribe("auth.invalidateSession", function () {
+		this.subscribe("auth.invalidateSession", function () {
 			this.app.security.invalidateSession();
 		});
 	}
