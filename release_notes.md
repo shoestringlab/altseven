@@ -3,6 +3,8 @@
 
 In the alpha.3 release, the entire framework has been re-factored into ES6 classes and modules. A new Application class has been introduced to manage the lifecycle of the application. The Application loads instances of the module classes and provides access to the Application instance throughout your application. To create a new application, import the Application class from the framework and create a new instance. Export the Application instance, then import it where you need it.
 
+Note, if you try the test apps in the test/8.x folder, only the new ES6 app will run as the others have yet to be updated.
+
 ``` javascript
 import { Application } from "/lib/altseven/dist/a7.js";
 let options = {};
