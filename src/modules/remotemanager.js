@@ -2,15 +2,12 @@ class RemoteManager extends Component {
 	constructor(options) {
 		super();
 		this.connections = {};
-
-		this.options =
-			app.options.remote && app.options.remote.modules
-				? app.options.remote.modules
-				: {};
+		this.app = app;
+		this.options = app.options.remote ? app.options.remote : {};
 		this.time = new Date();
 		this.sessionTimer;
 		this.modules = {};
-
+		this.init(this.options.modules);
 		this.token;
 		a7.log.info("RemoteManager initializing... ");
 	}
@@ -68,7 +65,7 @@ class RemoteManager extends Component {
 
 	refreshClientSession() {
 		var promise = new Promise(function (resolve, reject) {
-			a7.remote.invoke("auth.refresh", {
+			this.invoke("auth.refresh", {
 				resolve: resolve,
 				reject: reject,
 			});
@@ -104,8 +101,7 @@ class RemoteManager extends Component {
 	}
 
 	init(modules) {
-		let auth = a7.model.get("a7").auth;
-		this.options = a7.model.get("a7").remote;
+		let auth = this.app.options.auth;
 
 		this.options.sessionTimeout = auth.sessionTimeout;
 		// set token if valid
@@ -118,8 +114,8 @@ class RemoteManager extends Component {
 		}
 
 		let authModule = {
-			login: function (params) {
-				a7.log.trace("remote call: auth.login");
+			login: (params) => {
+				this.app.log.trace("remote call: auth.login");
 				var request,
 					args = {
 						method: "POST",
@@ -143,7 +139,7 @@ class RemoteManager extends Component {
 				var promise = fetch(request);
 
 				promise
-					.then(function (response) {
+					.then((response) => {
 						// set the token into sessionStorage so it is available if the browser is refreshed
 						//
 						var token =
@@ -155,11 +151,11 @@ class RemoteManager extends Component {
 						}
 						return response.json();
 					})
-					.then(function (json) {
+					.then((json) => {
 						if (json.success) {
 							var user = a7.model.get("user");
 							// map the response object into the user object
-							Object.keys(json.user).map(function (key) {
+							Object.keys(json.user).map((key) => {
 								user[key] = json.user[key];
 							});
 							// set the user into the sessionStorage and the model
@@ -170,8 +166,8 @@ class RemoteManager extends Component {
 							if (params.success !== undefined) {
 								if (typeof params.success === "function") {
 									params.success(json);
-								} else if (a7.model.get("a7").router) {
-									a7.router.open(params.success, json);
+								} else if (this.app.options.router) {
+									this.app.router.open(params.success, json);
 								} else {
 									a7.events.publish(params.success, json);
 								}
@@ -180,8 +176,8 @@ class RemoteManager extends Component {
 							// if login failed
 							if (typeof params.failure === "function") {
 								params.failure(json);
-							} else if (a7.model.get("a7").router) {
-								a7.router.open(params.failure, json);
+							} else if (this.app.options.router) {
+								this.app.router.open(params.failure, json);
 							} else {
 								a7.events.publish(params.failure, json);
 							}
@@ -191,8 +187,8 @@ class RemoteManager extends Component {
 						}
 					});
 			},
-			logout: function (params) {
-				a7.log.trace("remote call: auth.logout");
+			logout: (params) => {
+				this.app.log.trace("remote call: auth.logout");
 				var request,
 					args = {
 						method: "POST",
@@ -210,17 +206,17 @@ class RemoteManager extends Component {
 				var promise = fetch(request);
 
 				promise
-					.then(function (response) {
+					.then((response) => {
 						return response.json();
 					})
-					.then(function (json) {
+					.then((json) => {
 						if (json.success) {
 							a7.security.invalidateSession();
 							if (params.success !== undefined) {
 								if (typeof params.success === "function") {
 									params.success(json);
-								} else if (a7.model.get("a7").router) {
-									a7.router.open(params.success, json);
+								} else if (this.app.options.router) {
+									this.app.router.open(params.success, json);
 								} else {
 									a7.events.publish(params.success, json);
 								}
@@ -229,8 +225,8 @@ class RemoteManager extends Component {
 							// if logout failed
 							if (typeof params.failure === "function") {
 								params.failure(json);
-							} else if (a7.model.get("a7").router) {
-								a7.router.open(params.failure, json);
+							} else if (this.app.options.router) {
+								this.app.router.open(params.failure, json);
 							} else {
 								a7.events.publish(params.failure, json);
 							}
@@ -241,25 +237,24 @@ class RemoteManager extends Component {
 						}
 					});
 			},
-			refresh: function (params) {
+			refresh: (params) => {
 				// refresh keeps the client session alive
-				a7.remote
-					.fetch(this.options.refreshURL, {}, true)
+				this.fetch(this.options.refreshURL, {}, true)
 					// initial fetch needs to parse response
-					.then(function (response) {
+					.then((response) => {
 						if (response.status === 401) {
 							return { isauthenticated: false };
 						} else {
 							return response.json();
 						}
 					})
-					.then(function (json) {
+					.then((json) => {
 						// then json is handled
 						if (params.resolve !== undefined) {
 							params.resolve(json);
 						}
 					})
-					.catch(function (error) {
+					.catch((error) => {
 						if (params.reject) {
 							params.reject(error);
 						}
@@ -271,7 +266,7 @@ class RemoteManager extends Component {
 		this.setModule("auth", authModule);
 
 		// add application modules
-		Object.keys(modules).forEach(function (key) {
+		Object.keys(modules).forEach((key) => {
 			this.setModule(key, modules[key]);
 		});
 	}
@@ -320,7 +315,7 @@ class RemoteManager extends Component {
 		promise = fetch(request);
 
 		promise
-			.then(function (response) {
+			.then((response) => {
 				if (secure && this.options.useTokens) {
 					// according to https://www.rfc-editor.org/rfc/rfc6749#section-5.1
 					// the access_token response key should be in the body. we're going to include it as a header for non-oauth implementations
@@ -343,8 +338,8 @@ class RemoteManager extends Component {
 					}
 				}
 			})
-			.catch(function (error) {
-				a7.log.error(error);
+			.catch((error) => {
+				this.app.log.error(error);
 			});
 
 		return promise;

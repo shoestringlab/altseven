@@ -1,4 +1,4 @@
-class User extends Component {
+export class User extends Component {
 	constructor(args) {
 		super();
 		// Initialize the User object with provided arguments

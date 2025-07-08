@@ -1,9 +1,10 @@
-const Model = (() => {
+export const Model = (() => {
 	"use strict";
 
 	const modelStore = new Map();
 	const mementoStore = new Map();
 	let maxMementos = 20; // Default value
+	let _log;
 
 	class BindableObject {
 		constructor(data, element) {
@@ -42,7 +43,7 @@ const Model = (() => {
 
 		change(value, event, property) {
 			event.originalSource ??= "BindableObject.change";
-			a7.log.trace(`change : Source: ${event.originalSource}`);
+			_log.trace(`change : Source: ${event.originalSource}`);
 
 			const processedValue = this.processValue(value);
 
@@ -281,8 +282,9 @@ const Model = (() => {
 	return {
 		BindableObject,
 
-		init(options = {}) {
+		init(options = {}, log) {
 			maxMementos = options.maxMementos ?? 20;
+			_log = log;
 		},
 
 		create(name, value, element) {
@@ -311,7 +313,7 @@ const Model = (() => {
 
 		get(name, key) {
 			if (!name) {
-				a7.log.error("Expected parameter [name] is not defined.");
+				_log.error("Expected parameter [name] is not defined.");
 				return undefined;
 			}
 
@@ -319,7 +321,7 @@ const Model = (() => {
 			const model = modelStore.get(base);
 
 			if (!model) {
-				a7.log.error(`Key '${base}' does not exist in the model.`);
+				_log.error(`Key '${base}' does not exist in the model.`);
 				return undefined;
 			}
 			if (!key) {
@@ -328,7 +330,7 @@ const Model = (() => {
 			} else {
 				if (model.data instanceof Map) {
 					if (!model.data.has(key)) {
-						a7.log.error(`Key '${key}' does not exist in the Map .`);
+						_log.error(`Key '${key}' does not exist in the Map .`);
 					} else {
 						return model.data.get(key);
 					}
@@ -338,7 +340,7 @@ const Model = (() => {
 
 		set(name, value) {
 			if (!name) {
-				a7.log.error("Expected parameter [name] is not defined.");
+				_log.error("Expected parameter [name] is not defined.");
 				return;
 			}
 

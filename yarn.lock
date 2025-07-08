@@ -904,10 +904,10 @@
   "resolved" "https://registry.npmjs.org/function-bind/-/function-bind-1.1.2.tgz"
   "version" "1.1.2"
 
-"gadget-ui@^10.1.0":
-  "integrity" "sha512-wtL9tielwMVCZCExb/KLLpkK5HwINgV6bKNWsj6JPwTaiihUgzkgR5qRGd34MPzzbNRfU+KYZ8Eid/NFOvZ1Hw=="
-  "resolved" "https://registry.npmjs.org/gadget-ui/-/gadget-ui-10.1.4.tgz"
-  "version" "10.1.4"
+"gadget-ui@^11.0.1":
+  "integrity" "sha512-dGVVthBINhtZgc9lzR9+QCFFgm7jRm9UH+atlbss6NtWrqoPSGVmSa4daAI2x9A13etTKU3sLNvAwD+jq2g6Rg=="
+  "resolved" "https://registry.npmjs.org/gadget-ui/-/gadget-ui-11.0.1.tgz"
+  "version" "11.0.1"
   dependencies:
     "feather-icons" "^4.29.0"
     "velocity-animate" "^2.0.6"

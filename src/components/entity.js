@@ -1,4 +1,4 @@
-class Entity extends Component {
+export class Entity extends Component {
 	#schema;
 	#data;
 	constructor(props) {

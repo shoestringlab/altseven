@@ -1,12 +1,16 @@
-class View extends Component {
+export class View extends Component {
 	constructor(props) {
 		super();
-		this.renderer = a7.model.get("a7").ui.renderer;
 		this.type = "View";
-		this.timeout;
+		this.timeout = 600000;
+		this.renderer = "templateLiterals";
+		this.debounceTime = 18;
 		this.timer;
 		this.element; // HTML element the view renders into
 		this.props = props;
+		this.log;
+		this.model;
+		this.ui;
 		this.isTransient = props.isTransient || false;
 		this.state = {};
 		this.skipRender = false;
@@ -16,32 +20,43 @@ class View extends Component {
 		this.fireEvent("mustRegister");
 	}
 
+	setLog(logger) {
+		this.log = logger;
+	}
+
+	setModel(_model) {
+		this.model = _model;
+	}
+
+	setUI(_ui) {
+		this.ui = _ui;
+	}
+	// set these values on registration
+	setRenderer(renderer) {
+		this.renderer = renderer;
+	}
+	setTimeout(timeout) {
+		this.timeout = timeout;
+	}
+	setDebounceTime(debounceTime) {
+		this.debounceTime = debounceTime;
+	}
+
 	config() {
 		this.on(
-			"mustRegister",
-			function () {
-				a7.log.trace("mustRegister: " + this.props.id);
-				a7.ui.register(this);
-				if (a7.ui.getView(this.props.parentID)) {
-					a7.ui.getView(this.props.parentID).addChild(this);
-				}
-			}.bind(this),
-		);
-
-		this.on(
 			"mustRender",
-			a7.util.debounce(
+			this.debounce(
 				function () {
-					a7.log.trace("mustRender: " + this.props.id);
+					this.log.trace("mustRender: " + this.props.id);
 					if (this.shouldRender()) {
-						a7.ui.enqueueForRender(this.props.id);
+						this.ui.enqueueForRender(this.props.id);
 					} else {
-						a7.log.trace("Render cancelled: " + this.props.id);
+						this.log.trace("Render cancelled: " + this.props.id);
 						this.skipRender = false;
 					}
 				}.bind(this),
 			),
-			a7.model.get("a7").ui.debounceTime,
+			this.debounceTime,
 			true,
 		);
 
@@ -54,7 +69,7 @@ class View extends Component {
 					}
 					this.timer = setTimeout(
 						this.checkRenderStatus.bind(this),
-						a7.model.get("a7").ui.timeout,
+						this.timeout,
 					);
 				}
 				this.onRendered();
@@ -73,18 +88,10 @@ class View extends Component {
 		this.on(
 			"mustUnregister",
 			function () {
-				a7.ui.unregister(this.props.id);
+				this.ui.unregister(this.props.id);
 			}.bind(this),
 		);
 	}
-
-	// events = [
-	// 	"mustRender",
-	// 	"rendered",
-	// 	"mustRegister",
-	// 	"registered",
-	// 	"mustUnregister",
-	// ];
 
 	setState(args) {
 		if (this.dataProvider) {
@@ -131,22 +138,24 @@ class View extends Component {
 	}
 
 	getParent() {
-		return this.props.parentID ? a7.ui.getView(this.props.parentID) : undefined;
+		return this.props.parentID
+			? this.ui.getView(this.props.parentID)
+			: undefined;
 	}
 
 	render() {
-		a7.log.trace("render: " + this.props.id);
+		this.log.trace("render: " + this.props.id);
 		if (this.element === undefined || this.element === null) {
 			this.element = document.querySelector(this.props.selector);
 		}
 		if (!this.element) {
-			a7.log.error(
+			this.log.error(
 				"The DOM element for view " +
 					this.props.id +
 					" was not found. The view will be removed and unregistered.",
 			);
 			if (this.props.parentID !== undefined) {
-				a7.ui.getView(this.props.parentID).removeChild(this);
+				this.ui.getView(this.props.parentID).removeChild(this);
 			}
 			this.fireEvent("mustUnregister");
 			return;
@@ -156,7 +165,7 @@ class View extends Component {
 			typeof this.template == "function" ? this.template() : this.template;
 
 		var eventArr = [];
-		a7.ui.getEvents().forEach(function (eve) {
+		this.ui.getEvents().forEach(function (eve) {
 			eventArr.push("[data-on" + eve + "]");
 		});
 		var eles = this.element.querySelectorAll(eventArr.toString());
@@ -178,7 +187,7 @@ class View extends Component {
 
 		let boundEles = this.element.querySelectorAll("[data-bind]");
 		boundEles.forEach(function (ele) {
-			a7.model.bind(ele.attributes["data-bind"].value, ele);
+			this.model.bind(ele.attributes["data-bind"].value, ele);
 		});
 		this.fireEvent("rendered");
 	}
@@ -202,14 +211,51 @@ class View extends Component {
 
 	checkRenderStatus() {
 		if (document.querySelector(this.props.selector) === null) {
-			a7.ui.unregister(this.id);
+			this.ui.unregister(this.id);
 		} else {
 			if (this.isTransient) {
 				this.timer = setTimeout(
 					this.checkRenderStatus.bind(this),
-					a7.model.get("a7").ui.timeout,
+					this.timeout,
 				);
 			}
 		}
+	}
+
+	/**
+	 * Creates a debounced function that delays invoking `func` until after `wait` milliseconds
+	 * have elapsed since the last time the debounced function was invoked.
+	 *
+	 * @param {Function} func - The function to debounce.
+	 * @param {number} wait - The number of milliseconds to delay.
+	 * @param {boolean} [immediate=false] - Trigger the function on the leading edge, instead of the trailing.
+	 * @return {Function} A new debounced function.
+	 */
+	debounce(func, wait, immediate = false) {
+		let timeout;
+
+		return function executedFunction() {
+			// Save the context and arguments for later invocation
+			const context = this;
+			const args = arguments;
+
+			// Define the function that will actually call `func`
+			const later = function () {
+				timeout = null;
+				if (!immediate) func.apply(context, args);
+			};
+
+			const callNow = immediate && !timeout;
+
+			// Clear the previous timeout
+			clearTimeout(timeout);
+
+			// Set a new timeout
+			timeout = setTimeout(later, wait);
+
+			// If 'immediate' is true and this is the first time the function has been called,
+			// execute it right away
+			if (callNow) func.apply(context, args);
+		};
 	}
 }

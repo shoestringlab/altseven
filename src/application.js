@@ -2,26 +2,10 @@ export class Application extends Component {
 	constructor(options) {
 		super();
 		this.options = this._initializeOptions(options);
+		this.name = this.options.name;
 		this.util = new Util();
-		this.components = {
-			Component: Component,
-			Constructor: Constructor,
-			DataProvider: DataProvider,
-			Entity: Entity,
-			EventBindings: EventBindings,
-			Model: Model,
-			Service: Service,
-			User: User,
-			View: View,
-		};
-
-		this.init()
-			.then(() => {
-				this.log.info("Application initialized...");
-			})
-			.catch((message) => {
-				this.log.error(message);
-			});
+		this.init();
+		this.log.info("Application initialized...");
 	}
 
 	_initializeOptions(options) {
@@ -49,6 +33,7 @@ export class Application extends Component {
 				toBrowserConsole: options?.logging?.toBrowserConsole ?? false,
 			},
 			model: options?.model ?? "altseven",
+			name: options?.name ?? "a7",
 			remote: options?.remote
 				? {
 						loginURL: options.remote.loginURL ?? "",
@@ -56,6 +41,7 @@ export class Application extends Component {
 						refreshURL: options.remote.refreshURL ?? "",
 						useTokens: options?.auth?.useTokens ?? true,
 						tokenType: options.remote.tokenType ?? "X-Token", // Authorization is the other token type
+						modules: options.remote.modules ?? {},
 					}
 				: { useTokens: true },
 			router: options?.router
@@ -87,12 +73,15 @@ export class Application extends Component {
 		};
 	}
 
-	async init() {
-		this.log = new LogManager(this.options);
+	init() {
+		this.log = new LogManager(this);
 		this.log.trace("application log init");
 
 		this.log.trace("application services init");
 		this.services = new ServiceManager(this.options);
+
+		this.log.trace("application dataproviders init");
+		this.dataproviders = new DataProviderManager(this);
 
 		this.log.trace("application model init");
 		this.model = new ModelManager(this.options);
@@ -121,27 +110,27 @@ export class Application extends Component {
 
 		if (this.options.router) {
 			this.log.trace("application router init");
-			this.router = new RouterManager(this.options);
+			this.router = new RouterManager(this);
 		}
 
 		this.log.trace("application ui init");
 		// initialize templating engine
-		this.ui = new UIManager(this.options);
+		this.ui = new UIManager(this);
 
 		if (this.options.security.enabled) {
 			this.log.trace("application security init");
-			this.security = new SecurityManager(this.options);
-
+			this.security = new SecurityManager(this);
+			this.error = new ErrorManager(this);
 			// check whether user is authenticated
-			const response = this.security.isAuthenticated();
-			this.error = new ErrorManager();
-			this.log.info(`Authenticated: ${response.authenticated}...`);
-			return response;
+
+			var p = new Promise((resolve, reject) => {
+				this.security.isAuthenticated(resolve, reject);
+			});
+			p.then((response) => {
+				this.log.info(`Authenticated: ${response.authenticated}...`);
+			});
 		}
 
 		return {};
 	}
 }
-
-// Usage example:
-// const a7Manager = new A7Manager({ /* your options here */ });

@@ -1,8 +1,9 @@
 class RouterManager extends Component {
 	constructor(options, routes) {
 		super();
-		this.router = new Router(routes);
-		this.useEvents = options.router.useEvents ? true : false;
+		this.app = app;
+		this.router = new Router(app.options.router.routes);
+		this.useEvents = this.app.options.router.options.useEvents ?? false;
 
 		window.onpopstate = (event) => {
 			this.match(document.location.pathname + document.location.search);
@@ -30,7 +31,7 @@ class RouterManager extends Component {
 		history.pushState(JSON.parse(JSON.stringify(params)), "", path);
 		let combinedParams = Object.assign(params || {}, result.params || {});
 		if (this.useEvents && typeof result.handler === "string") {
-			a7.events.publish(result.handler, combinedParams);
+			this.app.events.publish(result.handler, combinedParams);
 		} else {
 			result.handler(combinedParams);
 		}
@@ -46,7 +47,7 @@ class RouterManager extends Component {
 		history.pushState(JSON.parse(JSON.stringify(params)), "", path);
 		let combinedParams = Object.assign(params || {}, result.params || {});
 		if (this.useEvents) {
-			a7.events.publish(result.handler, combinedParams);
+			this.app.events.publish(result.handler, combinedParams);
 		} else {
 			result.handler(combinedParams);
 		}
@@ -56,6 +57,11 @@ class RouterManager extends Component {
 // URL Router class
 class Router {
 	constructor(routes) {
+		this.REGEX_PARAM_DEFAULT = /^[^/]+/;
+		this.REGEX_START_WITH_PARAM = /^(:\w|\()/;
+		this.REGEX_INCLUDE_PARAM = /:\w|\(/;
+		this.REGEX_MATCH_PARAM = /^(?::(\w+))?(?:\(([^)]+)\))?/;
+
 		this.root = this.createNode();
 
 		if (routes) {
@@ -82,13 +88,15 @@ class Router {
 	}
 
 	parse(remain, handler, parent) {
-		if (REGEX_START_WITH_PARAM.test(remain)) {
-			const match = remain.match(REGEX_MATCH_PARAM);
+		if (this.REGEX_START_WITH_PARAM.test(remain)) {
+			const match = remain.match(this.REGEX_MATCH_PARAM);
 			let node = parent.children.regex[match[0]];
 
 			if (!node) {
 				node = parent.children.regex[match[0]] = this.createNode({
-					regex: match[2] ? new RegExp("^" + match[2]) : REGEX_PARAM_DEFAULT,
+					regex: match[2]
+						? new RegExp("^" + match[2])
+						: this.REGEX_PARAM_DEFAULT,
 					param: match[1],
 				});
 			}
@@ -111,7 +119,7 @@ class Router {
 	}
 
 	parseOptim(remain, handler, node) {
-		if (REGEX_INCLUDE_PARAM.test(remain)) {
+		if (this.REGEX_INCLUDE_PARAM.test(remain)) {
 			this.parse(remain, handler, node);
 		} else {
 			const child = node.children.string[remain];
@@ -140,7 +148,7 @@ class Router {
 			};
 		}
 
-		return this.find(remain, node, params);
+		return this._find(remain, node, params);
 	}
 
 	_find(remain, node, params) {

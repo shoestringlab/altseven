@@ -1,6 +1,117 @@
+8.0.0-alpha.3
+============
+
+In the alpha.3 release, the entire framework has been re-factored into ES6 classes and modules. A new Application class has been introduced to manage the lifecycle of the application. The Application loads instances of the module classes and provides access to the Application instance throughout your application. To create a new application, import the Application class from the framework and create a new instance. Export the Application instance, then import it where you need it.
+
+``` javascript
+import { Application } from "/lib/altseven/dist/a7.js";
+let options = {};
+export const myApp = new Application(options);
+```
+
+A more complex app including events, remote modules, and services might look like this:
+
+``` javascript
+import { Application } from "/lib/altseven/dist/a7.js";
+// include imports of events, services, remote modules
+// imports not included
+export var myApp;
+
+export var application = function init() {
+	var options = {
+		auth: {
+			sessionTimeout: 60 * 1000 * 15,
+		},
+		/* console: {
+				enabled: true,
+				container: floatingpane,
+        //wsServer: 'ws://127.0.0.1:8000',
+        left: 700
+			}, */
+		logging: {
+			logLevel: "INFO,ERROR,FATAL",
+			toBrowserConsole: true,
+		},
+		remote: {
+			// pass remote modules into the application
+			modules: {
+				user: user,
+			},
+			loginURL: "/api/auth/login",
+			logoutURL: "/api/auth/logout",
+			refreshURL: "/api/auth/refresh",
+			useTokens: true, // defaults to true for the auth system
+			tokenType: "access_token",
+		},
+		router: {
+			options: { useEvents: true },
+			routes: routes,
+		},
+		security: {
+			userArgs: { userID: "" },
+		},
+	};
+	// create a new application
+	myApp = new Application(options);
+	myApp.log.info("Application initialized");
+
+	//initialize pub/sub events
+	authEvents();
+
+	// register the services
+	myApp.services.register(UserService());
+
+	var p = new Promise(function (resolve, reject) {
+		myApp.security.isAuthenticated(resolve, reject);
+	});
+	p.then(function (response) {
+		main.init(response, hostname);
+	});
+	p["catch"](function (message) {
+		console.log("Something went wrong.");
+	});
+};
+```
+
+Services need to be registered with the application, as you can see above. Events do not. This code is an example, though hardly canonical, of how you can organize an altseven application.
+
+DataProviders and Entities work in a different fashion than Views. Import and extend the Entity or Service class as needed for your class.
+
+``` javascript
+import { Entity } from "/lib/altseven/dist/a7.js";
+export class Bookmark extends Entity {
+	// ...
+}
+```
+
+For Views, import the View class. You are now required to register your views with the application. As you see, the a7 namespace has been eliminated. Instead, you can name your application whatever you want, and that becomes the namespace for your app. For backwards compatibility, you can name your application a7 and use the same namespace.
+
+``` javascript
+import { myApp } from "/assets/js/app.js";
+import { View } from "/lib/altseven/dist/a7.js";
+const bookmarks = new View(props);
+myApp.ui.register(bookmarks);
+//...
+```
+
+DataProviders have an extra step in that they need to be registered inside the View where they are instantiated. You need to register the DataProvider with both the View and the application in order to make it active.
+
+``` javascript
+	const bdp = new BookmarksDP({
+		// some stuff
+	});
+	// regsiter with the app
+	myApp.dataproviders.register(bdp);
+	// register with the view
+	bookmarks.registerDataProvider(bdp);
+````
 
 8.0.0-alpha.2
 ============
+
+8.0.x represents the formalization of the ES6 class components and the new features of the DataProvider, Entity, and Service, as well as the modules that support them. Notable in this release are significant updates to the View component as well. In particular, the setState method now only updates the keys of the object passed to it and does not replace the previous state in its entirety. This release should be relatively stable, but there may be changes as these features are still under active development, hence the -alpha.1 release.
+
+In general, existing applications should be compatible with this release. However, there may be some changes to the API that may require updates to your code. If you experience issues with this release running an existing application, look through the release notes. In particular, check the changes around the security module and token use if you are using the built-in securicty mechanism.
 
 One significant change required to existing apps is to convert the calls to the Constructor component in Views to use the new ES6 View class.
 

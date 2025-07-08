@@ -1,3 +1,5 @@
+//import { Model } from "../components/model.js";
+
 class ModelManager extends Component {
 	constructor(options) {
 		super();
@@ -8,8 +10,8 @@ class ModelManager extends Component {
 		if (typeof options.model === "string") {
 			switch (options.model) {
 				case "altseven":
-					this._model = a7.components.Model;
-					this._model.init(options);
+					this._model = Model;
+					this._model.init(this.app.options, this.app.log);
 					break;
 				case "gadgetui":
 					this._model = gadgetui.model;
@@ -25,8 +27,6 @@ class ModelManager extends Component {
 		Object.keys(this._model).forEach((key) => {
 			this._methods[key] = this._model[key];
 		});
-
-		resolve();
 	}
 
 	destroy(...args) {
