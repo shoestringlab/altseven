@@ -50,7 +50,7 @@ class DataProviderManager extends Component {
 
 					matchingService.bind(rule, filter);
 
-					let boundData = this.getBoundData(dp.bindings.get(rule));
+					let boundData = this.getBoundData(dp, dp.bindings.get(rule));
 
 					dp.setStateOnly({ [rule]: boundData });
 
@@ -58,7 +58,7 @@ class DataProviderManager extends Component {
 					matchingService.on("cacheChanged", (service, args) => {
 						//pass in the DP state
 						args.state = dp.getState();
-						this.updateBoundState(dp.bindings.get(rule), args);
+						this.updateBoundState(dp, dp.bindings.get(rule), args);
 					});
 				}
 
@@ -70,7 +70,7 @@ class DataProviderManager extends Component {
 							this.app.log.trace("Binding dependency");
 							if ([key] in props) {
 								this.app.log.trace("updated " + key);
-								this.updateBoundState(this.bindings.get(rule), {
+								this.updateBoundState(dp, dp.bindings.get(rule), {
 									action: "refresh",
 									state: dp.getState(),
 								});
@@ -79,11 +79,11 @@ class DataProviderManager extends Component {
 						});
 					} else if (key.length === 2) {
 						// if the dependency is on another view, the dependency will be listed as ${viewID}.key.
-						a7.ui.getView(key[0]).on("stateChanged", (view, props) => {
+						this.app.ui.getView(key[0]).on("stateChanged", (view, props) => {
 							this.app.log.trace("Binding dependency");
 							if ([key[1]] in props) {
 								this.app.log.trace("updated " + key[1]);
-								this.updateBoundState(dp.bindings.get(rule), {
+								this.updateBoundState(dp, dp.bindings.get(rule), {
 									action: "refresh",
 									state: dp.getState(),
 									dependentState: view.getState(),
@@ -116,7 +116,7 @@ class DataProviderManager extends Component {
 		return updatedData;
 	}
 
-	async updateBoundState(view, binding, args) {
+	async updateBoundState(dp, binding, args) {
 		let updatedData;
 		if (binding.func !== null) {
 			// pass the filter to the func
@@ -137,7 +137,7 @@ class DataProviderManager extends Component {
 
 			dp.view.setState({ [binding.key]: updatedData });
 		} else {
-			let updatedData = this.getBoundData(binding);
+			let updatedData = this.getBoundData(dp, binding);
 
 			dp.view.setState({ [binding.key]: updatedData });
 		}

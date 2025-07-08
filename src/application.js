@@ -4,18 +4,6 @@ export class Application extends Component {
 		this.options = this._initializeOptions(options);
 		this.name = this.options.name;
 		this.util = new Util();
-		this.components = {
-			Component: Component,
-			Constructor: Constructor,
-			DataProvider: DataProvider,
-			Entity: Entity,
-			EventBindings: EventBindings,
-			Model: Model,
-			Service: Service,
-			User: User,
-			View: View,
-		};
-
 		this.init();
 		this.log.info("Application initialized...");
 	}
@@ -53,6 +41,7 @@ export class Application extends Component {
 						refreshURL: options.remote.refreshURL ?? "",
 						useTokens: options?.auth?.useTokens ?? true,
 						tokenType: options.remote.tokenType ?? "X-Token", // Authorization is the other token type
+						modules: options.remote.modules ?? {},
 					}
 				: { useTokens: true },
 			router: options?.router
@@ -131,12 +120,15 @@ export class Application extends Component {
 		if (this.options.security.enabled) {
 			this.log.trace("application security init");
 			this.security = new SecurityManager(this);
-
+			this.error = new ErrorManager(this);
 			// check whether user is authenticated
-			const response = this.security.isAuthenticated();
-			this.error = new ErrorManager();
-			this.log.info(`Authenticated: ${response.authenticated}...`);
-			return response;
+
+			var p = new Promise((resolve, reject) => {
+				this.security.isAuthenticated(resolve, reject);
+			});
+			p.then((response) => {
+				this.log.info(`Authenticated: ${response.authenticated}...`);
+			});
 		}
 
 		return {};

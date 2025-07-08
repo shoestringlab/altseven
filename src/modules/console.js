@@ -23,22 +23,15 @@ class Console extends Component {
 			this.consoleDiv.setAttribute("class", "a7-console");
 			document.body.appendChild(this.consoleDiv);
 
-			var fp = this.app.components.Constructor(
-				this.options.container,
-				[
-					this.consoleDiv,
-					{
-						width: this.options.width,
-						left: this.options.left,
-						height: this.options.height,
-						title: this.title,
-						top: this.options.top,
-						enableShrink: true,
-						enableClose: true,
-					},
-				],
-				false,
-			);
+			var fp = new this.options.container(this.consoleDiv, {
+				width: this.options.width,
+				left: this.options.left,
+				height: this.options.height,
+				title: this.title,
+				top: this.options.top,
+				enableShrink: true,
+				enableClose: true,
+			});
 			if (fp.element) fp.element.setAttribute("right", 0);
 
 			if (this.options.wsServer) {

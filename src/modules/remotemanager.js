@@ -3,14 +3,11 @@ class RemoteManager extends Component {
 		super();
 		this.connections = {};
 		this.app = app;
-		this.options =
-			app.options.remote && app.options.remote.modules
-				? app.options.remote.modules
-				: {};
+		this.options = app.options.remote ? app.options.remote : {};
 		this.time = new Date();
 		this.sessionTimer;
 		this.modules = {};
-
+		this.init(this.options.modules);
 		this.token;
 		this.app.log.info("RemoteManager initializing... ");
 	}
@@ -68,7 +65,7 @@ class RemoteManager extends Component {
 
 	refreshClientSession() {
 		var promise = new Promise(function (resolve, reject) {
-			this.app.remote.invoke("auth.refresh", {
+			this.invoke("auth.refresh", {
 				resolve: resolve,
 				reject: reject,
 			});
@@ -104,8 +101,7 @@ class RemoteManager extends Component {
 	}
 
 	init(modules) {
-		let auth = this.app.model.get("a7").auth;
-		this.options = this.app.model.get("a7").remote;
+		let auth = this.app.options.auth;
 
 		this.options.sessionTimeout = auth.sessionTimeout;
 		// set token if valid
@@ -118,7 +114,7 @@ class RemoteManager extends Component {
 		}
 
 		let authModule = {
-			login: function (params) {
+			login: (params) => {
 				this.app.log.trace("remote call: auth.login");
 				var request,
 					args = {
@@ -143,7 +139,7 @@ class RemoteManager extends Component {
 				var promise = fetch(request);
 
 				promise
-					.then(function (response) {
+					.then((response) => {
 						// set the token into sessionStorage so it is available if the browser is refreshed
 						//
 						var token =
@@ -155,11 +151,11 @@ class RemoteManager extends Component {
 						}
 						return response.json();
 					})
-					.then(function (json) {
+					.then((json) => {
 						if (json.success) {
 							var user = this.app.model.get("user");
 							// map the response object into the user object
-							Object.keys(json.user).map(function (key) {
+							Object.keys(json.user).map((key) => {
 								user[key] = json.user[key];
 							});
 							// set the user into the sessionStorage and the model
@@ -170,7 +166,7 @@ class RemoteManager extends Component {
 							if (params.success !== undefined) {
 								if (typeof params.success === "function") {
 									params.success(json);
-								} else if (this.app.model.get("a7").router) {
+								} else if (this.app.options.router) {
 									this.app.router.open(params.success, json);
 								} else {
 									this.app.events.publish(params.success, json);
@@ -180,7 +176,7 @@ class RemoteManager extends Component {
 							// if login failed
 							if (typeof params.failure === "function") {
 								params.failure(json);
-							} else if (this.app.model.get("a7").router) {
+							} else if (this.app.options.router) {
 								this.app.router.open(params.failure, json);
 							} else {
 								this.app.events.publish(params.failure, json);
@@ -191,7 +187,7 @@ class RemoteManager extends Component {
 						}
 					});
 			},
-			logout: function (params) {
+			logout: (params) => {
 				this.app.log.trace("remote call: auth.logout");
 				var request,
 					args = {
@@ -210,16 +206,16 @@ class RemoteManager extends Component {
 				var promise = fetch(request);
 
 				promise
-					.then(function (response) {
+					.then((response) => {
 						return response.json();
 					})
-					.then(function (json) {
+					.then((json) => {
 						if (json.success) {
 							this.app.security.invalidateSession();
 							if (params.success !== undefined) {
 								if (typeof params.success === "function") {
 									params.success(json);
-								} else if (this.app.model.get("a7").router) {
+								} else if (this.app.options.router) {
 									this.app.router.open(params.success, json);
 								} else {
 									this.app.events.publish(params.success, json);
@@ -229,7 +225,7 @@ class RemoteManager extends Component {
 							// if logout failed
 							if (typeof params.failure === "function") {
 								params.failure(json);
-							} else if (this.app.model.get("a7").router) {
+							} else if (this.app.options.router) {
 								this.app.router.open(params.failure, json);
 							} else {
 								this.app.events.publish(params.failure, json);
@@ -241,25 +237,24 @@ class RemoteManager extends Component {
 						}
 					});
 			},
-			refresh: function (params) {
+			refresh: (params) => {
 				// refresh keeps the client session alive
-				this.app.remote
-					.fetch(this.options.refreshURL, {}, true)
+				this.fetch(this.options.refreshURL, {}, true)
 					// initial fetch needs to parse response
-					.then(function (response) {
+					.then((response) => {
 						if (response.status === 401) {
 							return { isauthenticated: false };
 						} else {
 							return response.json();
 						}
 					})
-					.then(function (json) {
+					.then((json) => {
 						// then json is handled
 						if (params.resolve !== undefined) {
 							params.resolve(json);
 						}
 					})
-					.catch(function (error) {
+					.catch((error) => {
 						if (params.reject) {
 							params.reject(error);
 						}
@@ -271,7 +266,7 @@ class RemoteManager extends Component {
 		this.setModule("auth", authModule);
 
 		// add application modules
-		Object.keys(modules).forEach(function (key) {
+		Object.keys(modules).forEach((key) => {
 			this.setModule(key, modules[key]);
 		});
 	}
@@ -320,7 +315,7 @@ class RemoteManager extends Component {
 		promise = fetch(request);
 
 		promise
-			.then(function (response) {
+			.then((response) => {
 				if (secure && this.options.useTokens) {
 					// according to https://www.rfc-editor.org/rfc/rfc6749#section-5.1
 					// the access_token response key should be in the body. we're going to include it as a header for non-oauth implementations
@@ -343,7 +338,7 @@ class RemoteManager extends Component {
 					}
 				}
 			})
-			.catch(function (error) {
+			.catch((error) => {
 				this.app.log.error(error);
 			});
 

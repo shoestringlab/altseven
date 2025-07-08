@@ -82,7 +82,7 @@ var EventBindings = {
 	},
 }
 
-class Component {
+export class Component {
 	constructor() {
 		this.events = {};
 	}
@@ -119,7 +119,7 @@ class Component {
 	}
 }
 
-class DataProvider extends Component {
+export class DataProvider extends Component {
 	#state = {};
 	#schema;
 	constructor(props) {
@@ -153,7 +153,7 @@ class DataProvider extends Component {
 	}
 }
 
-class Entity extends Component {
+export class Entity extends Component {
 	#schema;
 	#data;
 	constructor(props) {
@@ -256,7 +256,7 @@ class Entity extends Component {
 	}
 }
 
-const Model = (() => {
+export const Model = (() => {
 	"use strict";
 
 	const modelStore = new Map();
@@ -663,7 +663,7 @@ model.fastForward("user"); // To "Bob"
 
 */
 
-class Service extends Component {
+export class Service extends Component {
 	constructor(props) {
 		super();
 		this.id = props.id; // id of the service to register with the framework
@@ -678,31 +678,27 @@ class Service extends Component {
 		// Queue initialization
 		this.queue = new Map();
 
-		this.config();
+		//this.config();
 		this.fireEvent("mustRegister");
 	}
 
 	config() {
-		let dataMap = this.get();
-		if (!dataMap || !(dataMap instanceof Map)) {
-			this.set(new Map());
-		}
-		// TODO: remove a7 references
-		// this.on("mustRegister", () => {
-		// 	this.log.trace("mustRegister: Service: " + this.id);
-		// 	a7.services.register(this);
-		// });
+		this.set(new Map());
+		// let dataMap = this.get();
+		// if (!dataMap || !(dataMap instanceof Map)) {
+		// 	this.set(new Map());
+		// }
 	}
 
-	set log(log) {
-		this.log = log;
+	setLog(logger) {
+		this.log = logger;
 	}
 
-	set model(model) {
-		this.model = model;
+	setModel(_model) {
+		this.model = _model;
 	}
 
-	set remote(remote) {
+	setRemote(remote) {
 		this.remote = remote;
 	}
 
@@ -1087,24 +1083,9 @@ class Service extends Component {
 
 		return filteredItems;
 	}
-
-	// notifyBoundDataProviders(action, data) {
-	// 	this.bindings.forEach((binding, key) => {
-	// 		if (this.dataProviders.size > 0) {
-	// 			//const filter = binding.filter || {};
-	// 			if (binding.filter !== null) {
-	// 				data = this.filter(dataMap.values(), filter);
-	// 			}
-
-	// 			this.dataProviders.forEach((dp) =>
-	// 				dp.setState({ [key]: filteredData }),
-	// 			);
-	// 		}
-	// 	});
-	// }
 }
 
-class User extends Component {
+export class User extends Component {
 	constructor(args) {
 		super();
 		// Initialize the User object with provided arguments
@@ -1121,11 +1102,13 @@ class User extends Component {
 	}
 }
 
-class View extends Component {
+export class View extends Component {
 	constructor(props) {
 		super();
 		this.type = "View";
-		this.timeout;
+		this.timeout = 600000;
+		this.renderer = "templateLiterals";
+		this.debounceTime = 18;
 		this.timer;
 		this.element; // HTML element the view renders into
 		this.props = props;
@@ -1152,24 +1135,22 @@ class View extends Component {
 	setUI(_ui) {
 		this.ui = _ui;
 	}
+	// set these values on registration
+	setRenderer(renderer) {
+		this.renderer = renderer;
+	}
+	setTimeout(timeout) {
+		this.timeout = timeout;
+	}
+	setDebounceTime(debounceTime) {
+		this.debounceTime = debounceTime;
+	}
 
 	config() {
-		// this.on(
-		// 	"mustRegister",
-		// 	function () {
-		// 		this.log.trace("mustRegister: " + this.props.id);
-		// 		this.ui.register(this);
-		// 		if (this.ui.getView(this.props.parentID)) {
-		// 			this.ui.getView(this.props.parentID).addChild(this);
-		// 		}
-		// 	}.bind(this),
-		// );
-		// TODO: remove a7 references
 		this.on(
 			"mustRender",
 			this.debounce(
 				function () {
-					this.renderer = this.model.get("a7").ui.renderer;
 					this.log.trace("mustRender: " + this.props.id);
 					if (this.shouldRender()) {
 						this.ui.enqueueForRender(this.props.id);
@@ -1179,8 +1160,7 @@ class View extends Component {
 					}
 				}.bind(this),
 			),
-			18,
-			//this.model.get("a7").ui.debounceTime,
+			this.debounceTime,
 			true,
 		);
 
@@ -1193,8 +1173,7 @@ class View extends Component {
 					}
 					this.timer = setTimeout(
 						this.checkRenderStatus.bind(this),
-						600000,
-						//this.model.get("a7").ui.timeout,
+						this.timeout,
 					);
 				}
 				this.onRendered();
@@ -1217,14 +1196,6 @@ class View extends Component {
 			}.bind(this),
 		);
 	}
-
-	// events = [
-	// 	"mustRender",
-	// 	"rendered",
-	// 	"mustRegister",
-	// 	"registered",
-	// 	"mustUnregister",
-	// ];
 
 	setState(args) {
 		if (this.dataProvider) {
@@ -1349,7 +1320,7 @@ class View extends Component {
 			if (this.isTransient) {
 				this.timer = setTimeout(
 					this.checkRenderStatus.bind(this),
-					this.model.get("a7").ui.timeout,
+					this.timeout,
 				);
 			}
 		}
@@ -1419,22 +1390,15 @@ class Console extends Component {
 			this.consoleDiv.setAttribute("class", "a7-console");
 			document.body.appendChild(this.consoleDiv);
 
-			var fp = this.app.components.Constructor(
-				this.options.container,
-				[
-					this.consoleDiv,
-					{
-						width: this.options.width,
-						left: this.options.left,
-						height: this.options.height,
-						title: this.title,
-						top: this.options.top,
-						enableShrink: true,
-						enableClose: true,
-					},
-				],
-				false,
-			);
+			var fp = new this.options.container(this.consoleDiv, {
+				width: this.options.width,
+				left: this.options.left,
+				height: this.options.height,
+				title: this.title,
+				top: this.options.top,
+				enableShrink: true,
+				enableClose: true,
+			});
 			if (fp.element) fp.element.setAttribute("right", 0);
 
 			if (this.options.wsServer) {
@@ -1547,7 +1511,7 @@ class DataProviderManager extends Component {
 
 					matchingService.bind(rule, filter);
 
-					let boundData = this.getBoundData(dp.bindings.get(rule));
+					let boundData = this.getBoundData(dp, dp.bindings.get(rule));
 
 					dp.setStateOnly({ [rule]: boundData });
 
@@ -1555,7 +1519,7 @@ class DataProviderManager extends Component {
 					matchingService.on("cacheChanged", (service, args) => {
 						//pass in the DP state
 						args.state = dp.getState();
-						this.updateBoundState(dp.bindings.get(rule), args);
+						this.updateBoundState(dp, dp.bindings.get(rule), args);
 					});
 				}
 
@@ -1567,7 +1531,7 @@ class DataProviderManager extends Component {
 							this.app.log.trace("Binding dependency");
 							if ([key] in props) {
 								this.app.log.trace("updated " + key);
-								this.updateBoundState(this.bindings.get(rule), {
+								this.updateBoundState(dp, dp.bindings.get(rule), {
 									action: "refresh",
 									state: dp.getState(),
 								});
@@ -1576,11 +1540,11 @@ class DataProviderManager extends Component {
 						});
 					} else if (key.length === 2) {
 						// if the dependency is on another view, the dependency will be listed as ${viewID}.key.
-						a7.ui.getView(key[0]).on("stateChanged", (view, props) => {
+						this.app.ui.getView(key[0]).on("stateChanged", (view, props) => {
 							this.app.log.trace("Binding dependency");
 							if ([key[1]] in props) {
 								this.app.log.trace("updated " + key[1]);
-								this.updateBoundState(dp.bindings.get(rule), {
+								this.updateBoundState(dp, dp.bindings.get(rule), {
 									action: "refresh",
 									state: dp.getState(),
 									dependentState: view.getState(),
@@ -1613,7 +1577,7 @@ class DataProviderManager extends Component {
 		return updatedData;
 	}
 
-	async updateBoundState(view, binding, args) {
+	async updateBoundState(dp, binding, args) {
 		let updatedData;
 		if (binding.func !== null) {
 			// pass the filter to the func
@@ -1634,7 +1598,7 @@ class DataProviderManager extends Component {
 
 			dp.view.setState({ [binding.key]: updatedData });
 		} else {
-			let updatedData = this.getBoundData(binding);
+			let updatedData = this.getBoundData(dp, binding);
 
 			dp.view.setState({ [binding.key]: updatedData });
 		}
@@ -1689,19 +1653,19 @@ class EventManager extends Component {
 		this.topics = {};
 		this.hasProp = this.topics.hasOwnProperty;
 
-		this.subscribe("auth.login", function (params) {
+		this.subscribe("auth.login", (params) => {
 			this.app.remote.invoke("auth.login", params);
 		});
-		this.subscribe("auth.logout", function (params) {
+		this.subscribe("auth.logout", (params) => {
 			this.app.remote.invoke("auth.logout", params);
 		});
-		this.subscribe("auth.refresh", function (params) {
+		this.subscribe("auth.refresh", (params) => {
 			this.app.remote.invoke("auth.refresh", params);
 		});
-		this.subscribe("auth.sessionTimeout", function () {
+		this.subscribe("auth.sessionTimeout", () => {
 			this.app.security.invalidateSession();
 		});
-		this.subscribe("auth.invalidateSession", function () {
+		this.subscribe("auth.invalidateSession", () => {
 			this.app.security.invalidateSession();
 		});
 	}
@@ -1717,7 +1681,7 @@ class EventManager extends Component {
 
 		// Provide handle back for removal of topic
 		return {
-			remove: function () {
+			remove: () => {
 				delete this.topics[topic][index];
 			},
 		};
@@ -1808,6 +1772,8 @@ class LogManager extends Component {
 	}
 }
 
+//import { Model } from "../components/model.js";
+
 class ModelManager extends Component {
 	constructor(app) {
 		super();
@@ -1819,7 +1785,7 @@ class ModelManager extends Component {
 		if (typeof this.app.options.model === "string") {
 			switch (this.app.options.model) {
 				case "altseven":
-					this._model = this.app.components.Model;
+					this._model = Model;
 					this._model.init(this.app.options, this.app.log);
 					break;
 				case "gadgetui":
@@ -1884,14 +1850,11 @@ class RemoteManager extends Component {
 		super();
 		this.connections = {};
 		this.app = app;
-		this.options =
-			app.options.remote && app.options.remote.modules
-				? app.options.remote.modules
-				: {};
+		this.options = app.options.remote ? app.options.remote : {};
 		this.time = new Date();
 		this.sessionTimer;
 		this.modules = {};
-
+		this.init(this.options.modules);
 		this.token;
 		this.app.log.info("RemoteManager initializing... ");
 	}
@@ -1949,7 +1912,7 @@ class RemoteManager extends Component {
 
 	refreshClientSession() {
 		var promise = new Promise(function (resolve, reject) {
-			this.app.remote.invoke("auth.refresh", {
+			this.invoke("auth.refresh", {
 				resolve: resolve,
 				reject: reject,
 			});
@@ -1985,8 +1948,7 @@ class RemoteManager extends Component {
 	}
 
 	init(modules) {
-		let auth = this.app.model.get("a7").auth;
-		this.options = this.app.model.get("a7").remote;
+		let auth = this.app.options.auth;
 
 		this.options.sessionTimeout = auth.sessionTimeout;
 		// set token if valid
@@ -1999,7 +1961,7 @@ class RemoteManager extends Component {
 		}
 
 		let authModule = {
-			login: function (params) {
+			login: (params) => {
 				this.app.log.trace("remote call: auth.login");
 				var request,
 					args = {
@@ -2024,7 +1986,7 @@ class RemoteManager extends Component {
 				var promise = fetch(request);
 
 				promise
-					.then(function (response) {
+					.then((response) => {
 						// set the token into sessionStorage so it is available if the browser is refreshed
 						//
 						var token =
@@ -2036,11 +1998,11 @@ class RemoteManager extends Component {
 						}
 						return response.json();
 					})
-					.then(function (json) {
+					.then((json) => {
 						if (json.success) {
 							var user = this.app.model.get("user");
 							// map the response object into the user object
-							Object.keys(json.user).map(function (key) {
+							Object.keys(json.user).map((key) => {
 								user[key] = json.user[key];
 							});
 							// set the user into the sessionStorage and the model
@@ -2051,7 +2013,7 @@ class RemoteManager extends Component {
 							if (params.success !== undefined) {
 								if (typeof params.success === "function") {
 									params.success(json);
-								} else if (this.app.model.get("a7").router) {
+								} else if (this.app.options.router) {
 									this.app.router.open(params.success, json);
 								} else {
 									this.app.events.publish(params.success, json);
@@ -2061,7 +2023,7 @@ class RemoteManager extends Component {
 							// if login failed
 							if (typeof params.failure === "function") {
 								params.failure(json);
-							} else if (this.app.model.get("a7").router) {
+							} else if (this.app.options.router) {
 								this.app.router.open(params.failure, json);
 							} else {
 								this.app.events.publish(params.failure, json);
@@ -2072,7 +2034,7 @@ class RemoteManager extends Component {
 						}
 					});
 			},
-			logout: function (params) {
+			logout: (params) => {
 				this.app.log.trace("remote call: auth.logout");
 				var request,
 					args = {
@@ -2091,16 +2053,16 @@ class RemoteManager extends Component {
 				var promise = fetch(request);
 
 				promise
-					.then(function (response) {
+					.then((response) => {
 						return response.json();
 					})
-					.then(function (json) {
+					.then((json) => {
 						if (json.success) {
 							this.app.security.invalidateSession();
 							if (params.success !== undefined) {
 								if (typeof params.success === "function") {
 									params.success(json);
-								} else if (this.app.model.get("a7").router) {
+								} else if (this.app.options.router) {
 									this.app.router.open(params.success, json);
 								} else {
 									this.app.events.publish(params.success, json);
@@ -2110,7 +2072,7 @@ class RemoteManager extends Component {
 							// if logout failed
 							if (typeof params.failure === "function") {
 								params.failure(json);
-							} else if (this.app.model.get("a7").router) {
+							} else if (this.app.options.router) {
 								this.app.router.open(params.failure, json);
 							} else {
 								this.app.events.publish(params.failure, json);
@@ -2122,25 +2084,24 @@ class RemoteManager extends Component {
 						}
 					});
 			},
-			refresh: function (params) {
+			refresh: (params) => {
 				// refresh keeps the client session alive
-				this.app.remote
-					.fetch(this.options.refreshURL, {}, true)
+				this.fetch(this.options.refreshURL, {}, true)
 					// initial fetch needs to parse response
-					.then(function (response) {
+					.then((response) => {
 						if (response.status === 401) {
 							return { isauthenticated: false };
 						} else {
 							return response.json();
 						}
 					})
-					.then(function (json) {
+					.then((json) => {
 						// then json is handled
 						if (params.resolve !== undefined) {
 							params.resolve(json);
 						}
 					})
-					.catch(function (error) {
+					.catch((error) => {
 						if (params.reject) {
 							params.reject(error);
 						}
@@ -2152,7 +2113,7 @@ class RemoteManager extends Component {
 		this.setModule("auth", authModule);
 
 		// add application modules
-		Object.keys(modules).forEach(function (key) {
+		Object.keys(modules).forEach((key) => {
 			this.setModule(key, modules[key]);
 		});
 	}
@@ -2201,7 +2162,7 @@ class RemoteManager extends Component {
 		promise = fetch(request);
 
 		promise
-			.then(function (response) {
+			.then((response) => {
 				if (secure && this.options.useTokens) {
 					// according to https://www.rfc-editor.org/rfc/rfc6749#section-5.1
 					// the access_token response key should be in the body. we're going to include it as a header for non-oauth implementations
@@ -2224,7 +2185,7 @@ class RemoteManager extends Component {
 					}
 				}
 			})
-			.catch(function (error) {
+			.catch((error) => {
 				this.app.log.error(error);
 			});
 
@@ -2257,8 +2218,8 @@ class RouterManager extends Component {
 	constructor(app) {
 		super();
 		this.app = app;
-		this.router = new Router(routes);
-		this.app.options.useEvents = this.app.options.useEvents ? true : false;
+		this.router = new Router(app.options.router.routes);
+		this.useEvents = this.app.options.router.options.useEvents ?? false;
 
 		window.onpopstate = (event) => {
 			this.match(document.location.pathname + document.location.search);
@@ -2285,7 +2246,7 @@ class RouterManager extends Component {
 
 		history.pushState(JSON.parse(JSON.stringify(params)), "", path);
 		let combinedParams = Object.assign(params || {}, result.params || {});
-		if (this.app.options.useEvents && typeof result.handler === "string") {
+		if (this.useEvents && typeof result.handler === "string") {
 			this.app.events.publish(result.handler, combinedParams);
 		} else {
 			result.handler(combinedParams);
@@ -2301,7 +2262,7 @@ class RouterManager extends Component {
 
 		history.pushState(JSON.parse(JSON.stringify(params)), "", path);
 		let combinedParams = Object.assign(params || {}, result.params || {});
-		if (this.app.options.useEvents) {
+		if (this.useEvents) {
 			this.app.events.publish(result.handler, combinedParams);
 		} else {
 			result.handler(combinedParams);
@@ -2312,6 +2273,11 @@ class RouterManager extends Component {
 // URL Router class
 class Router {
 	constructor(routes) {
+		this.REGEX_PARAM_DEFAULT = /^[^/]+/;
+		this.REGEX_START_WITH_PARAM = /^(:\w|\()/;
+		this.REGEX_INCLUDE_PARAM = /:\w|\(/;
+		this.REGEX_MATCH_PARAM = /^(?::(\w+))?(?:\(([^)]+)\))?/;
+
 		this.root = this.createNode();
 
 		if (routes) {
@@ -2338,13 +2304,15 @@ class Router {
 	}
 
 	parse(remain, handler, parent) {
-		if (REGEX_START_WITH_PARAM.test(remain)) {
-			const match = remain.match(REGEX_MATCH_PARAM);
+		if (this.REGEX_START_WITH_PARAM.test(remain)) {
+			const match = remain.match(this.REGEX_MATCH_PARAM);
 			let node = parent.children.regex[match[0]];
 
 			if (!node) {
 				node = parent.children.regex[match[0]] = this.createNode({
-					regex: match[2] ? new RegExp("^" + match[2]) : REGEX_PARAM_DEFAULT,
+					regex: match[2]
+						? new RegExp("^" + match[2])
+						: this.REGEX_PARAM_DEFAULT,
 					param: match[1],
 				});
 			}
@@ -2367,7 +2335,7 @@ class Router {
 	}
 
 	parseOptim(remain, handler, node) {
-		if (REGEX_INCLUDE_PARAM.test(remain)) {
+		if (this.REGEX_INCLUDE_PARAM.test(remain)) {
 			this.parse(remain, handler, node);
 		} else {
 			const child = node.children.string[remain];
@@ -2396,7 +2364,7 @@ class Router {
 			};
 		}
 
-		return this.find(remain, node, params);
+		return this._find(remain, node, params);
 	}
 
 	_find(remain, node, params) {
@@ -2483,7 +2451,7 @@ class SecurityManager extends Component {
 	invalidateSession() {
 		clearTimeout(this.app.remote.getSessionTimer());
 		this.app.remote.invalidateToken();
-		let user = new this.app.components.User(this.userArgs);
+		let user = new User(this.userArgs);
 		this.setUser(user);
 	}
 
@@ -2501,7 +2469,7 @@ class SecurityManager extends Component {
 			user = mUser;
 		} else if (sessionStorage.user && sessionStorage.user !== "") {
 			suser = JSON.parse(sessionStorage.user);
-			user = new this.app.components.User(this.userArgs);
+			user = new User(this.userArgs);
 			Object.keys(suser).map((key) => (user[key] = suser[key]));
 		}
 		return user;
@@ -2530,9 +2498,12 @@ class ServiceManager extends Component {
 	register(service) {
 		this.services.set(service.id, service);
 		// set the log for the service
-		service.log = this.app.log;
-		service.model = this.app.model;
-		service.remote = this.app.remote;
+		service.setLog(this.app.log);
+		service.setModel(this.app.model);
+		service.setRemote(this.app.remote);
+		// set the cache for the service
+
+		service.config();
 		this.app.log.trace(`Service registered: ${service.id}`);
 	}
 }
@@ -2766,6 +2737,9 @@ class UIManager extends Component {
 				view.setLog(this.app.log);
 				view.setModel(this.app.model);
 				view.setUI(this.app.ui);
+				view.setTimeout(this.app.options.ui.timeout);
+				view.setDebounceTime(this.app.options.ui.debounceTime);
+				view.setRenderer(this.app.options.ui.renderer);
 				this.views[view.props.id] = view;
 				// register as a child of the parent
 				if (this.getView(view.props.parentID)) {
@@ -3082,29 +3056,10 @@ export class Application extends Component {
 	constructor(options) {
 		super();
 		this.options = this._initializeOptions(options);
+		this.name = this.options.name;
 		this.util = new Util();
-		this.components = {
-			Component: Component,
-			Constructor: Constructor,
-			DataProvider: DataProvider,
-			Entity: Entity,
-			EventBindings: EventBindings,
-			Model: Model,
-			Service: Service,
-			User: User,
-			View: View,
-		};
-
 		this.init();
 		this.log.info("Application initialized...");
-
-		// .then(() => {
-		// 	this.log.info("Application initialized...");
-		// 	resolve(this);
-		// })
-		// .catch((message) => {
-		// 	this.log.error(message);
-		// });
 	}
 
 	_initializeOptions(options) {
@@ -3132,6 +3087,7 @@ export class Application extends Component {
 				toBrowserConsole: options?.logging?.toBrowserConsole ?? false,
 			},
 			model: options?.model ?? "altseven",
+			name: options?.name ?? "a7",
 			remote: options?.remote
 				? {
 						loginURL: options.remote.loginURL ?? "",
@@ -3139,6 +3095,7 @@ export class Application extends Component {
 						refreshURL: options.remote.refreshURL ?? "",
 						useTokens: options?.auth?.useTokens ?? true,
 						tokenType: options.remote.tokenType ?? "X-Token", // Authorization is the other token type
+						modules: options.remote.modules ?? {},
 					}
 				: { useTokens: true },
 			router: options?.router
@@ -3217,19 +3174,19 @@ export class Application extends Component {
 		if (this.options.security.enabled) {
 			this.log.trace("application security init");
 			this.security = new SecurityManager(this);
-
+			this.error = new ErrorManager(this);
 			// check whether user is authenticated
-			const response = this.security.isAuthenticated();
-			this.error = new ErrorManager();
-			this.log.info(`Authenticated: ${response.authenticated}...`);
-			return response;
+
+			var p = new Promise((resolve, reject) => {
+				this.security.isAuthenticated(resolve, reject);
+			});
+			p.then((response) => {
+				this.log.info(`Authenticated: ${response.authenticated}...`);
+			});
 		}
 
 		return {};
 	}
 }
-
-// Usage example:
-// const a7Manager = new A7Manager({ /* your options here */ });
 
 //# sourceMappingURL=a7.js.map

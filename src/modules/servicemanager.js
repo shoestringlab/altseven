@@ -16,9 +16,12 @@ class ServiceManager extends Component {
 	register(service) {
 		this.services.set(service.id, service);
 		// set the log for the service
-		service.log = this.app.log;
-		service.model = this.app.model;
-		service.remote = this.app.remote;
+		service.setLog(this.app.log);
+		service.setModel(this.app.model);
+		service.setRemote(this.app.remote);
+		// set the cache for the service
+
+		service.config();
 		this.app.log.trace(`Service registered: ${service.id}`);
 	}
 }

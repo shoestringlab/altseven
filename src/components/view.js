@@ -1,8 +1,10 @@
-class View extends Component {
+export class View extends Component {
 	constructor(props) {
 		super();
 		this.type = "View";
-		this.timeout;
+		this.timeout = 600000;
+		this.renderer = "templateLiterals";
+		this.debounceTime = 18;
 		this.timer;
 		this.element; // HTML element the view renders into
 		this.props = props;
@@ -29,24 +31,22 @@ class View extends Component {
 	setUI(_ui) {
 		this.ui = _ui;
 	}
+	// set these values on registration
+	setRenderer(renderer) {
+		this.renderer = renderer;
+	}
+	setTimeout(timeout) {
+		this.timeout = timeout;
+	}
+	setDebounceTime(debounceTime) {
+		this.debounceTime = debounceTime;
+	}
 
 	config() {
-		// this.on(
-		// 	"mustRegister",
-		// 	function () {
-		// 		this.log.trace("mustRegister: " + this.props.id);
-		// 		this.ui.register(this);
-		// 		if (this.ui.getView(this.props.parentID)) {
-		// 			this.ui.getView(this.props.parentID).addChild(this);
-		// 		}
-		// 	}.bind(this),
-		// );
-		// TODO: remove a7 references
 		this.on(
 			"mustRender",
 			this.debounce(
 				function () {
-					this.renderer = this.model.get("a7").ui.renderer;
 					this.log.trace("mustRender: " + this.props.id);
 					if (this.shouldRender()) {
 						this.ui.enqueueForRender(this.props.id);
@@ -56,8 +56,7 @@ class View extends Component {
 					}
 				}.bind(this),
 			),
-			18,
-			//this.model.get("a7").ui.debounceTime,
+			this.debounceTime,
 			true,
 		);
 
@@ -70,8 +69,7 @@ class View extends Component {
 					}
 					this.timer = setTimeout(
 						this.checkRenderStatus.bind(this),
-						600000,
-						//this.model.get("a7").ui.timeout,
+						this.timeout,
 					);
 				}
 				this.onRendered();
@@ -94,14 +92,6 @@ class View extends Component {
 			}.bind(this),
 		);
 	}
-
-	// events = [
-	// 	"mustRender",
-	// 	"rendered",
-	// 	"mustRegister",
-	// 	"registered",
-	// 	"mustUnregister",
-	// ];
 
 	setState(args) {
 		if (this.dataProvider) {
@@ -226,7 +216,7 @@ class View extends Component {
 			if (this.isTransient) {
 				this.timer = setTimeout(
 					this.checkRenderStatus.bind(this),
-					this.model.get("a7").ui.timeout,
+					this.timeout,
 				);
 			}
 		}

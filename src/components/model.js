@@ -1,4 +1,4 @@
-const Model = (() => {
+export const Model = (() => {
 	"use strict";
 
 	const modelStore = new Map();

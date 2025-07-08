@@ -1,4 +1,4 @@
-class Service extends Component {
+export class Service extends Component {
 	constructor(props) {
 		super();
 		this.id = props.id; // id of the service to register with the framework
@@ -13,31 +13,27 @@ class Service extends Component {
 		// Queue initialization
 		this.queue = new Map();
 
-		this.config();
+		//this.config();
 		this.fireEvent("mustRegister");
 	}
 
 	config() {
-		let dataMap = this.get();
-		if (!dataMap || !(dataMap instanceof Map)) {
-			this.set(new Map());
-		}
-		// TODO: remove a7 references
-		// this.on("mustRegister", () => {
-		// 	this.log.trace("mustRegister: Service: " + this.id);
-		// 	a7.services.register(this);
-		// });
+		this.set(new Map());
+		// let dataMap = this.get();
+		// if (!dataMap || !(dataMap instanceof Map)) {
+		// 	this.set(new Map());
+		// }
 	}
 
-	set log(log) {
-		this.log = log;
+	setLog(logger) {
+		this.log = logger;
 	}
 
-	set model(model) {
-		this.model = model;
+	setModel(_model) {
+		this.model = _model;
 	}
 
-	set remote(remote) {
+	setRemote(remote) {
 		this.remote = remote;
 	}
 
@@ -422,19 +418,4 @@ class Service extends Component {
 
 		return filteredItems;
 	}
-
-	// notifyBoundDataProviders(action, data) {
-	// 	this.bindings.forEach((binding, key) => {
-	// 		if (this.dataProviders.size > 0) {
-	// 			//const filter = binding.filter || {};
-	// 			if (binding.filter !== null) {
-	// 				data = this.filter(dataMap.values(), filter);
-	// 			}
-
-	// 			this.dataProviders.forEach((dp) =>
-	// 				dp.setState({ [key]: filteredData }),
-	// 			);
-	// 		}
-	// 	});
-	// }
 }

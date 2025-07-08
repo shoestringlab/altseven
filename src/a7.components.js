@@ -82,7 +82,7 @@ var EventBindings = {
 	},
 }
 
-class Component {
+export class Component {
 	constructor() {
 		this.events = {};
 	}
@@ -119,7 +119,7 @@ class Component {
 	}
 }
 
-class DataProvider extends Component {
+export class DataProvider extends Component {
 	#state = {};
 	#schema;
 	constructor(props) {
@@ -153,7 +153,7 @@ class DataProvider extends Component {
 	}
 }
 
-class Entity extends Component {
+export class Entity extends Component {
 	#schema;
 	#data;
 	constructor(props) {
@@ -256,7 +256,7 @@ class Entity extends Component {
 	}
 }
 
-const Model = (() => {
+export const Model = (() => {
 	"use strict";
 
 	const modelStore = new Map();
@@ -663,7 +663,7 @@ model.fastForward("user"); // To "Bob"
 
 */
 
-class Service extends Component {
+export class Service extends Component {
 	constructor(props) {
 		super();
 		this.id = props.id; // id of the service to register with the framework
@@ -678,31 +678,27 @@ class Service extends Component {
 		// Queue initialization
 		this.queue = new Map();
 
-		this.config();
+		//this.config();
 		this.fireEvent("mustRegister");
 	}
 
 	config() {
-		let dataMap = this.get();
-		if (!dataMap || !(dataMap instanceof Map)) {
-			this.set(new Map());
-		}
-		// TODO: remove a7 references
-		// this.on("mustRegister", () => {
-		// 	this.log.trace("mustRegister: Service: " + this.id);
-		// 	a7.services.register(this);
-		// });
+		this.set(new Map());
+		// let dataMap = this.get();
+		// if (!dataMap || !(dataMap instanceof Map)) {
+		// 	this.set(new Map());
+		// }
 	}
 
-	set log(log) {
-		this.log = log;
+	setLog(logger) {
+		this.log = logger;
 	}
 
-	set model(model) {
-		this.model = model;
+	setModel(_model) {
+		this.model = _model;
 	}
 
-	set remote(remote) {
+	setRemote(remote) {
 		this.remote = remote;
 	}
 
@@ -1087,24 +1083,9 @@ class Service extends Component {
 
 		return filteredItems;
 	}
-
-	// notifyBoundDataProviders(action, data) {
-	// 	this.bindings.forEach((binding, key) => {
-	// 		if (this.dataProviders.size > 0) {
-	// 			//const filter = binding.filter || {};
-	// 			if (binding.filter !== null) {
-	// 				data = this.filter(dataMap.values(), filter);
-	// 			}
-
-	// 			this.dataProviders.forEach((dp) =>
-	// 				dp.setState({ [key]: filteredData }),
-	// 			);
-	// 		}
-	// 	});
-	// }
 }
 
-class User extends Component {
+export class User extends Component {
 	constructor(args) {
 		super();
 		// Initialize the User object with provided arguments
@@ -1121,11 +1102,13 @@ class User extends Component {
 	}
 }
 
-class View extends Component {
+export class View extends Component {
 	constructor(props) {
 		super();
 		this.type = "View";
-		this.timeout;
+		this.timeout = 600000;
+		this.renderer = "templateLiterals";
+		this.debounceTime = 18;
 		this.timer;
 		this.element; // HTML element the view renders into
 		this.props = props;
@@ -1152,24 +1135,22 @@ class View extends Component {
 	setUI(_ui) {
 		this.ui = _ui;
 	}
+	// set these values on registration
+	setRenderer(renderer) {
+		this.renderer = renderer;
+	}
+	setTimeout(timeout) {
+		this.timeout = timeout;
+	}
+	setDebounceTime(debounceTime) {
+		this.debounceTime = debounceTime;
+	}
 
 	config() {
-		// this.on(
-		// 	"mustRegister",
-		// 	function () {
-		// 		this.log.trace("mustRegister: " + this.props.id);
-		// 		this.ui.register(this);
-		// 		if (this.ui.getView(this.props.parentID)) {
-		// 			this.ui.getView(this.props.parentID).addChild(this);
-		// 		}
-		// 	}.bind(this),
-		// );
-		// TODO: remove a7 references
 		this.on(
 			"mustRender",
 			this.debounce(
 				function () {
-					this.renderer = this.model.get("a7").ui.renderer;
 					this.log.trace("mustRender: " + this.props.id);
 					if (this.shouldRender()) {
 						this.ui.enqueueForRender(this.props.id);
@@ -1179,8 +1160,7 @@ class View extends Component {
 					}
 				}.bind(this),
 			),
-			18,
-			//this.model.get("a7").ui.debounceTime,
+			this.debounceTime,
 			true,
 		);
 
@@ -1193,8 +1173,7 @@ class View extends Component {
 					}
 					this.timer = setTimeout(
 						this.checkRenderStatus.bind(this),
-						600000,
-						//this.model.get("a7").ui.timeout,
+						this.timeout,
 					);
 				}
 				this.onRendered();
@@ -1217,14 +1196,6 @@ class View extends Component {
 			}.bind(this),
 		);
 	}
-
-	// events = [
-	// 	"mustRender",
-	// 	"rendered",
-	// 	"mustRegister",
-	// 	"registered",
-	// 	"mustUnregister",
-	// ];
 
 	setState(args) {
 		if (this.dataProvider) {
@@ -1349,7 +1320,7 @@ class View extends Component {
 			if (this.isTransient) {
 				this.timer = setTimeout(
 					this.checkRenderStatus.bind(this),
-					this.model.get("a7").ui.timeout,
+					this.timeout,
 				);
 			}
 		}

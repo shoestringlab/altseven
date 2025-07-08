@@ -30,7 +30,7 @@ class SecurityManager extends Component {
 	invalidateSession() {
 		clearTimeout(this.app.remote.getSessionTimer());
 		this.app.remote.invalidateToken();
-		let user = new this.app.components.User(this.userArgs);
+		let user = new User(this.userArgs);
 		this.setUser(user);
 	}
 
@@ -48,7 +48,7 @@ class SecurityManager extends Component {
 			user = mUser;
 		} else if (sessionStorage.user && sessionStorage.user !== "") {
 			suser = JSON.parse(sessionStorage.user);
-			user = new this.app.components.User(this.userArgs);
+			user = new User(this.userArgs);
 			Object.keys(suser).map((key) => (user[key] = suser[key]));
 		}
 		return user;

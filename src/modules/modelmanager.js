@@ -1,3 +1,5 @@
+//import { Model } from "../components/model.js";
+
 class ModelManager extends Component {
 	constructor(app) {
 		super();
@@ -9,7 +11,7 @@ class ModelManager extends Component {
 		if (typeof this.app.options.model === "string") {
 			switch (this.app.options.model) {
 				case "altseven":
-					this._model = this.app.components.Model;
+					this._model = Model;
 					this._model.init(this.app.options, this.app.log);
 					break;
 				case "gadgetui":

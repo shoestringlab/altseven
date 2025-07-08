@@ -227,6 +227,9 @@ class UIManager extends Component {
 				view.setLog(this.app.log);
 				view.setModel(this.app.model);
 				view.setUI(this.app.ui);
+				view.setTimeout(this.app.options.ui.timeout);
+				view.setDebounceTime(this.app.options.ui.debounceTime);
+				view.setRenderer(this.app.options.ui.renderer);
 				this.views[view.props.id] = view;
 				// register as a child of the parent
 				if (this.getView(view.props.parentID)) {

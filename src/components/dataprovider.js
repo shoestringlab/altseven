@@ -1,4 +1,4 @@
-class DataProvider extends Component {
+export class DataProvider extends Component {
 	#state = {};
 	#schema;
 	constructor(props) {

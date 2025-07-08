@@ -6,19 +6,19 @@ class EventManager extends Component {
 		this.topics = {};
 		this.hasProp = this.topics.hasOwnProperty;
 
-		this.subscribe("auth.login", function (params) {
+		this.subscribe("auth.login", (params) => {
 			this.app.remote.invoke("auth.login", params);
 		});
-		this.subscribe("auth.logout", function (params) {
+		this.subscribe("auth.logout", (params) => {
 			this.app.remote.invoke("auth.logout", params);
 		});
-		this.subscribe("auth.refresh", function (params) {
+		this.subscribe("auth.refresh", (params) => {
 			this.app.remote.invoke("auth.refresh", params);
 		});
-		this.subscribe("auth.sessionTimeout", function () {
+		this.subscribe("auth.sessionTimeout", () => {
 			this.app.security.invalidateSession();
 		});
-		this.subscribe("auth.invalidateSession", function () {
+		this.subscribe("auth.invalidateSession", () => {
 			this.app.security.invalidateSession();
 		});
 	}
@@ -34,7 +34,7 @@ class EventManager extends Component {
 
 		// Provide handle back for removal of topic
 		return {
-			remove: function () {
+			remove: () => {
 				delete this.topics[topic][index];
 			},
 		};
