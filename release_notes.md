@@ -1,3 +1,8 @@
+8.0.0-alpha.7
+============
+
+In alpha.6, the auth.refresh function to maintain the session was broken. This issue has been resolved.
+
 8.0.0-alpha.6
 ============
 

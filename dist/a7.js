@@ -2182,7 +2182,10 @@ class RemoteManager extends Component {
 							clearTimeout(this.sessionTimer);
 						}
 						this.sessionTimer = setTimeout(
-							this.refreshClientSession,
+							() => {
+								this.refreshClientSession().bind(this);
+							},
+
 							this.options.sessionTimeout,
 						);
 					} else {
