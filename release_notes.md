@@ -1,3 +1,10 @@
+8.0.0-alpha.4
+============
+
+Note that alpha3 was broken due to incomplete conversion of the Application class init of its modules. This issue has been resolved.
+
+The EventsManager constructor has added a function to subscribe to events passed in options.events, as an object : { "main.run", ()=>{} };. This means you can define events in your application code as a structure of keys and functions without explicitly using subscribe, avoiding unnecessary code.
+
 8.0.0-alpha.3
 ============
 

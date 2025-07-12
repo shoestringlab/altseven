@@ -1,5 +1,5 @@
 class Console extends Component {
-	constructor(options) {
+	constructor(app) {
 		super();
 		this.title = "Console Window";
 		this.consoleDiv = null;

@@ -1376,12 +1376,12 @@ class Console extends Component {
 		this.reject = reject;
 		this.options = this.app.options.console;
 
-		if (this.options.container === "") {
-			this.reject(
-				"You must specify a container object for the console display.",
-			);
-			return;
-		}
+		// if (this.options.container === "") {
+		// 	this.reject(
+		// 		"You must specify a container object for the console display.",
+		// 	);
+		// 	return;
+		// }
 
 		if (this.options.enabled) {
 			this.active = true;
@@ -1402,14 +1402,14 @@ class Console extends Component {
 			if (fp.element) fp.element.setAttribute("right", 0);
 
 			if (this.options.wsServer) {
-				var connection = this.app.remote.webSocket(
+				var connection = a7.remote.webSocket(
 					this.options.wsServer,
 					this.handleMessage.bind(this),
 				);
 			}
 
-			this.app.console.addMessage = this.addMessage.bind(this);
-			this.app.log.info("Console initializing...");
+			a7.console.addMessage = this.addMessage.bind(this);
+			a7.log.info("Console initializing...");
 			this.resolve();
 		} else {
 			this.reject(
@@ -1450,7 +1450,7 @@ class Console extends Component {
 		} else if (json.type === "message") {
 			this.addMessage(json.data.text, new Date(json.data.time), "websocket");
 		} else {
-			this.app.log.error("This doesn't look like valid JSON: ", json);
+			a7.log.error("This doesn't look like valid JSON: ", json);
 		}
 	}
 }
@@ -1465,7 +1465,7 @@ class DataProviderManager extends Component {
 		this.app = app;
 		this.services = this.app.services.getAll();
 		this._dataproviders = new Map();
-		this.app.log.info("DataProviderManager initialized...");
+		app.log.info("DataProviderManager initialized...");
 	}
 
 	getDataProvider(id) {
@@ -1612,13 +1612,13 @@ class DataProviderManager extends Component {
 class ErrorManager extends Component {
 	constructor(app) {
 		super();
-		this.app = app;
+
 		window.onerror = (msg, url, lineNo, columnNo, error) => {
 			this.captureError(msg, url, lineNo, columnNo, error);
 			return false;
 		};
 
-		this.app.log.info("ErrorManager initialized...");
+		app.log.info("ErrorManager initialized...");
 	}
 
 	captureError(msg, url, lineNo, columnNo, error) {
@@ -1648,8 +1648,8 @@ class ErrorManager extends Component {
 class EventManager extends Component {
 	constructor(app) {
 		super();
-
 		this.app = app;
+		this.options = app.options;
 		this.topics = {};
 		this.hasProp = this.topics.hasOwnProperty;
 
@@ -1668,6 +1668,10 @@ class EventManager extends Component {
 		this.subscribe("auth.invalidateSession", () => {
 			this.app.security.invalidateSession();
 		});
+		// Subscribe to all events in options.events
+		for (const [topic, listener] of Object.entries(this.options.events)) {
+			this.subscribe(topic, listener);
+		}
 	}
 
 	subscribe(topic, listener) {
@@ -1715,12 +1719,12 @@ class LogManager extends Component {
 	constructor(app) {
 		super();
 		this.app = app;
-
+		this.options = app.options;
 		this._ready = false;
 		this._deferred = [];
-		this.logLevel = this.app.options.logging.logLevel;
-		this._toBrowserConsole = this.app.options.logging.toBrowserConsole;
-		this._consoleEnabled = this.app.options.console.enabled;
+		this.logLevel = this.options.logging.logLevel;
+		this._toBrowserConsole = this.options.logging.toBrowserConsole;
+		this._consoleEnabled = this.options.console.enabled;
 		this._ready = true;
 
 		// Log any deferred messages
@@ -1761,7 +1765,7 @@ class LogManager extends Component {
 			this.logLevel.indexOf("ALL") >= 0
 		) {
 			if (this._consoleEnabled) {
-				this.app.console.addMessage(message, new Date(), "local", level);
+				a7.console.addMessage(message, new Date(), "local", level);
 			}
 			if (this._toBrowserConsole) {
 				console.log(message);
@@ -1778,25 +1782,26 @@ class ModelManager extends Component {
 	constructor(app) {
 		super();
 		this.app = app;
+		this.options = this.app.options;
 		this._model = null;
 		this._methods = {};
-		this.app.log.info("Model initializing... ");
+		app.log.info("Model initializing... ");
 
-		if (typeof this.app.options.model === "string") {
-			switch (this.app.options.model) {
+		if (typeof this.options.model === "string") {
+			switch (this.options.model) {
 				case "altseven":
 					this._model = Model;
-					this._model.init(this.app.options, this.app.log);
+					this._model.init(this.options, this.app.log);
 					break;
 				case "gadgetui":
 					this._model = gadgetui.model;
 					break;
 			}
-		} else if (typeof this.app.options.model === "object") {
-			this._model = this.app.options.model;
+		} else if (typeof this.options.model === "object") {
+			this._model = this.options.model;
 		}
 
-		this.app.log.trace("Model set: " + this._model);
+		app.log.trace("Model set: " + this._model);
 
 		// gadgetui maps directly, so we can loop on the keys
 		Object.keys(this._model).forEach((key) => {
@@ -1856,7 +1861,7 @@ class RemoteManager extends Component {
 		this.modules = {};
 		this.init(this.options.modules);
 		this.token;
-		this.app.log.info("RemoteManager initializing... ");
+		app.log.info("RemoteManager initializing... ");
 	}
 
 	setModule(key, module) {
@@ -2215,7 +2220,7 @@ class RemoteManager extends Component {
 // remoteManager.webSocket('ws://example.com/socket', (message) => { console.log(message); });
 
 class RouterManager extends Component {
-	constructor(app) {
+	constructor(app, routes) {
 		super();
 		this.app = app;
 		this.router = new Router(app.options.router.routes);
@@ -2225,7 +2230,7 @@ class RouterManager extends Component {
 			this.match(document.location.pathname + document.location.search);
 		};
 
-		this.app.log.info("RouterManager initialized...");
+		app.log.info("RouterManager initialized...");
 	}
 
 	add(path, handler) {
@@ -2423,11 +2428,11 @@ class SecurityManager extends Component {
 	constructor(app) {
 		super();
 		this.app = app;
-
-		this.app.log.info("Security initializing...");
-		this.useModel = this.app.options.model.length > 0 ? true : false;
-		this.userArgs = this.app.options.security.userArgs
-			? this.app.options.security.userArgs
+		this.options = app.options;
+		app.log.info("Security initializing...");
+		this.useModel = this.options.model.length > 0 ? true : false;
+		this.userArgs = this.options.security.userArgs
+			? this.options.security.userArgs
 			: [];
 		let user = this.getUser();
 		this.setUser(user);
@@ -2512,6 +2517,7 @@ class UIManager extends Component {
 	constructor(app) {
 		super();
 		this.app = app;
+		this.options = app.options;
 		this.events = [];
 		this.selectors = {};
 		this.nodes = {};
@@ -2519,10 +2525,10 @@ class UIManager extends Component {
 		this.deferred = [];
 		this.stateTransition = false;
 		this.views = [];
-		this.app.log.trace("Layout initializing...");
+		app.log.trace("Layout initializing...");
 
-		let eventGroups = this.app.options.ui.eventGroups
-			? this.app.options.ui.eventGroups
+		let eventGroups = this.options.ui.eventGroups
+			? this.options.ui.eventGroups
 			: "standard";
 
 		this.config();
@@ -2535,7 +2541,7 @@ class UIManager extends Component {
 				this.events = this.standardEvents;
 				break;
 			default:
-				this.app.options.ui.eventGroups.forEach((group) =>
+				this.options.ui.eventGroups.forEach((group) =>
 					this.events.concat(group),
 				);
 		}
@@ -2730,7 +2736,7 @@ class UIManager extends Component {
 	}
 
 	register(view) {
-		switch (this.app.options.ui.renderer) {
+		switch (this.options.ui.renderer) {
 			case "Handlebars":
 			case "Mustache":
 			case "templateLiterals":
@@ -3082,6 +3088,7 @@ export class Application extends Component {
 						height: options.console.height ?? 300,
 					}
 				: {},
+			events: options?.events ?? {},
 			logging: {
 				logLevel: options?.logging?.logLevel ?? "ERROR,FATAL,INFO",
 				toBrowserConsole: options?.logging?.toBrowserConsole ?? false,

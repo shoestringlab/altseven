@@ -1,5 +1,5 @@
 class RemoteManager extends Component {
-	constructor(options) {
+	constructor(app) {
 		super();
 		this.connections = {};
 		this.app = app;
@@ -9,7 +9,7 @@ class RemoteManager extends Component {
 		this.modules = {};
 		this.init(this.options.modules);
 		this.token;
-		a7.log.info("RemoteManager initializing... ");
+		app.log.info("RemoteManager initializing... ");
 	}
 
 	setModule(key, module) {
@@ -20,23 +20,23 @@ class RemoteManager extends Component {
 		const socket = new WebSocket(url);
 
 		socket.onopen = () => {
-			a7.log.info(`WebSocket connection to ${url} established.`);
+			this.app.log.info(`WebSocket connection to ${url} established.`);
 			this.fireEvent("webSocketOpen", [socket]);
 		};
 
 		socket.onerror = (error) => {
-			a7.log.error(`WebSocket error:`, error);
+			this.app.log.error(`WebSocket error:`, error);
 			this.fireEvent("webSocketError", [error]);
 		};
 
 		socket.onclose = () => {
-			a7.log.info(`WebSocket connection to ${url} closed.`);
+			this.app.log.info(`WebSocket connection to ${url} closed.`);
 			this.fireEvent("webSocketClose", []);
 		};
 
 		socket.onmessage = (event) => {
 			const data = JSON.parse(event.data);
-			a7.log.trace(`Received message:`, data);
+			this.app.log.trace(`Received message:`, data);
 			handleMessage(data);
 			this.fireEvent("webSocketMessage", [data]);
 		};
@@ -53,7 +53,7 @@ class RemoteManager extends Component {
 		if (this.connections[url]) {
 			this.connections[url].close();
 			delete this.connections[url];
-			a7.log.info(`WebSocket connection to ${url} closed.`);
+			this.app.log.info(`WebSocket connection to ${url} closed.`);
 		}
 	}
 
@@ -75,11 +75,11 @@ class RemoteManager extends Component {
 			.then(function (response) {
 				if (response.authenticated) {
 					// session is still active, no need to do anything else
-					a7.log.trace("Still logged in.");
+					this.app.log.trace("Still logged in.");
 				}
 			})
 			.catch(function (error) {
-				a7.events.publish(c);
+				this.app.events.publish(c);
 			});
 	}
 
@@ -122,7 +122,7 @@ class RemoteManager extends Component {
 						headers: {
 							Authorization:
 								"Basic " +
-								a7.util.base64.encode64(
+								this.app.util.base64.encode64(
 									params.username + ":" + params.password,
 								),
 							Accept:
@@ -153,14 +153,14 @@ class RemoteManager extends Component {
 					})
 					.then((json) => {
 						if (json.success) {
-							var user = a7.model.get("user");
+							var user = this.app.model.get("user");
 							// map the response object into the user object
 							Object.keys(json.user).map((key) => {
 								user[key] = json.user[key];
 							});
 							// set the user into the sessionStorage and the model
 							sessionStorage.user = JSON.stringify(user);
-							a7.model.set("user", user);
+							this.app.model.set("user", user);
 
 							// handler/function/route based on success
 							if (params.success !== undefined) {
@@ -169,7 +169,7 @@ class RemoteManager extends Component {
 								} else if (this.app.options.router) {
 									this.app.router.open(params.success, json);
 								} else {
-									a7.events.publish(params.success, json);
+									this.app.events.publish(params.success, json);
 								}
 							}
 						} else if (params.failure !== undefined) {
@@ -179,7 +179,7 @@ class RemoteManager extends Component {
 							} else if (this.app.options.router) {
 								this.app.router.open(params.failure, json);
 							} else {
-								a7.events.publish(params.failure, json);
+								this.app.events.publish(params.failure, json);
 							}
 						}
 						if (params.callback !== undefined) {
@@ -195,7 +195,7 @@ class RemoteManager extends Component {
 						headers: {
 							Authorization:
 								"Basic " +
-								a7.util.base64.encode64(
+								this.app.util.base64.encode64(
 									params.username + ":" + params.password,
 								),
 						},
@@ -211,14 +211,14 @@ class RemoteManager extends Component {
 					})
 					.then((json) => {
 						if (json.success) {
-							a7.security.invalidateSession();
+							this.app.security.invalidateSession();
 							if (params.success !== undefined) {
 								if (typeof params.success === "function") {
 									params.success(json);
 								} else if (this.app.options.router) {
 									this.app.router.open(params.success, json);
 								} else {
-									a7.events.publish(params.success, json);
+									this.app.events.publish(params.success, json);
 								}
 							}
 						} else if (params.failure !== undefined) {
@@ -228,7 +228,7 @@ class RemoteManager extends Component {
 							} else if (this.app.options.router) {
 								this.app.router.open(params.failure, json);
 							} else {
-								a7.events.publish(params.failure, json);
+								this.app.events.publish(params.failure, json);
 							}
 						}
 
@@ -272,7 +272,7 @@ class RemoteManager extends Component {
 	}
 
 	fetch(uri, params, secure) {
-		a7.log.info("fetch: " + uri);
+		this.app.log.info("fetch: " + uri);
 		var request, promise;
 
 		//if secure and tokens, we need to check timeout and add Authorization header
@@ -283,7 +283,7 @@ class RemoteManager extends Component {
 
 			if (minutes > this.options.sessionTimeout) {
 				// timeout
-				a7.events.publish("auth.sessionTimeout");
+				this.app.events.publish("auth.sessionTimeout");
 				return;
 			} else if (this.token !== undefined && this.token !== null) {
 				// set Authorization: Bearer header
@@ -334,7 +334,7 @@ class RemoteManager extends Component {
 							this.options.sessionTimeout,
 						);
 					} else {
-						a7.events.publish("auth.sessionTimeout");
+						this.app.events.publish("auth.sessionTimeout");
 					}
 				}
 			})
@@ -349,7 +349,7 @@ class RemoteManager extends Component {
 		var mA = moduleAction.split(".");
 		// if no action specified, return the list of actions
 		if (mA.length < 2) {
-			a7.log.error(
+			this.app.log.error(
 				"No action specified. Valid actions are: " +
 					Object.keys(this.modules[mA[0]]).toString(),
 			);

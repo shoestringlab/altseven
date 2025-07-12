@@ -1,5 +1,5 @@
 class RouterManager extends Component {
-	constructor(options, routes) {
+	constructor(app, routes) {
 		super();
 		this.app = app;
 		this.router = new Router(app.options.router.routes);
@@ -9,7 +9,7 @@ class RouterManager extends Component {
 			this.match(document.location.pathname + document.location.search);
 		};
 
-		a7.log.info("RouterManager initialized...");
+		app.log.info("RouterManager initialized...");
 	}
 
 	add(path, handler) {
@@ -24,7 +24,7 @@ class RouterManager extends Component {
 	open(path, params = {}) {
 		let result = this.find(path);
 		if (!result || !result.handler) {
-			a7.log.error(`No route found for path: ${path}`);
+			this.app.log.error(`No route found for path: ${path}`);
 			return;
 		}
 
@@ -40,7 +40,7 @@ class RouterManager extends Component {
 	match(path, params = {}) {
 		let result = this.find(path);
 		if (!result || !result.handler) {
-			a7.log.error(`No route found for path: ${path}`);
+			this.app.log.error(`No route found for path: ${path}`);
 			return;
 		}
 

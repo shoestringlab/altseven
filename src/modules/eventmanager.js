@@ -1,7 +1,8 @@
 class EventManager extends Component {
-	constructor() {
+	constructor(app) {
 		super();
-
+		this.app = app;
+		this.options = app.options;
 		this.topics = {};
 		this.hasProp = this.topics.hasOwnProperty;
 
@@ -20,6 +21,10 @@ class EventManager extends Component {
 		this.subscribe("auth.invalidateSession", () => {
 			this.app.security.invalidateSession();
 		});
+		// Subscribe to all events in options.events
+		for (const [topic, listener] of Object.entries(this.options.events)) {
+			this.subscribe(topic, listener);
+		}
 	}
 
 	subscribe(topic, listener) {
@@ -40,7 +45,7 @@ class EventManager extends Component {
 	}
 
 	publish(topic, info) {
-		a7.log.trace("event: " + topic);
+		this.app.log.trace("event: " + topic);
 		// If the topic doesn't exist, or there's no listeners in queue,
 		// just leave
 		if (!this.hasProp.call(this.topics, topic)) {

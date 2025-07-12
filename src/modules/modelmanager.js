@@ -1,27 +1,29 @@
 //import { Model } from "../components/model.js";
 
 class ModelManager extends Component {
-	constructor(options) {
+	constructor(app) {
 		super();
+		this.app = app;
+		this.options = this.app.options;
 		this._model = null;
 		this._methods = {};
-		a7.log.info("Model initializing... ");
+		app.log.info("Model initializing... ");
 
-		if (typeof options.model === "string") {
-			switch (options.model) {
+		if (typeof this.options.model === "string") {
+			switch (this.options.model) {
 				case "altseven":
 					this._model = Model;
-					this._model.init(this.app.options, this.app.log);
+					this._model.init(this.options, this.app.log);
 					break;
 				case "gadgetui":
 					this._model = gadgetui.model;
 					break;
 			}
-		} else if (typeof options.model === "object") {
-			this._model = options.model;
+		} else if (typeof this.options.model === "object") {
+			this._model = this.options.model;
 		}
 
-		a7.log.trace("Model set: " + this._model);
+		app.log.trace("Model set: " + this._model);
 
 		// gadgetui maps directly, so we can loop on the keys
 		Object.keys(this._model).forEach((key) => {

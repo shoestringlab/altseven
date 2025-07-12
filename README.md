@@ -1,6 +1,6 @@
 ## altseven
 
-v 8.0.0-alpha.3
+v 8.0.0-alpha.4
 
 A JavaScript framework. Originally built as an exploration into reactive programming with JavaScript. Now a full-fledged Web framework.
 
@@ -12,9 +12,13 @@ To install dev dependencies from NPM:
 
     `$ npm install`
 
-## Current Version - 8.0.0-alpha.3
+## Current Version - 8.0.0-alpha.4
 
-In the alpha.3 release, the entire framework has been re-factored into ES6 classes and modules. A new Application class has been introduced to manage the lifecycle of the application. The Application loads instances of the module classes and provides access to the Application instance throughout your application. To create a new application, import the Application class from the framework and create a new instance. Export the Application instance, then import it where you need it.
+Note that alpha3 was broken due to incomplete conversion of the Application class init of its modules. This issue has been resolved.
+
+In the alpha.4 release, the entire framework has been re-factored into ES6 classes and modules. A new Application class has been introduced to manage the lifecycle of the application. The Application loads instances of the module classes and provides access to the Application instance throughout your application. To create a new application, import the Application class from the framework and create a new instance. Export the Application instance, then import it where you need it.
+
+The EventsManager constructor has added a function to subscribe to events passed in options.events, as an object : { "main.run", ()=>{} };. This means you can define events in your application code as a structure of keys and functions without explicitly using subscribe, avoiding unnecessary code.
 
 See the release notes for more details.
 

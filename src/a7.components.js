@@ -1,4 +1,4 @@
-a7.components = ( function() {"use strict";function Constructor( constructor, args, addBindings ) {
+function Constructor( constructor, args, addBindings ) {
 	var returnedObj,
 		obj;
 
@@ -1364,16 +1364,4 @@ export class View extends Component {
 	}
 }
 
-return {
-	Component: Component,
-	Constructor: Constructor,
-	DataProvider: DataProvider,
-	Entity: Entity,
-	EventBindings: EventBindings,
-	Model: Model,
-	Service: Service,
-	User: User,
-	View: View,
-};
-}());
 //# sourceMappingURL=a7.components.js.map

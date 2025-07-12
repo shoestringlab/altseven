@@ -1,12 +1,13 @@
 class LogManager extends Component {
-	constructor(options) {
+	constructor(app) {
 		super();
-
+		this.app = app;
+		this.options = app.options;
 		this._ready = false;
 		this._deferred = [];
-		this.logLevel = options.logging.logLevel;
-		this._toBrowserConsole = options.logging.toBrowserConsole;
-		this._consoleEnabled = options.console.enabled;
+		this.logLevel = this.options.logging.logLevel;
+		this._toBrowserConsole = this.options.logging.toBrowserConsole;
+		this._consoleEnabled = this.options.console.enabled;
 		this._ready = true;
 
 		// Log any deferred messages

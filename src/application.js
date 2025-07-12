@@ -28,6 +28,7 @@ export class Application extends Component {
 						height: options.console.height ?? 300,
 					}
 				: {},
+			events: options?.events ?? {},
 			logging: {
 				logLevel: options?.logging?.logLevel ?? "ERROR,FATAL,INFO",
 				toBrowserConsole: options?.logging?.toBrowserConsole ?? false,
@@ -78,35 +79,35 @@ export class Application extends Component {
 		this.log.trace("application log init");
 
 		this.log.trace("application services init");
-		this.services = new ServiceManager(this.options);
+		this.services = new ServiceManager(this);
 
 		this.log.trace("application dataproviders init");
 		this.dataproviders = new DataProviderManager(this);
 
 		this.log.trace("application model init");
-		this.model = new ModelManager(this.options);
+		this.model = new ModelManager(this);
 		//await a7.model.init(this.options);
 		// if there is an applicationName set, use that for the options store
 		this.model.set(this.options?.applicationName ?? "a7", this.options);
 
 		if (this.options.console.enabled) {
 			this.log.trace("application console init");
-			this.console = new Console(this.options);
+			this.console = new Console(this);
 		}
 
 		if (this.options.security.enabled) {
 			this.log.trace("application security init");
 			// init user state
 			// pass security options if they were defined
-			this.security = new SecurityManager(this.options);
+			this.security = new SecurityManager(this);
 		}
 
 		this.log.trace("application remote init");
 		//pass remote modules if they were defined
-		this.remote = new RemoteManager(this.options);
+		this.remote = new RemoteManager(this);
 
 		this.log.trace("application events init");
-		this.events = new EventManager(this.options);
+		this.events = new EventManager(this);
 
 		if (this.options.router) {
 			this.log.trace("application router init");

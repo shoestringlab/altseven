@@ -1,18 +1,21 @@
 class SecurityManager extends Component {
-	constructor(options) {
+	constructor(app) {
 		super();
-
-		a7.log.info("Security initializing...");
-		this.useModel = options.model.length > 0 ? true : false;
-		this.userArgs = options.security.userArgs ? options.security.userArgs : [];
+		this.app = app;
+		this.options = app.options;
+		app.log.info("Security initializing...");
+		this.useModel = this.options.model.length > 0 ? true : false;
+		this.userArgs = this.options.security.userArgs
+			? this.options.security.userArgs
+			: [];
 		let user = this.getUser();
 		this.setUser(user);
 	}
 
 	async isAuthenticated(resolve, reject) {
-		a7.log.info("Checking authenticated state.. ");
+		this.app.log.info("Checking authenticated state.. ");
 		let response = await new Promise((resolve, reject) => {
-			a7.remote.invoke("auth.refresh", {
+			this.app.remote.invoke("auth.refresh", {
 				resolve: resolve,
 				reject: reject,
 			});
@@ -33,14 +36,14 @@ class SecurityManager extends Component {
 
 	setUser(user) {
 		if (this.useModel) {
-			a7.model.set("user", user);
+			this.app.model.set("user", user);
 		}
 		sessionStorage.user = JSON.stringify(user);
 	}
 
 	getUser() {
 		let suser, user;
-		let mUser = this.useModel ? a7.model.get("user") : null;
+		let mUser = this.useModel ? this.app.model.get("user") : null;
 		if (typeof mUser !== "undefined" && mUser !== "" && mUser !== null) {
 			user = mUser;
 		} else if (sessionStorage.user && sessionStorage.user !== "") {

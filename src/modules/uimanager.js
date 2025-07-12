@@ -1,7 +1,8 @@
 class UIManager extends Component {
-	constructor(options) {
+	constructor(app) {
 		super();
-		this.options = options;
+		this.app = app;
+		this.options = app.options;
 		this.events = [];
 		this.selectors = {};
 		this.nodes = {};
@@ -9,7 +10,7 @@ class UIManager extends Component {
 		this.deferred = [];
 		this.stateTransition = false;
 		this.views = [];
-		a7.log.trace("Layout initializing...");
+		app.log.trace("Layout initializing...");
 
 		let eventGroups = this.options.ui.eventGroups
 			? this.options.ui.eventGroups
@@ -208,7 +209,7 @@ class UIManager extends Component {
 
 	setStateTransition(val) {
 		this.stateTransition = val;
-		a7.log.trace("a7.ui.stateTransition: " + val);
+		this.app.log.trace("this.app.ui.stateTransition: " + val);
 	}
 
 	getStateTransition() {
@@ -245,7 +246,7 @@ class UIManager extends Component {
 	}
 
 	getParentViewIds(id) {
-		a7.log.trace("Find parents of " + id);
+		this.app.log.trace("Find parents of " + id);
 		let parentIds = [];
 		let view = this.views[id];
 		while (view.props.parentID !== undefined) {
@@ -256,7 +257,7 @@ class UIManager extends Component {
 	}
 
 	getChildViewIds(id) {
-		a7.log.trace("Find children of " + id);
+		this.app.log.trace("Find children of " + id);
 		let childIds = [];
 		let view = this.views[id];
 
@@ -272,15 +273,15 @@ class UIManager extends Component {
 
 	enqueueForRender(id) {
 		if (!this.getStateTransition()) {
-			a7.log.trace("enqueue: " + id);
+			this.app.log.trace("enqueue: " + id);
 			if (!this.queue.length) {
-				a7.log.trace("add first view to queue: " + id);
+				this.app.log.trace("add first view to queue: " + id);
 				this.queue.push(id);
 				this.processRenderQueue();
 			} else {
 				let childIds = this.getChildViewIds(id);
 				if (this.views[id].props.parentID === undefined) {
-					a7.log.trace("add to front of queue: " + id);
+					this.app.log.trace("add to front of queue: " + id);
 					this.queue.unshift(id);
 				} else {
 					let parentIds = this.getParentViewIds(id);
@@ -293,14 +294,14 @@ class UIManager extends Component {
 					}
 
 					if (highParent === undefined) {
-						a7.log.trace("add to end of queue: " + id);
+						this.app.log.trace("add to end of queue: " + id);
 						this.queue.push(id);
 					}
 				}
 
 				childIds.forEach((childId) => {
 					if (this.queue.indexOf(childId) >= 0) {
-						a7.log.trace("remove child from queue: " + childId);
+						this.app.log.trace("remove child from queue: " + childId);
 						this.queue.splice(this.queue.indexOf(childId), 1);
 					}
 				});
@@ -311,12 +312,12 @@ class UIManager extends Component {
 	}
 
 	processRenderQueue() {
-		a7.log.trace("processing the queue");
+		this.app.log.trace("processing the queue");
 		this.setStateTransition(true);
 		try {
 			this.queue.forEach((id) => this.views[id].render());
 		} catch (err) {
-			a7.log.trace(err);
+			this.app.log.trace(err);
 		}
 		this.queue = [];
 		this.setStateTransition(false);

@@ -1,10 +1,10 @@
 class DataProviderManager extends Component {
-	constructor() {
+	constructor(app) {
 		super();
 		this.app = app;
 		this.services = this.app.services.getAll();
 		this._dataproviders = new Map();
-		a7.log.info("DataProviderManager initialized...");
+		app.log.info("DataProviderManager initialized...");
 	}
 
 	getDataProvider(id) {
