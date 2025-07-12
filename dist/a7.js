@@ -1916,7 +1916,7 @@ class RemoteManager extends Component {
 	}
 
 	refreshClientSession() {
-		var promise = new Promise(function (resolve, reject) {
+		var promise = new Promise((resolve, reject) => {
 			this.invoke("auth.refresh", {
 				resolve: resolve,
 				reject: reject,
@@ -1924,13 +1924,13 @@ class RemoteManager extends Component {
 		});
 
 		promise
-			.then(function (response) {
+			.then((response) => {
 				if (response.authenticated) {
 					// session is still active, no need to do anything else
 					this.app.log.trace("Still logged in.");
 				}
 			})
-			.catch(function (error) {
+			.catch((error) => {
 				this.app.events.publish(c);
 			});
 	}

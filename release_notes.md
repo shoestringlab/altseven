@@ -1,4 +1,4 @@
-8.0.0-alpha.4
+8.0.0-alpha.6
 ============
 
 Note that alpha3 was broken due to incomplete conversion of the Application class init of its modules. This issue has been resolved.
