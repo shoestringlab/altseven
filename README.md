@@ -1,6 +1,6 @@
 ## altseven
 
-v 8.0.0-alpha.4
+v 8.0.0-alpha.5
 
 A JavaScript framework. Originally built as an exploration into reactive programming with JavaScript. Now a full-fledged Web framework.
 
@@ -12,7 +12,7 @@ To install dev dependencies from NPM:
 
     `$ npm install`
 
-## Current Version - 8.0.0-alpha.4
+## Current Version - 8.0.0-alpha.5
 
 Note that alpha3 was broken due to incomplete conversion of the Application class init of its modules. This issue has been resolved.
 
