@@ -1,6 +1,6 @@
 ## altseven
 
-v 8.0.0-alpha.7
+v 8.0.0-alpha.8
 
 A JavaScript framework. Originally built as an exploration into reactive programming with JavaScript. Now a full-fledged Web framework.
 
@@ -12,13 +12,13 @@ To install dev dependencies from NPM:
 
     `$ npm install`
 
-## Current Version - 8.0.0-alpha.7
+## Current Version - 8.0.0-alpha.8
 
-Note that alpha3 was broken due to incomplete conversion of the Application class init of its modules. This issue has been resolved.
+A planned feature has been implemented with the remote manager. You can now specify CRUD plus readAll methods for a given remote module using an object that specifies the url for each method. You can still use the old syntax if you prefer, and you can use the old syntax for additional methods in the module.
 
-In the alpha.4 release, the entire framework has been re-factored into ES6 classes and modules. A new Application class has been introduced to manage the lifecycle of the application. The Application loads instances of the module classes and provides access to the Application instance throughout your application. To create a new application, import the Application class from the framework and create a new instance. Export the Application instance, then import it where you need it.
+When you call remote.invoke(module.method, obj), the obj object should be either a plain object that can be cast as an Entity of the type for the module, or an Entity already cast. You can use this syntax with Services, so you can call bookmarkService.create(obj) with this syntax.
 
-The EventsManager constructor has added a function to subscribe to events passed in options.events, as an object : { "main.run", ()=>{} };. This means you can define events in your application code as a structure of keys and functions without explicitly using subscribe, avoiding unnecessary code.
+Note that this is still an alpha release, though the next release should be a beta or ga and the API is not expected to change now, barring some unforeseen changes.
 
 See the release notes for more details.
 

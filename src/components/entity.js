@@ -11,6 +11,19 @@ export class Entity extends Component {
 				this[key] = props[key];
 			}
 		}
+
+		const idField = Object.keys(this.#schema).find(
+			(key) => this.#schema[key].id === true,
+		);
+		if (idField) {
+			Object.defineProperty(this, "id", {
+				get: function () {
+					return this[idField];
+				},
+			});
+		} else {
+			//this.app.log.error("No ID field found in schema.");
+		}
 	}
 
 	_defineProperty(key) {
@@ -98,5 +111,13 @@ export class Entity extends Component {
 			}
 		}
 		return true;
+	}
+
+	toFlatObject() {
+		const flatObject = {};
+		for (const [key, value] of Object.entries(this.#data)) {
+			flatObject[key.replace(/^_/, "")] = value;
+		}
+		return flatObject;
 	}
 }

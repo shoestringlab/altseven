@@ -166,6 +166,19 @@ export class Entity extends Component {
 				this[key] = props[key];
 			}
 		}
+
+		const idField = Object.keys(this.#schema).find(
+			(key) => this.#schema[key].id === true,
+		);
+		if (idField) {
+			Object.defineProperty(this, "id", {
+				get: function () {
+					return this[idField];
+				},
+			});
+		} else {
+			//this.app.log.error("No ID field found in schema.");
+		}
 	}
 
 	_defineProperty(key) {
@@ -253,6 +266,14 @@ export class Entity extends Component {
 			}
 		}
 		return true;
+	}
+
+	toFlatObject() {
+		const flatObject = {};
+		for (const [key, value] of Object.entries(this.#data)) {
+			flatObject[key.replace(/^_/, "")] = value;
+		}
+		return flatObject;
 	}
 }
 
@@ -776,7 +797,7 @@ export class Service extends Component {
 	async create(obj) {
 		// if obj is a plain object, create a new entity
 		let entityInstance =
-			(!obj) instanceof this.entityClass ? this.format(obj) : obj;
+			obj instanceof this.entityClass ? obj : this.format(obj);
 
 		await this.remote
 			.invoke(this.remoteMethods.create, entityInstance)
@@ -813,7 +834,9 @@ export class Service extends Component {
 	}
 
 	async update(obj) {
-		let entityInstance = this.format(obj);
+		let entityInstance =
+			obj instanceof this.entityClass ? obj : this.format(obj);
+
 		await this.remote
 			.invoke(this.remoteMethods.update, obj)
 			.then((response) => response.json())
@@ -2199,10 +2222,52 @@ class RemoteManager extends Component {
 
 		return promise;
 	}
+	genericFetch(method, url, body = null, headers = {}) {
+		const params = {
+			method: method,
+			headers: headers,
+		};
+
+		if (body) {
+			params.body = JSON.stringify(body);
+		}
+
+		return this.fetch(url, params, true);
+	}
+
+	readAll(moduleConfig) {
+		return this.genericFetch("GET", moduleConfig.url);
+	}
+
+	create(moduleConfig, body) {
+		const headers = {
+			Accept: "application/json, application/xml, text/play, text/html, *.*",
+			"Content-Type": "application/json; charset=utf-8",
+		};
+		return this.genericFetch("POST", moduleConfig.url, body, headers);
+	}
+
+	read(moduleConfig, id) {
+		const fullUrl = moduleConfig.url.replace(":ID", id);
+		return this.genericFetch("GET", fullUrl);
+	}
+
+	update(moduleConfig, id, body) {
+		const fullUrl = moduleConfig.url.replace(":ID", id);
+		const headers = {
+			Accept: "application/json, application/xml, text/play, text/html, *.*",
+			"Content-Type": "application/json; charset=utf-8",
+		};
+		return this.genericFetch("PUT", fullUrl, body, headers);
+	}
+
+	destroy(moduleConfig, id) {
+		const fullUrl = moduleConfig.url.replace(":ID", id);
+		return this.genericFetch("DELETE", fullUrl);
+	}
 
 	invoke(moduleAction, params) {
 		var mA = moduleAction.split(".");
-		// if no action specified, return the list of actions
 		if (mA.length < 2) {
 			this.app.log.error(
 				"No action specified. Valid actions are: " +
@@ -2210,9 +2275,30 @@ class RemoteManager extends Component {
 			);
 			return;
 		}
-		if (typeof this.modules[mA[0]][mA[1]] === "function") {
-			//	_modules[ mA[ 0 ] ][ mA[ 1 ] ].apply( _modules[ mA[ 0 ] ][ mA[ 1 ] ].prototype, params );
-			return this.modules[mA[0]][mA[1]](params);
+
+		const moduleKey = mA[0];
+		const actionKey = mA[1];
+
+		if (typeof this.modules[moduleKey][actionKey] === "function") {
+			return this.modules[moduleKey][actionKey](params);
+		} else if (typeof this.modules[moduleKey][actionKey] === "object") {
+			const moduleConfig = this.modules[moduleKey][actionKey];
+			switch (actionKey) {
+				case "read":
+					return this.read(moduleConfig, params.id);
+				case "readAll":
+					return this.readAll(moduleConfig);
+				case "create":
+					return this.create(moduleConfig, params.toFlatObject());
+				case "update":
+					return this.update(moduleConfig, params.id, params.toFlatObject());
+				case "destroy":
+					return this.destroy(moduleConfig, params.id);
+				default:
+					this.app.log.error(`Unsupported HTTP method: ${moduleConfig.method}`);
+			}
+		} else {
+			this.app.log.error(`Invalid action: ${actionKey}`);
 		}
 	}
 }

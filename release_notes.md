@@ -1,3 +1,35 @@
+8.0.0-alpha.8
+============
+
+A planned feature has been implemented with the remote manager. You can now specify CRUD plus readAll methods for a given remote module using an object that specifies the url for each method. You can still use the old syntax if you prefer, and you can use the old syntax for additional methods in the module.
+
+When you call remote.invoke(module.method, obj), the obj object should be either a plain object that can be cast as an Entity of the type for the module, or an Entity already cast. You can use this syntax with Services, so you can call bookmarkService.create(obj) with this syntax.
+
+``` javascript
+export var bookmark = {
+	create: {
+		url: "/api/bookmarks",
+	},
+	read: {
+		url: "/api/bookmarks/:ID",
+	},
+	update: {
+		url: "/api/bookmarks/:ID",
+	},
+	destroy: {
+		url: "/api/bookmarks/:ID",
+	},
+	readAll: {
+		url: "/api/bookmarks",
+	},
+	deleteByPostID: function (obj) {
+		let params = { method: "DELETE" };
+		return a7.remote.fetch("/api/bookmarks/post/" + obj.postID, params, true);
+	},
+};
+
+```
+
 8.0.0-alpha.7
 ============
 

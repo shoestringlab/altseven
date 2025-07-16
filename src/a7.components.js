@@ -166,6 +166,19 @@ export class Entity extends Component {
 				this[key] = props[key];
 			}
 		}
+
+		const idField = Object.keys(this.#schema).find(
+			(key) => this.#schema[key].id === true,
+		);
+		if (idField) {
+			Object.defineProperty(this, "id", {
+				get: function () {
+					return this[idField];
+				},
+			});
+		} else {
+			//this.app.log.error("No ID field found in schema.");
+		}
 	}
 
 	_defineProperty(key) {
@@ -253,6 +266,14 @@ export class Entity extends Component {
 			}
 		}
 		return true;
+	}
+
+	toFlatObject() {
+		const flatObject = {};
+		for (const [key, value] of Object.entries(this.#data)) {
+			flatObject[key.replace(/^_/, "")] = value;
+		}
+		return flatObject;
 	}
 }
 
@@ -776,7 +797,7 @@ export class Service extends Component {
 	async create(obj) {
 		// if obj is a plain object, create a new entity
 		let entityInstance =
-			(!obj) instanceof this.entityClass ? this.format(obj) : obj;
+			obj instanceof this.entityClass ? obj : this.format(obj);
 
 		await this.remote
 			.invoke(this.remoteMethods.create, entityInstance)
@@ -813,7 +834,9 @@ export class Service extends Component {
 	}
 
 	async update(obj) {
-		let entityInstance = this.format(obj);
+		let entityInstance =
+			obj instanceof this.entityClass ? obj : this.format(obj);
+
 		await this.remote
 			.invoke(this.remoteMethods.update, obj)
 			.then((response) => response.json())
