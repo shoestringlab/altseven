@@ -46,10 +46,15 @@ class SecurityManager extends Component {
 		let mUser = this.useModel ? this.app.model.get("user") : null;
 		if (typeof mUser !== "undefined" && mUser !== "" && mUser !== null) {
 			user = mUser;
-		} else if (sessionStorage.user && sessionStorage.user !== "") {
+		} else if (
+			typeof sessionStorage.user !== "undefined" &&
+			sessionStorage.user !== ""
+		) {
 			suser = JSON.parse(sessionStorage.user);
 			user = new User(this.userArgs);
 			Object.keys(suser).map((key) => (user[key] = suser[key]));
+		} else {
+			user = new User(this.userArgs);
 		}
 		return user;
 	}

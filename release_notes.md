@@ -1,3 +1,10 @@
+8.0.0-alpha.9
+============
+
+Bug fix in the remotemanager with bind(this) and scoping of refreshClientSession().
+
+Bug fix with user authentication in securitymanager.
+
 8.0.0-alpha.8
 ============
 

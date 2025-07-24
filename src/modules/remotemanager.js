@@ -331,7 +331,7 @@ class RemoteManager extends Component {
 						}
 						this.sessionTimer = setTimeout(
 							() => {
-								this.refreshClientSession().bind(this);
+								this.refreshClientSession();
 							},
 
 							this.options.sessionTimeout,
