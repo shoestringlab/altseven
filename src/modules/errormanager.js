@@ -1,7 +1,7 @@
 class ErrorManager extends Component {
 	constructor(app) {
 		super();
-
+		this.app = app;
 		window.onerror = (msg, url, lineNo, columnNo, error) => {
 			this.captureError(msg, url, lineNo, columnNo, error);
 			return false;

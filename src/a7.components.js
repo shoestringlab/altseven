@@ -153,22 +153,28 @@ export class DataProvider extends Component {
 	}
 }
 
+// Updated base Entity class to support inheritance with per-subclass static schemas
 export class Entity extends Component {
-	#schema;
+	// Public static schema; subclasses will override this
+	static schema = null;
+
 	#data;
+
 	constructor(props) {
 		super();
-		this.#schema = props.schema;
 		this.#data = {};
-		if (this.#schema && this.validate()) {
-			for (const [key, descriptor] of Object.entries(this.#schema)) {
+		// No longer set schema from props; it's static per class/subclass
+		if (this.constructor.schema) {
+			for (const [key, descriptor] of Object.entries(this.constructor.schema)) {
 				this._defineProperty(key);
-				this[key] = props[key];
+				this[key] = props[key]; // Setter will validate type/required
 			}
+			// Validate after properties are defined and set
+			this.validate();
 		}
 
-		const idField = Object.keys(this.#schema).find(
-			(key) => this.#schema[key].id === true,
+		const idField = Object.keys(this.constructor.schema).find(
+			(key) => this.constructor.schema[key].id === true,
 		);
 		if (idField) {
 			Object.defineProperty(this, "id", {
@@ -181,6 +187,11 @@ export class Entity extends Component {
 		}
 	}
 
+	// Instance getter to access the class-level schema
+	get schema() {
+		return this.constructor.schema;
+	}
+
 	_defineProperty(key) {
 		const propertyName = `_${key}`;
 		this.#data[propertyName] = undefined;
@@ -190,7 +201,7 @@ export class Entity extends Component {
 				return this.#data[propertyName];
 			},
 			set: function (value) {
-				const schemaDescriptor = this.#schema[key];
+				const schemaDescriptor = this.constructor.schema[key];
 
 				if (schemaDescriptor.required && value === undefined) {
 					throw new Error(`Property ${key} is required.`);
@@ -216,14 +227,6 @@ export class Entity extends Component {
 	}
 
 	_isOfType(value, expectedType) {
-		// Special case for checking if the value is an instance of a specific class
-		// if (expectedType === "date") {
-		// 	return new Date(value) instanceof Date;
-		// }
-		// if (expectedType === "array") {
-		// 	return Array.isArray(value);
-		// }
-
 		switch (expectedType) {
 			case "date":
 				return new Date(value) instanceof Date;
@@ -250,19 +253,26 @@ export class Entity extends Component {
 		}
 	}
 
-	set schema(obj) {}
-
-	get schema() {
-		return this.#schema;
-	}
-
 	validate() {
-		for (let field in this.#schema) {
-			if (field.required && !this.#data[field]) {
+		for (let field in this.constructor.schema) {
+			const propertyName = `_${field}`;
+			if (
+				this.constructor.schema[field].required &&
+				this.#data[propertyName] === undefined
+			) {
 				throw new Error(`Field ${field} is required`);
 			}
-			if (field.type && typeof this.#data[field] !== field.type) {
-				throw new Error(`Field ${field} must be of type ${field.type}`);
+			if (
+				this.constructor.schema[field].type &&
+				this.#data[propertyName] &&
+				!this._isOfType(
+					this.#data[propertyName],
+					this.constructor.schema[field].type,
+				)
+			) {
+				throw new Error(
+					`Field ${field} must be of type ${this.constructor.schema[field].type}`,
+				);
 			}
 		}
 		return true;
@@ -274,6 +284,46 @@ export class Entity extends Component {
 			flatObject[key.replace(/^_/, "")] = value;
 		}
 		return flatObject;
+	}
+
+	/**
+	 * Update the entity instance with values from a flat object
+	 * @param {Object} obj - Flat object containing property values
+	 */
+	fromFlatObject(obj) {
+		if (!obj || typeof obj !== "object") {
+			throw new Error("Invalid input: expected an object");
+		}
+
+		for (const [key, value] of Object.entries(obj)) {
+			// Only update properties that exist in the schema
+			if (this.constructor.schema && this.constructor.schema[key]) {
+				// Validate the value against the schema before setting it
+				const schemaDescriptor = this.constructor.schema[key];
+
+				if (schemaDescriptor.required && value === undefined) {
+					throw new Error(`Property ${key} is required.`);
+				}
+
+				// Check data type
+				const expectedType = schemaDescriptor.type;
+				const valueType = typeof value;
+
+				if (
+					!this._isOfType(value, expectedType) &&
+					value !== null &&
+					typeof value !== "undefined"
+				) {
+					throw new Error(
+						`Invalid type for property ${key}. Expected ${expectedType}, but got ${valueType}.`,
+					);
+				}
+
+				this[key] = value;
+			}
+		}
+
+		return this;
 	}
 }
 
@@ -699,6 +749,9 @@ export class Service extends Component {
 		// Queue initialization
 		this.queue = new Map();
 
+		// Get ID fields from entity schema
+		this.idFields = this.getEntityIdFields();
+
 		//this.config();
 		this.fireEvent("mustRegister");
 	}
@@ -709,6 +762,23 @@ export class Service extends Component {
 		// if (!dataMap || !(dataMap instanceof Map)) {
 		// 	this.set(new Map());
 		// }
+	}
+
+	getEntityIdFields() {
+		// Check if entityClass has a static schema property with id fields
+		if (this.entityClass && typeof this.entityClass.schema === "object") {
+			const idFields = [];
+			for (const [fieldName, fieldConfig] of Object.entries(
+				this.entityClass.schema,
+			)) {
+				if (fieldConfig.id === true) {
+					idFields.push(fieldName);
+				}
+			}
+			return idFields;
+		}
+		// Fallback to the original key if no schema is found
+		return [this.key];
 	}
 
 	setLog(logger) {
@@ -732,8 +802,9 @@ export class Service extends Component {
 	convertArrayToMap(dataArray) {
 		let dataMap = new Map();
 		dataArray.forEach((item) => {
-			if (item[this.key]) {
-				dataMap.set(item[this.key], item);
+			const key = this.getCompositeKey(item);
+			if (key) {
+				dataMap.set(key, item);
 			}
 		});
 		return dataMap;
@@ -779,8 +850,9 @@ export class Service extends Component {
 		}
 
 		newItems.forEach((item) => {
-			if (item[this.key]) {
-				dataMap.set(item[this.key], this.format(item));
+			const key = this.getCompositeKey(item);
+			if (key) {
+				dataMap.set(key, this.format(item));
 			}
 		});
 
@@ -788,6 +860,28 @@ export class Service extends Component {
 
 		this.fireEvent("cacheChanged", { action: "refresh" });
 		return dataMap;
+	}
+
+	getCompositeKey(item) {
+		if (!item || typeof item !== "object") {
+			return null;
+		}
+
+		if (this.idFields.length === 0) {
+			// Fallback to original behavior if no ID fields defined
+			return item[this.key] || null;
+		}
+
+		if (this.idFields.length === 1) {
+			// Single ID field
+			return item[this.idFields[0]] || null;
+		}
+
+		// Multiple ID fields - combine them
+		const keyParts = this.idFields
+			.map((field) => item[field])
+			.filter((part) => part !== undefined && part !== null);
+		return keyParts.length > 0 ? keyParts.join("|") : null;
 	}
 
 	bind(key, filter) {
@@ -803,7 +897,7 @@ export class Service extends Component {
 			.invoke(this.remoteMethods.create, entityInstance)
 			.then((response) => response.json())
 			.then((json) => {
-				entityInstance = this.format(json);
+				entityInstance.fromFlatObject(json);
 				this.cacheSet(entityInstance);
 			});
 		return entityInstance;
@@ -811,26 +905,32 @@ export class Service extends Component {
 
 	async read(obj) {
 		let dataMap = this.get();
+		let compositeKey = "-";
 		const requestKey = `${this.remoteMethods.read}-${JSON.stringify(obj)}`;
 		if (this.queue.has(requestKey)) {
 			this.log.trace("Duplicate read request detected, cancelling new request");
 			//return this.queue.get(requestKey);
 		} else {
-			if (!dataMap.has(obj[this.key])) {
-				let entity;
+			// Get the composite key for the object
+			compositeKey = this.getCompositeKey(obj);
+			if (!dataMap.has(compositeKey)) {
+				let entityInstance =
+					obj instanceof this.entityClass ? obj : this.format(obj);
+
 				await this.remote
-					.invoke(this.remoteMethods.read, obj)
+					.invoke(this.remoteMethods.read, entityInstance)
 					.then((response) => response.json())
 					.then((json) => {
-						entity = json;
+						// set the entity instance from the json response
+						entityInstance.fromFlatObject(json);
 					});
-				this.cacheSet(this.format(entity));
+				this.cacheSet(this.format(entityInstance));
 				this.queue.delete(requestKey);
 				dataMap = this.get();
 			}
 		}
 
-		return dataMap.get(obj[this.key]);
+		return dataMap.get(compositeKey);
 	}
 
 	async update(obj) {
@@ -838,24 +938,29 @@ export class Service extends Component {
 			obj instanceof this.entityClass ? obj : this.format(obj);
 
 		await this.remote
-			.invoke(this.remoteMethods.update, obj)
+			.invoke(this.remoteMethods.update, entityInstance)
 			.then((response) => response.json())
 			.then((json) => {
-				entityInstance = this.format(json);
+				entityInstance.fromFlatObject(json);
 				this.cacheSet(entityInstance);
 			});
 		return entityInstance;
 	}
 
 	async delete(obj) {
+		let returnVal = {};
+		let entityInstance =
+			obj instanceof this.entityClass ? obj : this.format(obj);
 		await this.remote
-			.invoke(this.remoteMethods.delete, obj)
+			.invoke(this.remoteMethods.delete, entityInstance)
 			.then((response) => response.json())
 			.then((json) => {
 				// nothing to do here
+				returnVal = json;
 			});
-		this.cacheDelete(obj[this.key]);
-		return true;
+		const compositeKey = this.getCompositeKey(entityInstance);
+		this.cacheDelete(compositeKey);
+		return returnVal; // return the response from the remote call
 	}
 
 	async readAll(obj) {
@@ -880,8 +985,100 @@ export class Service extends Component {
 		return this.get();
 	}
 
+	// Add a method to call custom remote methods
+	async invoke(
+		methodName,
+		params,
+		options = {
+			merge: true,
+			checkCache: true,
+			filter: {},
+			returnType: "Map",
+		},
+	) {
+		// if (returnType === "Array") {
+		// 	return data.map(item => new this.entityClass(item));
+		// } else if (returnType === "Map") {
+		// 	return new Map(data.map(item => [this.getCompositeKey(item), new this.entityClass(item)]));
+		// } else {
+		// 	throw new Error(`Unsupported returnType: ${returnType}`);
+		// }
+		//}
+
+		const methodConfig = this.remoteMethods[methodName];
+		if (!methodConfig) {
+			throw new Error(`Method ${methodName} not found in remoteMethods`);
+		}
+
+		if (options?.checkCache) {
+			let item, map;
+			let dataMap = this.get();
+
+			let data =
+				typeof options.filter !== "undefined" &&
+				Object.keys(options.filter).length === 0
+					? dataMap
+					: this.filter(dataMap, options.filter);
+			if (data.length > 0) {
+				this.log.trace("Cache hit for method", methodName);
+				return this.formatData(data, options.returnType);
+			}
+		}
+
+		// Call the remote method
+		const response = await this.remote.invoke(methodConfig, params);
+
+		// Parse the JSON response
+		const json = await response.json();
+
+		// Check if we should merge the results into cache
+		if (options.merge) {
+			// If it's an array of objects, treat them as entities and merge
+			if (Array.isArray(json) && json.length > 0) {
+				this.merge(json);
+			} else if (typeof json === "object" && json !== null) {
+				this.merge([json]);
+			}
+			return this.formatData(json, options.returnType);
+		}
+
+		// Otherwise return the raw response
+		return json;
+	}
+
 	format(obj) {
 		return new this.entityClass(obj);
+	}
+
+	formatData(data, returnType) {
+		let map = new Map(),
+			array = [];
+
+		if (typeof data === "object" && !Array.isArray(data) && data !== null) {
+			return this.format(data);
+		}
+		if (returnType === "object" && data.length === 1) {
+			let item = data[0];
+			return item instanceof this.entityClass ? item : this.format(item);
+		}
+
+		data.forEach((item, index) => {
+			// Transform the item and update the original array or create a new one
+			data[index] = item instanceof this.entityClass ? item : this.format(item);
+
+			if (returnType === "Map") {
+				map.set(data[index].id, data[index]);
+			}
+			if (returnType === "Array") {
+				array.push(data[index]);
+			}
+		});
+
+		if (returnType === "Map") {
+			return map;
+		} else if (returnType === "Array") {
+			return array;
+		}
 	}
 
 	cacheDelete(id) {
@@ -896,8 +1093,12 @@ export class Service extends Component {
 
 	cacheSet(item) {
 		if (item instanceof this.entityClass) {
+			const compositeKey = this.getCompositeKey(item);
+			if (!compositeKey) {
+				throw new Error("Cannot cache item: no valid ID fields found");
+			}
 			let dataMap = this.get();
-			dataMap.set(item[this.key], item);
+			dataMap.set(compositeKey, item);
 			this.set(dataMap);
 
 			// Notify bound DataProviders
@@ -922,7 +1123,6 @@ export class Service extends Component {
 		}
 	}
 
-	// Retrieve items, using cache when possible
 	async readMany(IDs) {
 		if (typeof IDs === "undefined") {
 			return new Map();
@@ -957,12 +1157,16 @@ export class Service extends Component {
 
 			//const cachedItems = present.map((id) => itemsMap.get(id));
 		}
+		return this.getMappedItems(IDs);
+	}
+
+	getMappedItems(IDs) {
 		// Return all requested items in order, filtering out nulls
 		const result = IDs.map((id) => {
 			const item = this.get(id);
 			return item || null; // Return null for items that couldn't be found
 		});
-		return result.filter((item) => item !== null); // Filter out any null values
+		return result.filter((item) => item !== null);
 	}
 
 	sort(items, sortFields) {
@@ -1013,6 +1217,7 @@ export class Service extends Component {
 
 		return itemsArray;
 	}
+
 	filter(items, criteria) {
 		// Convert items to array if it's a Map
 		let itemsArray = Array.isArray(items) ? items : Array.from(items.values());
@@ -1064,26 +1269,31 @@ export class Service extends Component {
 
 		// Filter the array based on the provided criteria
 		const filteredItems = itemsArray.filter((item) => {
+			// For each item, check if it satisfies ALL criteria
 			for (let field of Object.keys(criteria)) {
 				const criterion = criteria[field];
+
+				// Get the value from the item for this field
+				let valueA = item[field];
 
 				if (Array.isArray(criterion) && criterion.length === 3) {
 					// Handle specific operator, value, and regex flag
 					const [operator, value, useRegex] = criterion;
-					let valueA = item[field];
 					let valueB = typeof value === "function" ? value() : value;
 
 					if (useRegex && typeof valueB === "string") {
 						// Use regex for string matching
 						const regex = new RegExp(valueB);
-						return compareValues(
-							valueA.toString(),
-							regex.test(valueA),
-							operator,
-						);
+						if (
+							!compareValues(valueA.toString(), regex.test(valueA), operator)
+						) {
+							return false; // If any criterion fails, item is filtered out
+						}
 					} else {
 						// Use normal comparison
-						return compareValues(valueA, valueB, operator);
+						if (!compareValues(valueA, valueB, operator)) {
+							return false; // If any criterion fails, item is filtered out
+						}
 					}
 				} else if (Array.isArray(criterion) && criterion.length === 2) {
 					const operator = criterion[0];
@@ -1092,15 +1302,24 @@ export class Service extends Component {
 
 					// Handle range match or simple equality/inequality check
 					if (typeof value === "object" && Array.isArray(value)) {
-						return isWithinRange(item[field], value);
+						if (!isWithinRange(valueA, value)) {
+							return false; // If any criterion fails, item is filtered out
+						}
 					} else {
 						// Simple equality/inequality check
-						return compareValues(item[field], value, operator);
+						if (!compareValues(valueA, value, operator)) {
+							return false; // If any criterion fails, item is filtered out
+						}
 					}
 				} else {
-					throw new Error(`Invalid criterion for field: ${field}`);
+					// Simple direct value comparison - treat as equality
+					if (!compareValues(valueA, criterion, "=")) {
+						return false; // If any criterion fails, item is filtered out
+					}
 				}
 			}
+
+			// If we get here, all criteria have been satisfied
 			return true;
 		});
 
@@ -1224,7 +1443,7 @@ export class View extends Component {
 		if (this.dataProvider) {
 			this.dataProvider.setState(args);
 		} else {
-			this.state = Object.assign(args);
+			this.state = Object.assign(this.state, args);
 			// if there is no dataProvider, fire stateChanged here, otherwise wait for the dataProvider (see registerDataProvider())
 			this.fireEvent("stateChanged", args);
 		}
@@ -1316,6 +1535,7 @@ export class View extends Component {
 		boundEles.forEach(function (ele) {
 			this.model.bind(ele.attributes["data-bind"].value, ele);
 		});
+		this.log.trace("Rendered: " + this.props.id);
 		this.fireEvent("rendered");
 	}
 

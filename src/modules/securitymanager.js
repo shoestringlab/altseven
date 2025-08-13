@@ -50,9 +50,16 @@ class SecurityManager extends Component {
 			typeof sessionStorage.user !== "undefined" &&
 			sessionStorage.user !== ""
 		) {
-			suser = JSON.parse(sessionStorage.user);
-			user = new User(this.userArgs);
-			Object.keys(suser).map((key) => (user[key] = suser[key]));
+			try {
+				//try to parse the user data
+				suser = JSON.parse(sessionStorage.user);
+				user = new User(this.userArgs);
+				Object.keys(suser).map((key) => (user[key] = suser[key]));
+			} catch (e) {
+				// Handle error parsing user data
+				console.error("Error parsing user data:", e);
+				user = new User(this.userArgs);
+			}
 		} else {
 			user = new User(this.userArgs);
 		}

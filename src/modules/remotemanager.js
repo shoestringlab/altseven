@@ -9,7 +9,7 @@ class RemoteManager extends Component {
 		this.modules = {};
 		this.init(this.options.modules);
 		this.token;
-		app.log.info("RemoteManager initializing... ");
+		app.log.trace("RemoteManager initializing... ");
 	}
 
 	setModule(key, module) {
@@ -20,7 +20,7 @@ class RemoteManager extends Component {
 		const socket = new WebSocket(url);
 
 		socket.onopen = () => {
-			this.app.log.info(`WebSocket connection to ${url} established.`);
+			this.app.log.trace(`WebSocket connection to ${url} established.`);
 			this.fireEvent("webSocketOpen", [socket]);
 		};
 
@@ -30,7 +30,7 @@ class RemoteManager extends Component {
 		};
 
 		socket.onclose = () => {
-			this.app.log.info(`WebSocket connection to ${url} closed.`);
+			this.app.log.trace(`WebSocket connection to ${url} closed.`);
 			this.fireEvent("webSocketClose", []);
 		};
 
@@ -53,7 +53,7 @@ class RemoteManager extends Component {
 		if (this.connections[url]) {
 			this.connections[url].close();
 			delete this.connections[url];
-			this.app.log.info(`WebSocket connection to ${url} closed.`);
+			this.app.log.trace(`WebSocket connection to ${url} closed.`);
 		}
 	}
 
@@ -79,7 +79,7 @@ class RemoteManager extends Component {
 				}
 			})
 			.catch((error) => {
-				this.app.events.publish(c);
+				this.app.events.publish("auth.logout");
 			});
 	}
 
@@ -272,7 +272,7 @@ class RemoteManager extends Component {
 	}
 
 	fetch(uri, params, secure) {
-		this.app.log.info("fetch: " + uri);
+		this.app.log.trace("fetch: " + uri);
 		var request, promise;
 
 		//if secure and tokens, we need to check timeout and add Authorization header
@@ -371,23 +371,34 @@ class RemoteManager extends Component {
 		};
 		return this.genericFetch("POST", moduleConfig.url, body, headers);
 	}
-
-	read(moduleConfig, id) {
-		const fullUrl = moduleConfig.url.replace(":ID", id);
+	read(moduleConfig, params) {
+		let fullUrl = moduleConfig.url;
+		// Replace all :ID placeholders with values from params
+		Object.keys(params).forEach((key) => {
+			fullUrl = fullUrl.replace(new RegExp(`:${key}`, "g"), params[key]);
+		});
 		return this.genericFetch("GET", fullUrl);
 	}
 
-	update(moduleConfig, id, body) {
-		const fullUrl = moduleConfig.url.replace(":ID", id);
+	update(moduleConfig, params) {
+		let fullUrl = moduleConfig.url;
+		// Replace all :ID placeholders with values from params
+		Object.keys(params).forEach((key) => {
+			fullUrl = fullUrl.replace(new RegExp(`:${key}`, "g"), params[key]);
+		});
 		const headers = {
 			Accept: "application/json, application/xml, text/play, text/html, *.*",
 			"Content-Type": "application/json; charset=utf-8",
 		};
-		return this.genericFetch("PUT", fullUrl, body, headers);
+		return this.genericFetch("PUT", fullUrl, params, headers);
 	}
 
-	destroy(moduleConfig, id) {
-		const fullUrl = moduleConfig.url.replace(":ID", id);
+	destroy(moduleConfig, params) {
+		let fullUrl = moduleConfig.url;
+		// Replace all :ID placeholders with values from params
+		Object.keys(params).forEach((key) => {
+			fullUrl = fullUrl.replace(new RegExp(`:${key}`, "g"), params[key]);
+		});
 		return this.genericFetch("DELETE", fullUrl);
 	}
 
@@ -410,24 +421,65 @@ class RemoteManager extends Component {
 			const moduleConfig = this.modules[moduleKey][actionKey];
 			switch (actionKey) {
 				case "read":
-					return this.read(moduleConfig, params.id);
+					return this.read(moduleConfig, params.toFlatObject());
 				case "readAll":
 					return this.readAll(moduleConfig);
 				case "create":
 					return this.create(moduleConfig, params.toFlatObject());
 				case "update":
-					return this.update(moduleConfig, params.id, params.toFlatObject());
+					return this.update(moduleConfig, params.toFlatObject());
 				case "destroy":
-					return this.destroy(moduleConfig, params.id);
+					return this.destroy(moduleConfig, params.toFlatObject());
 				default:
-					this.app.log.error(`Unsupported HTTP method: ${moduleConfig.method}`);
+					// Handle custom methods
+					return this.invokeCustomMethod(moduleConfig, params);
 			}
 		} else {
 			this.app.log.error(`Invalid action: ${actionKey}`);
 		}
 	}
-}
 
+	invokeCustomMethod(moduleConfig, params) {
+		// Extract method and URL from module config
+		const method = (moduleConfig.params && moduleConfig.params.method) || "GET";
+		const url = moduleConfig.url;
+
+		// Prepare the full URL with parameters
+		let fullUrl = url;
+		if (typeof params === "object" && params !== null) {
+			Object.keys(params).forEach((key) => {
+				// Replace :key placeholders with actual values
+				fullUrl = fullUrl.replace(new RegExp(`:${key}`, "g"), params[key]);
+			});
+		}
+
+		// Prepare headers and body
+		const headers = {};
+		let body = null;
+
+		// Handle request body if present in params
+		if (params.body) {
+			body = JSON.stringify(params.body);
+			headers["Content-Type"] = "application/json; charset=utf-8";
+		}
+
+		// Handle additional headers from module config
+		if (moduleConfig.params && moduleConfig.params.headers) {
+			Object.assign(headers, moduleConfig.params.headers);
+		}
+
+		const fetchParams = {
+			method: method.toUpperCase(),
+			headers: headers,
+		};
+
+		if (body) {
+			fetchParams.body = body;
+		}
+
+		return this.fetch(fullUrl, fetchParams, true);
+	}
+}
 // Usage example:
 // const remoteManager = new RemoteManager();
 // remoteManager.init({}, () => { console.log('RemoteManager initialized'); });

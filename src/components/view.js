@@ -97,7 +97,7 @@ export class View extends Component {
 		if (this.dataProvider) {
 			this.dataProvider.setState(args);
 		} else {
-			this.state = Object.assign(args);
+			this.state = Object.assign(this.state, args);
 			// if there is no dataProvider, fire stateChanged here, otherwise wait for the dataProvider (see registerDataProvider())
 			this.fireEvent("stateChanged", args);
 		}
@@ -189,6 +189,7 @@ export class View extends Component {
 		boundEles.forEach(function (ele) {
 			this.model.bind(ele.attributes["data-bind"].value, ele);
 		});
+		this.log.trace("Rendered: " + this.props.id);
 		this.fireEvent("rendered");
 	}
 
