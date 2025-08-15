@@ -106,17 +106,17 @@ export class Service extends Component {
 	}
 
 	// Merge new items into the existing Map
-	merge(newItems) {
+	async merge(newItems) {
 		let dataMap = this.get();
 
 		if (!(dataMap instanceof Map)) {
 			dataMap = new Map();
 		}
 
-		newItems.forEach((item) => {
+		await newItems.forEach(async (item) => {
 			const key = this.getCompositeKey(item);
 			if (key) {
-				dataMap.set(key, this.format(item));
+				dataMap.set(key, await this.format(item));
 			}
 		});
 
@@ -155,7 +155,7 @@ export class Service extends Component {
 	async create(obj) {
 		// if obj is a plain object, create a new entity
 		let entityInstance =
-			obj instanceof this.entityClass ? obj : this.format(obj);
+			obj instanceof this.entityClass ? obj : await this.format(obj);
 
 		await this.remote
 			.invoke(this.remoteMethods.create, entityInstance)
@@ -179,7 +179,7 @@ export class Service extends Component {
 			compositeKey = this.getCompositeKey(obj);
 			if (!dataMap.has(compositeKey)) {
 				let entityInstance =
-					obj instanceof this.entityClass ? obj : this.format(obj);
+					obj instanceof this.entityClass ? obj : await this.format(obj);
 
 				await this.remote
 					.invoke(this.remoteMethods.read, entityInstance)
@@ -188,7 +188,7 @@ export class Service extends Component {
 						// set the entity instance from the json response
 						entityInstance.fromFlatObject(json);
 					});
-				this.cacheSet(this.format(entityInstance));
+				this.cacheSet(await this.format(entityInstance));
 				this.queue.delete(requestKey);
 				dataMap = this.get();
 			}
@@ -199,7 +199,7 @@ export class Service extends Component {
 
 	async update(obj) {
 		let entityInstance =
-			obj instanceof this.entityClass ? obj : this.format(obj);
+			obj instanceof this.entityClass ? obj : await this.format(obj);
 
 		await this.remote
 			.invoke(this.remoteMethods.update, entityInstance)
@@ -214,7 +214,7 @@ export class Service extends Component {
 	async delete(obj) {
 		let returnVal = {};
 		let entityInstance =
-			obj instanceof this.entityClass ? obj : this.format(obj);
+			obj instanceof this.entityClass ? obj : await this.format(obj);
 		await this.remote
 			.invoke(this.remoteMethods.delete, entityInstance)
 			.then((response) => response.json())
@@ -242,7 +242,7 @@ export class Service extends Component {
 					.then((json) => {
 						entities = json;
 					});
-				this.merge(entities);
+				await this.merge(entities);
 				this.queue.delete(requestKey);
 			}
 		}
@@ -285,7 +285,7 @@ export class Service extends Component {
 					: this.filter(dataMap, options.filter);
 			if (data.length > 0) {
 				this.log.trace("Cache hit for method", methodName);
-				return this.formatData(data, options.returnType);
+				return await this.formatData(data, options.returnType);
 			}
 		}
 
@@ -299,36 +299,37 @@ export class Service extends Component {
 		if (options.merge) {
 			// If it's an array of objects, treat them as entities and merge
 			if (Array.isArray(json) && json.length > 0) {
-				this.merge(json);
+				await this.merge(json);
 			} else if (typeof json === "object" && json !== null) {
-				this.merge([json]);
+				await this.merge([json]);
 			}
-			return this.formatData(json, options.returnType);
+			return await this.formatData(json, options.returnType);
 		}
 
 		// Otherwise return the raw response
 		return json;
 	}
 
-	format(obj) {
+	async format(obj) {
 		return new this.entityClass(obj);
 	}
 
-	formatData(data, returnType) {
+	async formatData(data, returnType) {
 		let map = new Map(),
 			array = [];
 
 		if (typeof data === "object" && !Array.isArray(data) && data !== null) {
-			return this.format(data);
+			return await this.format(data);
 		}
 		if (returnType === "object" && data.length === 1) {
 			let item = data[0];
-			return item instanceof this.entityClass ? item : this.format(item);
+			return item instanceof this.entityClass ? item : await this.format(item);
 		}
 
-		data.forEach((item, index) => {
+		await data.forEach(async (item, index) => {
 			// Transform the item and update the original array or create a new one
-			data[index] = item instanceof this.entityClass ? item : this.format(item);
+			data[index] =
+				item instanceof this.entityClass ? item : await this.format(item);
 
 			if (returnType === "Map") {
 				map.set(data[index].id, data[index]);
@@ -411,9 +412,9 @@ export class Service extends Component {
 				await this.remote
 					.invoke(this.remoteMethods.readMany, obj)
 					.then((response) => response.json())
-					.then((json) => {
+					.then(async (json) => {
 						if (Array.isArray(json)) {
-							this.merge(json);
+							await this.merge(json);
 							this.queue.delete(requestKey);
 						}
 					});
