@@ -1,6 +1,6 @@
 ## altseven
 
-v 8.0.0-alpha.9
+v 8.0.0-beta.1
 
 A JavaScript framework. Originally built as an exploration into reactive programming with JavaScript. Now a full-fledged Web framework.
 
@@ -12,10 +12,9 @@ To install dev dependencies from NPM:
 
     `$ npm install`
 
-## Current Version - 8.0.0-alpha.9
+## Current Version - 8.0.0-beta.1
 
-Bug fix in the remotemanager with bind(this) and scoping of refreshClientSession(). Bug fix with user authentication in securitymanager.
-
+A variety of new features and bug fixes.
 See the release notes for more details.
 
 ## Installation

@@ -1,3 +1,19 @@
+8.0.0-beta.1
+============
+
+Big update for altseven beta. Composite keys in entities means you can now define a primary key that is a combination of multiple fields. This allows you to create more complex relationships between entities and provides more flexibility in your data modeling. Custom invoke methods in remotes means you can define custom remote methods that you can invoke through services. Changing the schema in the Entity class to be static and accessible from the Entity class itself improves the Entity class.
+
+- service format method made async
+- remote methods made async
+- interactions with remote methods in services made async
+- composite keys in entities
+- custom invoke methods in remotes
+- don't replace the entire view state, only keys you pass in
+- make schema a static property of Entity objects
+- add fromFlatObject to set values into an existing Entity from a generic object
+- update websocket in remote manager to enable token authentication for web socket connections
+
+
 8.0.0-alpha.9
 ============
 
