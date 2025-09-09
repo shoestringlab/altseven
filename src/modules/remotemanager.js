@@ -16,11 +16,16 @@ class RemoteManager extends Component {
 		this.modules[key] = module;
 	}
 
-	webSocket(url, handleMessage) {
-		const socket = new WebSocket(url);
+	webSocket(url, handleMessage, isSecure = false) {
+		const protocol = isSecure ? "wss://" : "ws://";
+		const fullUrl =
+			url.startsWith("ws://") || url.startsWith("wss://")
+				? `${url}${url.includes("?") ? "&" : "?"}token=${encodeURIComponent(this.token)}`
+				: `${protocol}${url}?token=${encodeURIComponent(this.token)}`;
+		const socket = new WebSocket(fullUrl);
 
 		socket.onopen = () => {
-			this.app.log.trace(`WebSocket connection to ${url} established.`);
+			this.app.log.trace(`WebSocket connection to ${fullUrl} established.`);
 			this.fireEvent("webSocketOpen", [socket]);
 		};
 
@@ -30,18 +35,22 @@ class RemoteManager extends Component {
 		};
 
 		socket.onclose = () => {
-			this.app.log.trace(`WebSocket connection to ${url} closed.`);
+			this.app.log.trace(`WebSocket connection to ${fullUrl} closed.`);
 			this.fireEvent("webSocketClose", []);
 		};
 
-		socket.onmessage = (event) => {
+		socket.onmessage = async (event) => {
 			const data = JSON.parse(event.data);
 			this.app.log.trace(`Received message:`, data);
-			handleMessage(data);
+			if (handleMessage.constructor.name === "AsyncFunction") {
+				await handleMessage(data);
+			} else {
+				handleMessage(data);
+			}
 			this.fireEvent("webSocketMessage", [data]);
 		};
 
-		this.connections[url] = socket;
+		this.connections[fullUrl] = socket;
 		return socket;
 	}
 
@@ -63,24 +72,27 @@ class RemoteManager extends Component {
 		}
 	}
 
-	refreshClientSession() {
-		var promise = new Promise((resolve, reject) => {
-			this.invoke("auth.refresh", {
-				resolve: resolve,
-				reject: reject,
+	async refreshClientSession() {
+		try {
+			const response = await this.invoke("auth.refresh", {
+				resolve: (json) => {
+					if (json.authenticated) {
+						// session is still active, no need to do anything else
+						this.app.log.trace("Still logged in.");
+					} else {
+						this.app.log.trace("Session expired.");
+						this.app.events.publish("auth.logout");
+					}
+				},
+				reject: (error) => {
+					console.log("Error in refreshClientSession:", error);
+					this.app.events.publish("auth.logout");
+				},
 			});
-		});
-
-		promise
-			.then((response) => {
-				if (response.authenticated) {
-					// session is still active, no need to do anything else
-					this.app.log.trace("Still logged in.");
-				}
-			})
-			.catch((error) => {
-				this.app.events.publish("auth.logout");
-			});
+		} catch (error) {
+			console.log("Error in refreshClientSession:", error);
+			this.app.events.publish("auth.logout");
+		}
 	}
 
 	setToken(token) {
@@ -114,151 +126,144 @@ class RemoteManager extends Component {
 		}
 
 		let authModule = {
-			login: (params) => {
+			login: async (params) => {
 				this.app.log.trace("remote call: auth.login");
-				var request,
-					args = {
-						method: "POST",
-						headers: {
-							Authorization:
-								"Basic " +
-								this.app.util.base64.encode64(
-									params.username + ":" + params.password,
-								),
-							Accept:
-								"application/json, application/xml, text/play, text/html, *.*",
-							"Content-Type": "application/json; charset=utf-8",
-						},
-						body: JSON.stringify({
-							rememberMe: params.rememberMe || false,
-						}),
-					};
+				const args = {
+					method: "POST",
+					headers: {
+						Authorization:
+							"Basic " +
+							this.app.util.base64.encode64(
+								params.username + ":" + params.password,
+							),
+						Accept:
+							"application/json, application/xml, text/play, text/html, *.*",
+						"Content-Type": "application/json; charset=utf-8",
+					},
+					body: JSON.stringify({
+						rememberMe: params.rememberMe || false,
+					}),
+				};
 
-				request = new Request(this.options.loginURL, args);
+				try {
+					const response = await fetch(this.options.loginURL, args);
 
-				var promise = fetch(request);
+					// set the token into sessionStorage so it is available if the browser is refreshed
+					var token =
+						this.options.tokenType === "X-Token"
+							? response.headers.get("X-Token")
+							: response.headers.get("Access_token");
+					if (token !== undefined && token !== null) {
+						this.setToken(token);
+					}
 
-				promise
-					.then((response) => {
-						// set the token into sessionStorage so it is available if the browser is refreshed
-						//
-						var token =
-							this.options.tokenType === "X-Token"
-								? response.headers.get("X-Token")
-								: response.headers.get("Access_token");
-						if (token !== undefined && token !== null) {
-							this.setToken(token);
-						}
-						return response.json();
-					})
-					.then((json) => {
-						if (json.success) {
-							var user = this.app.model.get("user");
-							// map the response object into the user object
-							Object.keys(json.user).map((key) => {
-								user[key] = json.user[key];
-							});
-							// set the user into the sessionStorage and the model
-							sessionStorage.user = JSON.stringify(user);
-							this.app.model.set("user", user);
+					const json = await response.json();
 
-							// handler/function/route based on success
-							if (params.success !== undefined) {
-								if (typeof params.success === "function") {
-									params.success(json);
-								} else if (this.app.options.router) {
-									this.app.router.open(params.success, json);
-								} else {
-									this.app.events.publish(params.success, json);
-								}
-							}
-						} else if (params.failure !== undefined) {
-							// if login failed
-							if (typeof params.failure === "function") {
-								params.failure(json);
+					if (json.success) {
+						var user = this.app.model.get("user");
+						// map the response object into the user object
+						Object.keys(json.user).map((key) => {
+							user[key] = json.user[key];
+						});
+						// set the user into the sessionStorage and the model
+						sessionStorage.user = JSON.stringify(user);
+						this.app.model.set("user", user);
+
+						// handler/function/route based on success
+						if (params.success !== undefined) {
+							if (typeof params.success === "function") {
+								params.success(json);
 							} else if (this.app.options.router) {
-								this.app.router.open(params.failure, json);
+								this.app.router.open(params.success, json);
 							} else {
-								this.app.events.publish(params.failure, json);
+								this.app.events.publish(params.success, json);
 							}
 						}
-						if (params.callback !== undefined) {
-							params.callback(json);
-						}
-					});
-			},
-			logout: (params) => {
-				this.app.log.trace("remote call: auth.logout");
-				var request,
-					args = {
-						method: "POST",
-						headers: {
-							Authorization:
-								"Basic " +
-								this.app.util.base64.encode64(
-									params.username + ":" + params.password,
-								),
-						},
-					};
-
-				request = new Request(this.options.logoutURL, args);
-
-				var promise = fetch(request);
-
-				promise
-					.then((response) => {
-						return response.json();
-					})
-					.then((json) => {
-						if (json.success) {
-							this.app.security.invalidateSession();
-							if (params.success !== undefined) {
-								if (typeof params.success === "function") {
-									params.success(json);
-								} else if (this.app.options.router) {
-									this.app.router.open(params.success, json);
-								} else {
-									this.app.events.publish(params.success, json);
-								}
-							}
-						} else if (params.failure !== undefined) {
-							// if logout failed
-							if (typeof params.failure === "function") {
-								params.failure(json);
-							} else if (this.app.options.router) {
-								this.app.router.open(params.failure, json);
-							} else {
-								this.app.events.publish(params.failure, json);
-							}
-						}
-
-						if (params.callback !== undefined) {
-							params.callback();
-						}
-					});
-			},
-			refresh: (params) => {
-				// refresh keeps the client session alive
-				this.fetch(this.options.refreshURL, {}, true)
-					// initial fetch needs to parse response
-					.then((response) => {
-						if (response.status === 401) {
-							return { isauthenticated: false };
+					} else if (params.failure !== undefined) {
+						// if login failed
+						if (typeof params.failure === "function") {
+							params.failure(json);
+						} else if (this.app.options.router) {
+							this.app.router.open(params.failure, json);
 						} else {
-							return response.json();
+							this.app.events.publish(params.failure, json);
 						}
-					})
-					.then((json) => {
-						// then json is handled
-						if (params.resolve !== undefined) {
-							params.resolve(json);
+					}
+					if (params.callback !== undefined) {
+						params.callback(json);
+					}
+				} catch (error) {
+					this.app.log.error("Login error:", error);
+				}
+			},
+			logout: async (params) => {
+				this.app.log.trace("remote call: auth.logout");
+				const args = {
+					method: "POST",
+					headers: {
+						Authorization:
+							"Basic " +
+							this.app.util.base64.encode64(
+								params.username + ":" + params.password,
+							),
+					},
+				};
+
+				try {
+					const response = await fetch(this.options.logoutURL, args);
+					const json = await response.json();
+
+					if (json.success) {
+						this.app.security.invalidateSession();
+						if (params.success !== undefined) {
+							if (typeof params.success === "function") {
+								params.success(json);
+							} else if (this.app.options.router) {
+								this.app.router.open(params.success, json);
+							} else {
+								this.app.events.publish(params.success, json);
+							}
 						}
-					})
-					.catch((error) => {
-						if (params.reject) {
-							params.reject(error);
+					} else if (params.failure !== undefined) {
+						// if logout failed
+						if (typeof params.failure === "function") {
+							params.failure(json);
+						} else if (this.app.options.router) {
+							this.app.router.open(params.failure, json);
+						} else {
+							this.app.events.publish(params.failure, json);
 						}
-					});
+					}
+
+					if (params.callback !== undefined) {
+						params.callback();
+					}
+				} catch (error) {
+					this.app.log.error("Logout error:", error);
+				}
+			},
+			refresh: async (params) => {
+				// refresh keeps the client session alive
+				try {
+					const response = await this.fetch(this.options.refreshURL, {}, true);
+
+					// initial fetch needs to parse response
+					let json;
+					if (response.status === 401) {
+						json = { isauthenticated: false };
+					} else {
+						json = await response.json();
+					}
+
+					// then json is handled
+					if (params.resolve !== undefined) {
+						params.resolve(json);
+					}
+				} catch (error) {
+					if (params.reject) {
+						params.reject(error);
+					}
+				}
 			},
 		};
 
@@ -271,9 +276,10 @@ class RemoteManager extends Component {
 		});
 	}
 
-	fetch(uri, params, secure) {
+	async fetch(uri, params, secure) {
 		this.app.log.trace("fetch: " + uri);
-		var request, promise;
+		var request;
+		var response;
 
 		//if secure and tokens, we need to check timeout and add Authorization header
 		if (secure && this.options.useTokens) {
@@ -310,44 +316,41 @@ class RemoteManager extends Component {
 
 			this.time = currentTime;
 		}
+
 		request = new Request(uri, params);
 		//calling the native JS fetch method ...
-		promise = fetch(request);
+		try {
+			response = await fetch(request);
 
-		promise
-			.then((response) => {
-				if (secure && this.options.useTokens) {
-					// according to https://www.rfc-editor.org/rfc/rfc6749#section-5.1
-					// the access_token response key should be in the body. we're going to include it as a header for non-oauth implementations
-					var token =
-						this.options.tokenType === "X-Token"
-							? response.headers.get("X-Token")
-							: response.headers.get("Access_token");
-					if (token !== undefined && token !== null) {
-						this.setToken(token);
+			if (secure && this.options.useTokens) {
+				// according to https://www.rfc-editor.org/rfc/rfc6749#section-5.1
+				// the access_token response key should be in the body. we're going to include it as a header for non-oauth implementations
+				var token =
+					this.options.tokenType === "X-Token"
+						? response.headers.get("X-Token")
+						: response.headers.get("Access_token");
+				if (token !== undefined && token !== null) {
+					this.setToken(token);
 
-						if (this.sessionTimer !== undefined) {
-							clearTimeout(this.sessionTimer);
-						}
-						this.sessionTimer = setTimeout(
-							() => {
-								this.refreshClientSession();
-							},
-
-							this.options.sessionTimeout,
-						);
-					} else {
-						this.app.events.publish("auth.sessionTimeout");
+					if (this.sessionTimer !== undefined) {
+						clearTimeout(this.sessionTimer);
 					}
+					this.sessionTimer = setTimeout(() => {
+						this.refreshClientSession();
+					}, this.options.sessionTimeout);
+				} else {
+					this.app.events.publish("auth.sessionTimeout");
 				}
-			})
-			.catch((error) => {
-				this.app.log.error(error);
-			});
+			}
 
-		return promise;
+			return response;
+		} catch (error) {
+			this.app.log.error(error);
+			throw error;
+		}
 	}
-	genericFetch(method, url, body = null, headers = {}) {
+
+	async genericFetch(method, url, body = null, headers = {}) {
 		const params = {
 			method: method,
 			headers: headers,
@@ -357,30 +360,31 @@ class RemoteManager extends Component {
 			params.body = JSON.stringify(body);
 		}
 
-		return this.fetch(url, params, true);
+		return await this.fetch(url, params, true);
 	}
 
-	readAll(moduleConfig) {
-		return this.genericFetch("GET", moduleConfig.url);
+	async readAll(moduleConfig) {
+		return await this.genericFetch("GET", moduleConfig.url);
 	}
 
-	create(moduleConfig, body) {
+	async create(moduleConfig, body) {
 		const headers = {
 			Accept: "application/json, application/xml, text/play, text/html, *.*",
 			"Content-Type": "application/json; charset=utf-8",
 		};
-		return this.genericFetch("POST", moduleConfig.url, body, headers);
+		return await this.genericFetch("POST", moduleConfig.url, body, headers);
 	}
-	read(moduleConfig, params) {
+
+	async read(moduleConfig, params) {
 		let fullUrl = moduleConfig.url;
 		// Replace all :ID placeholders with values from params
 		Object.keys(params).forEach((key) => {
 			fullUrl = fullUrl.replace(new RegExp(`:${key}`, "g"), params[key]);
 		});
-		return this.genericFetch("GET", fullUrl);
+		return await this.genericFetch("GET", fullUrl);
 	}
 
-	update(moduleConfig, params) {
+	async update(moduleConfig, params) {
 		let fullUrl = moduleConfig.url;
 		// Replace all :ID placeholders with values from params
 		Object.keys(params).forEach((key) => {
@@ -390,19 +394,19 @@ class RemoteManager extends Component {
 			Accept: "application/json, application/xml, text/play, text/html, *.*",
 			"Content-Type": "application/json; charset=utf-8",
 		};
-		return this.genericFetch("PUT", fullUrl, params, headers);
+		return await this.genericFetch("PUT", fullUrl, params, headers);
 	}
 
-	destroy(moduleConfig, params) {
+	async destroy(moduleConfig, params) {
 		let fullUrl = moduleConfig.url;
 		// Replace all :ID placeholders with values from params
 		Object.keys(params).forEach((key) => {
 			fullUrl = fullUrl.replace(new RegExp(`:${key}`, "g"), params[key]);
 		});
-		return this.genericFetch("DELETE", fullUrl);
+		return await this.genericFetch("DELETE", fullUrl);
 	}
 
-	invoke(moduleAction, params) {
+	async invoke(moduleAction, params) {
 		var mA = moduleAction.split(".");
 		if (mA.length < 2) {
 			this.app.log.error(
@@ -416,30 +420,30 @@ class RemoteManager extends Component {
 		const actionKey = mA[1];
 
 		if (typeof this.modules[moduleKey][actionKey] === "function") {
-			return this.modules[moduleKey][actionKey](params);
+			return await this.modules[moduleKey][actionKey](params);
 		} else if (typeof this.modules[moduleKey][actionKey] === "object") {
 			const moduleConfig = this.modules[moduleKey][actionKey];
 			switch (actionKey) {
 				case "read":
-					return this.read(moduleConfig, params.toFlatObject());
+					return await this.read(moduleConfig, params.toFlatObject());
 				case "readAll":
-					return this.readAll(moduleConfig);
+					return await this.readAll(moduleConfig);
 				case "create":
-					return this.create(moduleConfig, params.toFlatObject());
+					return await this.create(moduleConfig, params.toFlatObject());
 				case "update":
-					return this.update(moduleConfig, params.toFlatObject());
+					return await this.update(moduleConfig, params.toFlatObject());
 				case "destroy":
-					return this.destroy(moduleConfig, params.toFlatObject());
+					return await this.destroy(moduleConfig, params.toFlatObject());
 				default:
 					// Handle custom methods
-					return this.invokeCustomMethod(moduleConfig, params);
+					return await this.invokeCustomMethod(moduleConfig, params);
 			}
 		} else {
 			this.app.log.error(`Invalid action: ${actionKey}`);
 		}
 	}
 
-	invokeCustomMethod(moduleConfig, params) {
+	async invokeCustomMethod(moduleConfig, params) {
 		// Extract method and URL from module config
 		const method = (moduleConfig.params && moduleConfig.params.method) || "GET";
 		const url = moduleConfig.url;
@@ -477,10 +481,6 @@ class RemoteManager extends Component {
 			fetchParams.body = body;
 		}
 
-		return this.fetch(fullUrl, fetchParams, true);
+		return await this.fetch(fullUrl, fetchParams, true);
 	}
 }
-// Usage example:
-// const remoteManager = new RemoteManager();
-// remoteManager.init({}, () => { console.log('RemoteManager initialized'); });
-// remoteManager.webSocket('ws://example.com/socket', (message) => { console.log(message); });

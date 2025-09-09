@@ -849,12 +849,14 @@ export class Service extends Component {
 			dataMap = new Map();
 		}
 
-		await newItems.forEach(async (item) => {
-			const key = this.getCompositeKey(item);
-			if (key) {
-				dataMap.set(key, await this.format(item));
-			}
-		});
+		await Promise.all(
+			newItems.map(async (item) => {
+				const key = this.getCompositeKey(item);
+				if (key) {
+					dataMap.set(key, await this.format(item));
+				}
+			}),
+		);
 
 		this.set(dataMap);
 
@@ -893,13 +895,13 @@ export class Service extends Component {
 		let entityInstance =
 			obj instanceof this.entityClass ? obj : await this.format(obj);
 
-		await this.remote
-			.invoke(this.remoteMethods.create, entityInstance)
-			.then((response) => response.json())
-			.then((json) => {
-				entityInstance.fromFlatObject(json);
-				this.cacheSet(entityInstance);
-			});
+		const response = await this.remote.invoke(
+			this.remoteMethods.create,
+			entityInstance,
+		);
+		const json = await response.json();
+		entityInstance.fromFlatObject(json);
+		this.cacheSet(entityInstance);
 		return entityInstance;
 	}
 
@@ -917,13 +919,13 @@ export class Service extends Component {
 				let entityInstance =
 					obj instanceof this.entityClass ? obj : await this.format(obj);
 
-				await this.remote
-					.invoke(this.remoteMethods.read, entityInstance)
-					.then((response) => response.json())
-					.then((json) => {
-						// set the entity instance from the json response
-						entityInstance.fromFlatObject(json);
-					});
+				const response = await this.remote.invoke(
+					this.remoteMethods.read,
+					entityInstance,
+				);
+				const json = await response.json();
+				// set the entity instance from the json response
+				entityInstance.fromFlatObject(json);
 				this.cacheSet(await this.format(entityInstance));
 				this.queue.delete(requestKey);
 				dataMap = this.get();
@@ -937,13 +939,13 @@ export class Service extends Component {
 		let entityInstance =
 			obj instanceof this.entityClass ? obj : await this.format(obj);
 
-		await this.remote
-			.invoke(this.remoteMethods.update, entityInstance)
-			.then((response) => response.json())
-			.then((json) => {
-				entityInstance.fromFlatObject(json);
-				this.cacheSet(entityInstance);
-			});
+		const response = await this.remote.invoke(
+			this.remoteMethods.update,
+			entityInstance,
+		);
+		const json = await response.json();
+		entityInstance.fromFlatObject(json);
+		this.cacheSet(entityInstance);
 		return entityInstance;
 	}
 
@@ -951,13 +953,15 @@ export class Service extends Component {
 		let returnVal = {};
 		let entityInstance =
 			obj instanceof this.entityClass ? obj : await this.format(obj);
-		await this.remote
-			.invoke(this.remoteMethods.delete, entityInstance)
-			.then((response) => response.json())
-			.then((json) => {
-				// nothing to do here
-				returnVal = json;
-			});
+
+		const response = await this.remote.invoke(
+			this.remoteMethods.delete,
+			entityInstance,
+		);
+		const json = await response.json();
+		// nothing to do here
+		returnVal = json;
+
 		const compositeKey = this.getCompositeKey(entityInstance);
 		this.cacheDelete(compositeKey);
 		return returnVal; // return the response from the remote call
@@ -971,14 +975,12 @@ export class Service extends Component {
 		} else {
 			let dataMap = this.get();
 			if (!dataMap.size) {
-				let entities;
-				await this.remote
-					.invoke(this.remoteMethods.readAll, obj)
-					.then((response) => response.json())
-					.then((json) => {
-						entities = json;
-					});
-				await this.merge(entities);
+				const response = await this.remote.invoke(
+					this.remoteMethods.readAll,
+					obj,
+				);
+				const json = await response.json();
+				await this.merge(json);
 				this.queue.delete(requestKey);
 			}
 		}
@@ -1015,8 +1017,9 @@ export class Service extends Component {
 			let dataMap = this.get();
 
 			let data =
-				typeof options.filter !== "undefined" &&
-				Object.keys(options.filter).length === 0
+				typeof options.filter === "undefined" ||
+				(typeof options.filter !== "undefined" &&
+					Object.keys(options.filter).length === 0)
 					? dataMap
 					: this.filter(dataMap, options.filter);
 			if (data.length > 0) {
@@ -1062,18 +1065,20 @@ export class Service extends Component {
 			return item instanceof this.entityClass ? item : await this.format(item);
 		}
 
-		await data.forEach(async (item, index) => {
-			// Transform the item and update the original array or create a new one
-			data[index] =
-				item instanceof this.entityClass ? item : await this.format(item);
+		await Promise.all(
+			data.map(async (item, index) => {
+				// Transform the item and update the original array or create a new one
+				data[index] =
+					item instanceof this.entityClass ? item : await this.format(item);
 
-			if (returnType === "Map") {
-				map.set(data[index].id, data[index]);
-			}
-			if (returnType === "Array") {
-				array.push(data[index]);
-			}
-		});
+				if (returnType === "Map") {
+					map.set(data[index].id, data[index]);
+				}
+				if (returnType === "Array") {
+					array.push(data[index]);
+				}
+			}),
+		);
 
 		if (returnType === "Map") {
 			return map;
@@ -1145,15 +1150,16 @@ export class Service extends Component {
 			if (missing.length > 0) {
 				let obj = { id: missing };
 
-				await this.remote
-					.invoke(this.remoteMethods.readMany, obj)
-					.then((response) => response.json())
-					.then(async (json) => {
-						if (Array.isArray(json)) {
-							await this.merge(json);
-							this.queue.delete(requestKey);
-						}
-					});
+				const response = await this.remote.invoke(
+					this.remoteMethods.readMany,
+					obj,
+				);
+				const json = await response.json();
+
+				if (Array.isArray(json)) {
+					await this.merge(json);
+					this.queue.delete(requestKey);
+				}
 			}
 
 			//const cachedItems = present.map((id) => itemsMap.get(id));
