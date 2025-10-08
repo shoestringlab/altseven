@@ -1,6 +1,6 @@
 ## altseven
 
-v 8.0.0-beta.1
+v 8.0.0-beta.2.1
 
 A JavaScript framework. Originally built as an exploration into reactive programming with JavaScript. Now a full-fledged Web framework.
 
@@ -12,7 +12,7 @@ To install dev dependencies from NPM:
 
     `$ npm install`
 
-## Current Version - 8.0.0-beta.1
+## Current Version - 8.0.0-beta.2.1
 
 A variety of new features and bug fixes.
 See the release notes for more details.
