@@ -153,101 +153,185 @@ export class DataProvider extends Component {
 	}
 }
 
-// Updated base Entity class to support inheritance with per-subclass static schemas
 export class Entity extends Component {
-	// Public static schema; subclasses will override this
 	static schema = null;
 
-	#data;
+	_data; // Protected field (using _ convention)
 
 	constructor(props) {
 		super();
-		this.#data = {};
-		// No longer set schema from props; it's static per class/subclass
+		this._data = {};
+
 		if (this.constructor.schema) {
+			// Validate required fields in props
+			for (const [key, descriptor] of Object.entries(this.constructor.schema)) {
+				if (
+					descriptor.required &&
+					!(key in props) &&
+					props[key] === undefined
+				) {
+					throw new Error(`Missing required field: ${key}`);
+				}
+			}
+
+			// Define properties
 			for (const [key, descriptor] of Object.entries(this.constructor.schema)) {
 				this._defineProperty(key);
-				this[key] = props[key]; // Setter will validate type/required
 			}
-			// Validate after properties are defined and set
+
+			// Set properties
+			for (const [key, descriptor] of Object.entries(this.constructor.schema)) {
+				if (key in props && props[key] !== undefined) {
+					this[key] = props[key]; // Setter will validate and convert
+				}
+			}
+
+			// Validate after properties are set
 			this.validate();
 		}
 
 		const idField = Object.keys(this.constructor.schema).find(
 			(key) => this.constructor.schema[key].id === true,
 		);
-		if (idField) {
+		if (idField && !Object.prototype.hasOwnProperty.call(this, "id")) {
 			Object.defineProperty(this, "id", {
 				get: function () {
 					return this[idField];
 				},
 			});
-		} else {
-			//this.app.log.error("No ID field found in schema.");
 		}
 	}
 
-	// Instance getter to access the class-level schema
 	get schema() {
 		return this.constructor.schema;
 	}
 
-	_defineProperty(key) {
+	// Protected method to get data
+	_getData(key) {
 		const propertyName = `_${key}`;
-		this.#data[propertyName] = undefined;
-
-		Object.defineProperty(this, key, {
-			get: function () {
-				return this.#data[propertyName];
-			},
-			set: function (value) {
-				const schemaDescriptor = this.constructor.schema[key];
-
-				if (schemaDescriptor.required && value === undefined) {
-					throw new Error(`Property ${key} is required.`);
-				}
-
-				// Check data type
-				const expectedType = schemaDescriptor.type;
-				const valueType = typeof value;
-
-				if (
-					!this._isOfType(value, expectedType) &&
-					value !== null &&
-					typeof value !== "undefined"
-				) {
-					throw new Error(
-						`Invalid type for property ${key}. Expected ${expectedType}, but got ${valueType}.`,
-					);
-				}
-
-				this.#data[propertyName] = value;
-			},
-		});
+		return this._data[propertyName];
 	}
 
-	_isOfType(value, expectedType) {
+	// Protected method to set data with validation
+	_setData(key, value) {
+		const schemaDescriptor = this.constructor.schema[key];
+		const propertyName = `_${key}`;
+		let valueType = typeof value;
+
+		// Validate required
+		if (schemaDescriptor.required && value === undefined) {
+			throw new Error(`Property ${key} is required.`);
+		}
+
+		// Convert string to Date for date type
+		if (schemaDescriptor.type === "date" && typeof value === "string") {
+			const parsedDate = new Date(value);
+			if (!isNaN(parsedDate)) {
+				value = parsedDate;
+				valueType = "object";
+			} else {
+				throw new Error(`Invalid date string for property ${key}: ${value}`);
+			}
+		}
+
+		// Convert 1 or 0 to boolean for boolean type
+		if (schemaDescriptor.type === "boolean" && typeof value === "number") {
+			if (value === 1 || value === 0) {
+				value = value === 1; // Cast 1 to true, 0 to false
+				valueType = "boolean";
+			}
+		}
+
+		// Handle entityClass instantiation
+		if (
+			schemaDescriptor.type === "object" &&
+			schemaDescriptor.entityClass &&
+			value !== null &&
+			value !== undefined
+		) {
+			if (!(value instanceof schemaDescriptor.entityClass)) {
+				value = new schemaDescriptor.entityClass(value);
+			}
+		}
+
+		// Validate type
+		if (
+			!this._isOfType(value, schemaDescriptor.type, schemaDescriptor) &&
+			value !== null &&
+			typeof value !== "undefined"
+		) {
+			throw new Error(
+				`Invalid type for property ${key}. Expected ${schemaDescriptor.type}, but got ${valueType}.`,
+			);
+		}
+
+		this._data[propertyName] = value;
+	}
+
+	_defineProperty(key) {
+		const propertyName = `_${key}`;
+		this._data[propertyName] = undefined;
+
+		const descriptor = Object.getOwnPropertyDescriptor(
+			this.constructor.prototype,
+			key,
+		);
+
+		if (descriptor && (descriptor.get || descriptor.set)) {
+			// Use custom getter/setter from subclass
+			const originalGet = descriptor.get;
+			const originalSet = descriptor.set;
+
+			Object.defineProperty(this, key, {
+				get: originalGet
+					? function () {
+							return originalGet.call(this);
+						}
+					: function () {
+							return this._getData(key);
+						},
+				set: originalSet
+					? function (value) {
+							originalSet.call(this, value);
+						}
+					: function (value) {
+							this._setData(key, value);
+						},
+			});
+		} else {
+			// Define default getter/setter
+			if (!Object.prototype.hasOwnProperty.call(this, key)) {
+				Object.defineProperty(this, key, {
+					get: function () {
+						return this._getData(key);
+					},
+					set: function (value) {
+						this._setData(key, value);
+					},
+				});
+			}
+		}
+	}
+
+	_isOfType(value, expectedType, schemaDescriptor) {
 		switch (expectedType) {
 			case "date":
-				return new Date(value) instanceof Date;
-
+				return value instanceof Date && !isNaN(value);
 			case "array":
 				return Array.isArray(value);
-
 			case "boolean":
-				return value === 0 || value === 1 || value === true || value === false
-					? true
-					: false;
-
+				return typeof value === "boolean";
 			case "integer":
 				return Number.isInteger(value);
-
 			case "float":
-				return typeof value === "number";
-
+				return typeof value === "number" && !Number.isInteger(value);
 			case "string":
 				return typeof value === "string";
-
+			case "object":
+				if (schemaDescriptor?.entityClass) {
+					return value instanceof schemaDescriptor.entityClass;
+				}
+				return typeof value === "object" && value !== null;
 			default:
 				return true;
 		}
@@ -258,16 +342,18 @@ export class Entity extends Component {
 			const propertyName = `_${field}`;
 			if (
 				this.constructor.schema[field].required &&
-				this.#data[propertyName] === undefined
+				this._data[propertyName] === undefined
 			) {
 				throw new Error(`Field ${field} is required`);
 			}
 			if (
 				this.constructor.schema[field].type &&
-				this.#data[propertyName] &&
+				this._data[propertyName] !== undefined &&
+				this._data[propertyName] !== null &&
 				!this._isOfType(
-					this.#data[propertyName],
+					this._data[propertyName],
 					this.constructor.schema[field].type,
+					this.constructor.schema[field],
 				)
 			) {
 				throw new Error(
@@ -280,46 +366,21 @@ export class Entity extends Component {
 
 	toFlatObject() {
 		const flatObject = {};
-		for (const [key, value] of Object.entries(this.#data)) {
-			flatObject[key.replace(/^_/, "")] = value;
+		for (const [key, value] of Object.entries(this._data)) {
+			flatObject[key.replace(/^_/, "")] =
+				value instanceof Entity ? value.toFlatObject() : value;
 		}
 		return flatObject;
 	}
 
-	/**
-	 * Update the entity instance with values from a flat object
-	 * @param {Object} obj - Flat object containing property values
-	 */
 	fromFlatObject(obj) {
 		if (!obj || typeof obj !== "object") {
 			throw new Error("Invalid input: expected an object");
 		}
 
 		for (const [key, value] of Object.entries(obj)) {
-			// Only update properties that exist in the schema
 			if (this.constructor.schema && this.constructor.schema[key]) {
-				// Validate the value against the schema before setting it
-				const schemaDescriptor = this.constructor.schema[key];
-
-				if (schemaDescriptor.required && value === undefined) {
-					throw new Error(`Property ${key} is required.`);
-				}
-
-				// Check data type
-				const expectedType = schemaDescriptor.type;
-				const valueType = typeof value;
-
-				if (
-					!this._isOfType(value, expectedType) &&
-					value !== null &&
-					typeof value !== "undefined"
-				) {
-					throw new Error(
-						`Invalid type for property ${key}. Expected ${expectedType}, but got ${valueType}.`,
-					);
-				}
-
-				this[key] = value;
+				this[key] = value; // Use setter for validation
 			}
 		}
 
@@ -650,7 +711,7 @@ export const Model = (() => {
 			const model = modelStore.get(base);
 
 			if (!model) {
-				_log.error(`Key '${base}' does not exist in the model.`);
+				_log.trace(`Key '${base}' does not exist in the model.`);
 				return undefined;
 			}
 			if (!key) {
@@ -659,7 +720,7 @@ export const Model = (() => {
 			} else {
 				if (model.data instanceof Map) {
 					if (!model.data.has(key)) {
-						_log.error(`Key '${key}' does not exist in the Map .`);
+						_log.trace(`Key '${key}' does not exist in the Map .`);
 					} else {
 						return model.data.get(key);
 					}
@@ -800,6 +861,7 @@ export class Service extends Component {
 	}
 
 	convertArrayToMap(dataArray) {
+		this.log.trace(this.id + ": method: convertArrayToMap");
 		let dataMap = new Map();
 		dataArray.forEach((item) => {
 			const key = this.getCompositeKey(item);
@@ -816,8 +878,8 @@ export class Service extends Component {
 
 	// Compare itemIDs against cached items
 	compareIDs(IDs) {
-		this.log.trace("Service: " + this.id);
-		this.log.trace("compareIDs: " + IDs);
+		this.log.trace(this.id + ": method: compareIDs");
+		this.log.debug(this.id + ":compareIDs: " + IDs);
 
 		const dataMap = this.get();
 		const present = [];
@@ -834,8 +896,12 @@ export class Service extends Component {
 				missing.push(id);
 			}
 		});
-		this.log.trace(
-			"results: " + JSON.stringify(present) + " " + JSON.stringify(missing),
+		this.log.debug(
+			this.id +
+				":results: " +
+				JSON.stringify(present) +
+				" " +
+				JSON.stringify(missing),
 		);
 
 		return { present, missing };
@@ -843,6 +909,7 @@ export class Service extends Component {
 
 	// Merge new items into the existing Map
 	async merge(newItems) {
+		this.log.trace(this.id + ": method: merge");
 		let dataMap = this.get();
 
 		if (!(dataMap instanceof Map)) {
@@ -892,6 +959,7 @@ export class Service extends Component {
 
 	async create(obj) {
 		// if obj is a plain object, create a new entity
+		this.log.trace(this.id + ": method: create");
 		let entityInstance =
 			obj instanceof this.entityClass ? obj : await this.format(obj);
 
@@ -906,36 +974,59 @@ export class Service extends Component {
 	}
 
 	async read(obj) {
+		this.log.trace(this.id + ": method: read");
 		let dataMap = this.get();
 		let compositeKey = "-";
 		const requestKey = `${this.remoteMethods.read}-${JSON.stringify(obj)}`;
+
 		if (this.queue.has(requestKey)) {
-			this.log.trace("Duplicate read request detected, cancelling new request");
-			//return this.queue.get(requestKey);
+			this.log.debug(
+				this.id +
+					":Duplicate read request detected, waiting for existing request. " +
+					JSON.stringify(obj),
+			);
+			// Return a promise that resolves when the existing request completes
+			return await this.queue.get(requestKey);
 		} else {
-			// Get the composite key for the object
-			compositeKey = this.getCompositeKey(obj);
-			if (!dataMap.has(compositeKey)) {
-				let entityInstance =
-					obj instanceof this.entityClass ? obj : await this.format(obj);
+			this.log.debug(this.id + ": New read request. " + JSON.stringify(obj));
+			// Create a new promise for this request
+			const requestPromise = new Promise(async (resolve, reject) => {
+				try {
+					// Get the composite key for the object
+					compositeKey = this.getCompositeKey(obj);
+					if (!dataMap.has(compositeKey)) {
+						let entityInstance =
+							obj instanceof this.entityClass ? obj : await this.format(obj);
 
-				const response = await this.remote.invoke(
-					this.remoteMethods.read,
-					entityInstance,
-				);
-				const json = await response.json();
-				// set the entity instance from the json response
-				entityInstance.fromFlatObject(json);
-				this.cacheSet(await this.format(entityInstance));
-				this.queue.delete(requestKey);
-				dataMap = this.get();
-			}
+						const response = await this.remote.invoke(
+							this.remoteMethods.read,
+							entityInstance,
+						);
+						const json = await response.json();
+						// set the entity instance from the json response
+						entityInstance.fromFlatObject(json);
+						this.cacheSet(await this.format(entityInstance));
+					}
+					resolve(dataMap.get(compositeKey));
+				} catch (error) {
+					this.log.debug(this.id + ": Error reading object. " + error);
+					reject(error);
+				} finally {
+					// Always remove from queue when done
+					this.queue.delete(requestKey);
+				}
+			});
+
+			// Add the promise to the queue
+			this.queue.set(requestKey, requestPromise);
+			this.log.debug(this.id + ": read request added to the queue.");
+			// Return the promise so callers can await it
+			return await requestPromise;
 		}
-
-		return dataMap.get(compositeKey);
 	}
 
 	async update(obj) {
+		this.log.trace(this.id + ": method: update");
 		let entityInstance =
 			obj instanceof this.entityClass ? obj : await this.format(obj);
 
@@ -950,6 +1041,7 @@ export class Service extends Component {
 	}
 
 	async delete(obj) {
+		this.log.trace(this.id + ": method: delete");
 		let returnVal = {};
 		let entityInstance =
 			obj instanceof this.entityClass ? obj : await this.format(obj);
@@ -967,24 +1059,45 @@ export class Service extends Component {
 		return returnVal; // return the response from the remote call
 	}
 
-	async readAll(obj) {
+	async readAll(obj = {}) {
+		this.log.trace(this.id + ": method: readAll");
 		const requestKey = `${this.remoteMethods.readAll}-${JSON.stringify(obj)}`;
 		if (this.queue.has(requestKey)) {
-			this.log.trace("Duplicate read request detected, cancelling new request");
-			//return this.queue.get(requestKey);
+			this.log.debug(
+				this.id +
+					":Duplicate readAll request detected, waiting for existing request.",
+			);
+			// Return a promise that resolves when the existing request completes
+			return await this.queue.get(requestKey);
 		} else {
-			let dataMap = this.get();
-			if (!dataMap.size) {
-				const response = await this.remote.invoke(
-					this.remoteMethods.readAll,
-					obj,
-				);
-				const json = await response.json();
-				await this.merge(json);
-				this.queue.delete(requestKey);
-			}
+			this.log.debug(this.id + ":Creating new readAll request.");
+			// Create a new promise for this request
+			const requestPromise = new Promise(async (resolve, reject) => {
+				try {
+					let dataMap = this.get();
+					if (!dataMap.size) {
+						const response = await this.remote.invoke(
+							this.remoteMethods.readAll,
+							obj,
+						);
+						const json = await response.json();
+						await this.merge(json);
+					}
+					resolve(this.get());
+				} catch (error) {
+					reject(error);
+				} finally {
+					// Always remove from queue when done
+					this.queue.delete(requestKey);
+				}
+			});
+
+			// Add the promise to the queue
+			this.queue.set(requestKey, requestPromise);
+			this.log.debug(this.id + ":readAll completed for " + obj.id);
+			// Return the promise so callers can await it
+			return await requestPromise;
 		}
-		return this.get();
 	}
 
 	// Add a method to call custom remote methods
@@ -1006,7 +1119,7 @@ export class Service extends Component {
 		// 	throw new Error(`Unsupported returnType: ${returnType}`);
 		// }
 		//}
-
+		this.log.trace(this.id + ": method: invoke");
 		const methodConfig = this.remoteMethods[methodName];
 		if (!methodConfig) {
 			throw new Error(`Method ${methodName} not found in remoteMethods`);
@@ -1023,7 +1136,7 @@ export class Service extends Component {
 					? dataMap
 					: this.filter(dataMap, options.filter);
 			if (data.length > 0) {
-				this.log.trace("Cache hit for method", methodName);
+				this.log.debug(this.id + ": Cache hit for method", methodName);
 				return await this.formatData(data, options.returnType);
 			}
 		}
@@ -1050,10 +1163,12 @@ export class Service extends Component {
 	}
 
 	async format(obj) {
+		this.log.trace(this.id + ": method: format");
 		return new this.entityClass(obj);
 	}
 
 	async formatData(data, returnType) {
+		this.log.trace(this.id + ": method: formatData");
 		let map = new Map(),
 			array = [];
 
@@ -1088,6 +1203,7 @@ export class Service extends Component {
 	}
 
 	cacheDelete(id) {
+		this.log.trace(this.id + ": method: cacheDelete");
 		let dataMap = this.get();
 		dataMap.delete(id);
 		this.set(dataMap);
@@ -1098,6 +1214,7 @@ export class Service extends Component {
 	}
 
 	cacheSet(item) {
+		this.log.trace(this.id + ": method: cacheSet");
 		if (item instanceof this.entityClass) {
 			const compositeKey = this.getCompositeKey(item);
 			if (!compositeKey) {
@@ -1118,10 +1235,12 @@ export class Service extends Component {
 	}
 
 	set(dataMap) {
+		this.log.trace(this.id + ": method: set");
 		this.model.set(this.id, dataMap);
 	}
 
 	get(ID) {
+		this.log.trace(this.id + ": method: get");
 		if (typeof ID === "undefined") {
 			return this.model.get(this.id);
 		} else {
@@ -1130,44 +1249,66 @@ export class Service extends Component {
 	}
 
 	async readMany(IDs) {
+		this.log.trace(this.id + ": method: readMany");
 		if (typeof IDs === "undefined") {
 			return new Map();
 		}
-		this.log.trace("readMany: ");
+
 		// Get cached items
 		//const itemsMap = this.get();
 		const requestKey = `${this.remoteMethods.readMany}-${JSON.stringify(IDs)}`;
 		if (this.queue.has(requestKey)) {
-			this.log.trace("Duplicate read request detected, cancelling new request");
-			//return this.queue.get(requestKey);
+			this.log.debug(
+				this.id +
+					":Duplicate readMany request detected, waiting for existing request." +
+					IDs,
+			);
+			// Return a promise that resolves when the existing request completes
+			return await this.queue.get(requestKey);
 		} else {
-			// Compare requested IDs with cache
-			const { present, missing } = this.compareIDs(IDs);
+			this.log.debug(this.id + ": New readMany: " + IDs);
+			// Create a new promise for this request
+			const requestPromise = new Promise(async (resolve, reject) => {
+				try {
+					// Compare requested IDs with cache
+					const { present, missing } = this.compareIDs(IDs);
 
-			// Fetch missing items if any
+					// Fetch missing items if any
+					this.log.debug(this.id + ": Present? " + present.length);
+					this.log.debug(this.id + ": Missing? " + missing.length);
+					if (missing.length > 0) {
+						let obj = { id: missing };
 
-			this.log.trace("Missing? " + missing.length);
-			if (missing.length > 0) {
-				let obj = { id: missing };
+						const response = await this.remote.invoke(
+							this.remoteMethods.readMany,
+							obj,
+						);
+						const json = await response.json();
 
-				const response = await this.remote.invoke(
-					this.remoteMethods.readMany,
-					obj,
-				);
-				const json = await response.json();
+						if (Array.isArray(json)) {
+							await this.merge(json);
+						}
+					}
 
-				if (Array.isArray(json)) {
-					await this.merge(json);
+					resolve(this.getMappedItems(IDs));
+				} catch (error) {
+					reject(error);
+				} finally {
+					// Always remove from queue when done
 					this.queue.delete(requestKey);
 				}
-			}
+			});
 
-			//const cachedItems = present.map((id) => itemsMap.get(id));
+			// Add the promise to the queue
+			this.queue.set(requestKey, requestPromise);
+			this.log.debug(this.id + ": Completed readMany: " + IDs);
+			// Return the promise so callers can await it
+			return await requestPromise;
 		}
-		return this.getMappedItems(IDs);
 	}
 
 	getMappedItems(IDs) {
+		this.log.trace(this.id + ": method: getMappedItems");
 		// Return all requested items in order, filtering out nulls
 		const result = IDs.map((id) => {
 			const item = this.get(id);
@@ -1177,6 +1318,7 @@ export class Service extends Component {
 	}
 
 	sort(items, sortFields) {
+		this.log.trace(this.id + ": method: sort");
 		// Convert items to array if it's a Map
 		let itemsArray = items instanceof Map ? Array.from(items.values()) : items;
 
@@ -1226,6 +1368,7 @@ export class Service extends Component {
 	}
 
 	filter(items, criteria) {
+		this.log.trace(this.id + ": method: filter");
 		// Convert items to array if it's a Map
 		let itemsArray = Array.isArray(items) ? items : Array.from(items.values());
 
@@ -1369,7 +1512,6 @@ export class View extends Component {
 		this.skipRender = false;
 		this.children = {}; // Child views
 		this.components = {}; // Register objects external to the framework so we can address them later
-		this.config();
 		this.fireEvent("mustRegister");
 	}
 
@@ -1391,6 +1533,9 @@ export class View extends Component {
 	setTimeout(timeout) {
 		this.timeout = timeout;
 	}
+	setDebounce(debounce) {
+		this.debounce = debounce;
+	}
 	setDebounceTime(debounceTime) {
 		this.debounceTime = debounceTime;
 	}
@@ -1408,9 +1553,8 @@ export class View extends Component {
 						this.skipRender = false;
 					}
 				}.bind(this),
+				this.debounceTime,
 			),
-			this.debounceTime,
-			true,
 		);
 
 		this.on(
@@ -1502,7 +1646,7 @@ export class View extends Component {
 			this.element = document.querySelector(this.props.selector);
 		}
 		if (!this.element) {
-			this.log.error(
+			this.log.trace(
 				"The DOM element for view " +
 					this.props.id +
 					" was not found. The view will be removed and unregistered.",
@@ -1574,43 +1718,6 @@ export class View extends Component {
 				);
 			}
 		}
-	}
-
-	/**
-	 * Creates a debounced function that delays invoking `func` until after `wait` milliseconds
-	 * have elapsed since the last time the debounced function was invoked.
-	 *
-	 * @param {Function} func - The function to debounce.
-	 * @param {number} wait - The number of milliseconds to delay.
-	 * @param {boolean} [immediate=false] - Trigger the function on the leading edge, instead of the trailing.
-	 * @return {Function} A new debounced function.
-	 */
-	debounce(func, wait, immediate = false) {
-		let timeout;
-
-		return function executedFunction() {
-			// Save the context and arguments for later invocation
-			const context = this;
-			const args = arguments;
-
-			// Define the function that will actually call `func`
-			const later = function () {
-				timeout = null;
-				if (!immediate) func.apply(context, args);
-			};
-
-			const callNow = immediate && !timeout;
-
-			// Clear the previous timeout
-			clearTimeout(timeout);
-
-			// Set a new timeout
-			timeout = setTimeout(later, wait);
-
-			// If 'immediate' is true and this is the first time the function has been called,
-			// execute it right away
-			if (callNow) func.apply(context, args);
-		};
 	}
 }
 
@@ -1733,7 +1840,7 @@ class DataProviderManager extends Component {
 			service.registerDataProvider(dataprovider);
 		});
 
-		this.app.log.info(`DataProvider "${dataprovider.id}" registered.`);
+		this.app.log.trace(`DataProvider "${dataprovider.id}" registered.`);
 	}
 
 	bind(dp) {
@@ -1836,9 +1943,9 @@ class DataProviderManager extends Component {
 				sort: binding.sort,
 			});
 			if (binding.func.constructor.name === "AsyncFunction") {
-				updatedData = await binding.func(args);
+				updatedData = await binding.func(args, dp);
 			} else {
-				updatedData = binding.func(args);
+				updatedData = binding.func(args, dp);
 			}
 			//let type = binding.entityClass.type;
 			let type = dp.schema[binding.key].type;
@@ -2005,6 +2112,10 @@ class LogManager extends Component {
 		this.log(message, "TRACE");
 	}
 
+	debug(message) {
+		this.log(message, "DEBUG");
+	}
+
 	warn(message) {
 		this.log(message, "WARN");
 	}
@@ -2119,25 +2230,58 @@ class RemoteManager extends Component {
 	}
 
 	webSocket(url, handleMessage, isSecure = false) {
-		const protocol = isSecure ? "wss://" : "ws://";
-		const fullUrl =
-			url.startsWith("ws://") || url.startsWith("wss://")
-				? `${url}${url.includes("?") ? "&" : "?"}token=${encodeURIComponent(this.token)}`
-				: `${protocol}${url}?token=${encodeURIComponent(this.token)}`;
-		const socket = new WebSocket(fullUrl);
+		// Parse and reconstruct the URL properly
+		let finalUrl;
+
+		if (url.startsWith("ws://") || url.startsWith("wss://")) {
+			// Already a full URL - parse it properly
+			const urlObj = new URL(url);
+			if (this.options.useTokens) {
+				urlObj.searchParams.set("token", this.token);
+			}
+			finalUrl = urlObj.toString();
+		} else {
+			// Construct from components - force no trailing slash
+			const cleanUrl = url.replace(/\/+$/, "");
+			const protocol = isSecure ? "wss://" : "ws://";
+			finalUrl = `${protocol}${cleanUrl}`;
+		}
+
+		// Debug output to see what URL Chromium is actually getting
+		this.app.log.trace("WebSocket connecting to:", finalUrl);
+
+		const socket = new WebSocket(finalUrl);
+
+		// Add connection error handler specifically for Chromium quirks
+		// socket.addEventListener("error", (error) => {
+		// 	console.error("WebSocket connection failed:", error);
+		// 	// Try alternative URL format if first attempt fails
+		// 	if (finalUrl.endsWith("/")) {
+		// 		const altUrl = finalUrl.slice(0, -1);
+		// 		console.log("Trying alternative URL:", altUrl);
+		// 		// You might want to implement retry logic here
+		// 	}
+		// });
 
 		socket.onopen = () => {
-			this.app.log.trace(`WebSocket connection to ${fullUrl} established.`);
+			this.app.log.trace(`WebSocket connection to ${finalUrl} established...`);
 			this.fireEvent("webSocketOpen", [socket]);
 		};
 
 		socket.onerror = (error) => {
+			console.error("WebSocket connection failed:", error);
+			// Try alternative URL format if first attempt fails
+			if (finalUrl.endsWith("/")) {
+				const altUrl = finalUrl.slice(0, -1);
+				this.app.log.trace("Trying alternative URL:", altUrl);
+				// You might want to implement retry logic here
+			}
 			this.app.log.error(`WebSocket error:`, error);
 			this.fireEvent("webSocketError", [error]);
 		};
 
 		socket.onclose = () => {
-			this.app.log.trace(`WebSocket connection to ${fullUrl} closed.`);
+			this.app.log.trace(`WebSocket connection to ${finalUrl} closed.`);
 			this.fireEvent("webSocketClose", []);
 		};
 
@@ -2152,7 +2296,7 @@ class RemoteManager extends Component {
 			this.fireEvent("webSocketMessage", [data]);
 		};
 
-		this.connections[fullUrl] = socket;
+		this.connections[finalUrl] = socket;
 		return socket;
 	}
 
@@ -2187,12 +2331,12 @@ class RemoteManager extends Component {
 					}
 				},
 				reject: (error) => {
-					console.log("Error in refreshClientSession:", error);
+					this.app.log.error("Error in refreshClientSession:", error);
 					this.app.events.publish("auth.logout");
 				},
 			});
 		} catch (error) {
-			console.log("Error in refreshClientSession:", error);
+			this.app.log.error("Error in refreshClientSession:", error);
 			this.app.events.publish("auth.logout");
 		}
 	}
@@ -2250,15 +2394,16 @@ class RemoteManager extends Component {
 				try {
 					const response = await fetch(this.options.loginURL, args);
 
-					// set the token into sessionStorage so it is available if the browser is refreshed
-					var token =
-						this.options.tokenType === "X-Token"
-							? response.headers.get("X-Token")
-							: response.headers.get("Access_token");
-					if (token !== undefined && token !== null) {
-						this.setToken(token);
+					if (this.options.useTokens) {
+						// set the token into sessionStorage so it is available if the browser is refreshed
+						var token =
+							this.options.tokenType === "X-Token"
+								? response.headers.get("X-Token")
+								: response.headers.get("Access_token");
+						if (token !== undefined && token !== null) {
+							this.setToken(token);
+						}
 					}
-
 					const json = await response.json();
 
 					if (json.success) {
@@ -2270,7 +2415,7 @@ class RemoteManager extends Component {
 						// set the user into the sessionStorage and the model
 						sessionStorage.user = JSON.stringify(user);
 						this.app.model.set("user", user);
-
+						this.app.log.trace("User set into model:", user);
 						// handler/function/route based on success
 						if (params.success !== undefined) {
 							if (typeof params.success === "function") {
@@ -2303,11 +2448,11 @@ class RemoteManager extends Component {
 				const args = {
 					method: "POST",
 					headers: {
-						Authorization:
-							"Basic " +
-							this.app.util.base64.encode64(
-								params.username + ":" + params.password,
-							),
+						// Authorization:
+						// 	"Basic " +
+						// 	this.app.util.base64.encode64(
+						// 		params.username + ":" + params.password,
+						// 	),
 					},
 				};
 
@@ -2806,19 +2951,38 @@ class SecurityManager extends Component {
 		this.setUser(user);
 	}
 
-	async isAuthenticated(resolve, reject) {
-		this.app.log.info("Checking authenticated state.. ");
-		let response = await new Promise((resolve, reject) => {
-			this.app.remote.invoke("auth.refresh", {
-				resolve: resolve,
-				reject: reject,
-			});
+	async isAuthenticated() {
+		this.app.log.trace("Checking authenticated state.. ");
+
+		// Check if there's an outstanding auth.refresh call
+		if (this.authRefreshPromise) {
+			this.app.log.trace("Waiting for existing auth.refresh call to complete");
+			return await this.authRefreshPromise;
+		}
+
+		// Create a new promise for the auth.refresh call
+		this.authRefreshPromise = new Promise(async (resolve, reject) => {
+			try {
+				let response = await this.app.remote.invoke("auth.refresh", {
+					resolve: resolve,
+					reject: reject,
+				});
+
+				if (response.authenticated) {
+					this.setUser(response.user);
+				}
+				this.app.log.trace("Resolving the response... ");
+				resolve(response);
+			} catch (error) {
+				reject(error);
+			} finally {
+				// Clear the promise reference when done
+				this.authRefreshPromise = null;
+			}
 		});
 
-		if (response.authenticated) {
-			this.setUser(response.user);
-		}
-		resolve(response);
+		// Return the promise so callers can await it
+		return await this.authRefreshPromise;
 	}
 
 	invalidateSession() {
@@ -2894,6 +3058,14 @@ class ServiceManager extends Component {
 }
 
 class UIManager extends Component {
+	#handleMouseMove(event) {
+		this.mousePosition = {
+			x: event.clientX,
+			y: event.clientY,
+		};
+	}
+	#debouncedMouseMove;
+
 	constructor(app) {
 		super();
 		this.app = app;
@@ -2904,6 +3076,10 @@ class UIManager extends Component {
 		this.queue = [];
 		this.deferred = [];
 		this.stateTransition = false;
+		this.mousePosition = {
+			x: 0,
+			y: 0,
+		};
 		this.views = [];
 		app.log.trace("Layout initializing...");
 
@@ -2924,6 +3100,10 @@ class UIManager extends Component {
 				this.options.ui.eventGroups.forEach((group) =>
 					this.events.concat(group),
 				);
+		}
+
+		if (this.options.ui.enableMouseTracking) {
+			this.enableMouseTracking(true);
 		}
 	}
 
@@ -3085,6 +3265,19 @@ class UIManager extends Component {
 			.concat(uncategorizedEvents);
 	}
 
+	enableMouseTracking(enable) {
+		if (enable) {
+			// Create a debounced version of the mouse move handler
+			this.#debouncedMouseMove = this.app.util.debounce(
+				this.#handleMouseMove.bind(this),
+				this.options.ui.mouseTrackingDeBounceTime,
+			);
+			document.addEventListener("mousemove", this.#debouncedMouseMove);
+		} else {
+			document.removeEventListener("mousemove", this.#debouncedMouseMove);
+		}
+	}
+
 	setSelector(name, selector) {
 		this.selectors[name] = selector;
 		this.nodes[name] = document.querySelector(selector);
@@ -3126,6 +3319,9 @@ class UIManager extends Component {
 				view.setTimeout(this.app.options.ui.timeout);
 				view.setDebounceTime(this.app.options.ui.debounceTime);
 				view.setRenderer(this.app.options.ui.renderer);
+				// inject the debounce function
+				view.setDebounce(this.app.util.debounce);
+				view.config();
 				this.views[view.props.id] = view;
 				// register as a child of the parent
 				if (this.getView(view.props.parentID)) {
@@ -3212,7 +3408,7 @@ class UIManager extends Component {
 		try {
 			this.queue.forEach((id) => this.views[id].render());
 		} catch (err) {
-			this.app.log.trace(err);
+			this.app.log.error(err);
 		}
 		this.queue = [];
 		this.setStateTransition(false);
@@ -3444,8 +3640,9 @@ export class Application extends Component {
 		this.options = this._initializeOptions(options);
 		this.name = this.options.name;
 		this.util = new Util();
-		this.init();
-		this.log.info("Application initialized...");
+		this.log = new LogManager(this);
+		this.constants = {};
+		this.log.info("Application initializing...");
 	}
 
 	_initializeOptions(options) {
@@ -3499,7 +3696,11 @@ export class Application extends Component {
 						options: options.security.options ?? {},
 					}
 				: { enabled: true, options: {} },
+			services: options?.services ?? [],
 			ui: {
+				enableMouseTracking: options?.ui?.enableMouseTracking ?? false,
+				mouseTrackingDeBounceTime:
+					options?.ui?.mouseTrackingDeBounceTime ?? 100,
 				renderer:
 					options?.ui?.renderer ??
 					(typeof Mustache === "object"
@@ -3514,8 +3715,7 @@ export class Application extends Component {
 		};
 	}
 
-	init() {
-		this.log = new LogManager(this);
+	async init() {
 		this.log.trace("application log init");
 
 		this.log.trace("application services init");
@@ -3564,15 +3764,26 @@ export class Application extends Component {
 			this.error = new ErrorManager(this);
 			// check whether user is authenticated
 
-			var p = new Promise((resolve, reject) => {
-				this.security.isAuthenticated(resolve, reject);
-			});
-			p.then((response) => {
+			if (this.options.services.length > 0) {
+				this.options.services.forEach((service) => {
+					this.services.register(service);
+				});
+				this.log.trace("application services registered");
+			}
+
+			try {
+				const response = await this.security.isAuthenticated();
 				this.log.info(`Authenticated: ${response.authenticated}...`);
-			});
+				this.authenticated = response.authenticated;
+				this.user = response.user;
+			} catch (error) {
+				this.log.error("Authentication check failed:", error);
+				throw error;
+			}
 		}
 
-		return {};
+		this.log.info("Application initialized...");
+		return this;
 	}
 }
 

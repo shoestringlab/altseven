@@ -1,4 +1,12 @@
 class UIManager extends Component {
+	#handleMouseMove(event) {
+		this.mousePosition = {
+			x: event.clientX,
+			y: event.clientY,
+		};
+	}
+	#debouncedMouseMove;
+
 	constructor(app) {
 		super();
 		this.app = app;
@@ -9,6 +17,10 @@ class UIManager extends Component {
 		this.queue = [];
 		this.deferred = [];
 		this.stateTransition = false;
+		this.mousePosition = {
+			x: 0,
+			y: 0,
+		};
 		this.views = [];
 		app.log.trace("Layout initializing...");
 
@@ -29,6 +41,10 @@ class UIManager extends Component {
 				this.options.ui.eventGroups.forEach((group) =>
 					this.events.concat(group),
 				);
+		}
+
+		if (this.options.ui.enableMouseTracking) {
+			this.enableMouseTracking(true);
 		}
 	}
 
@@ -190,6 +206,19 @@ class UIManager extends Component {
 			.concat(uncategorizedEvents);
 	}
 
+	enableMouseTracking(enable) {
+		if (enable) {
+			// Create a debounced version of the mouse move handler
+			this.#debouncedMouseMove = this.app.util.debounce(
+				this.#handleMouseMove.bind(this),
+				this.options.ui.mouseTrackingDeBounceTime,
+			);
+			document.addEventListener("mousemove", this.#debouncedMouseMove);
+		} else {
+			document.removeEventListener("mousemove", this.#debouncedMouseMove);
+		}
+	}
+
 	setSelector(name, selector) {
 		this.selectors[name] = selector;
 		this.nodes[name] = document.querySelector(selector);
@@ -231,6 +260,9 @@ class UIManager extends Component {
 				view.setTimeout(this.app.options.ui.timeout);
 				view.setDebounceTime(this.app.options.ui.debounceTime);
 				view.setRenderer(this.app.options.ui.renderer);
+				// inject the debounce function
+				view.setDebounce(this.app.util.debounce);
+				view.config();
 				this.views[view.props.id] = view;
 				// register as a child of the parent
 				if (this.getView(view.props.parentID)) {
@@ -317,7 +349,7 @@ class UIManager extends Component {
 		try {
 			this.queue.forEach((id) => this.views[id].render());
 		} catch (err) {
-			this.app.log.trace(err);
+			this.app.log.error(err);
 		}
 		this.queue = [];
 		this.setStateTransition(false);

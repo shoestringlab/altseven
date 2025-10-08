@@ -17,25 +17,58 @@ class RemoteManager extends Component {
 	}
 
 	webSocket(url, handleMessage, isSecure = false) {
-		const protocol = isSecure ? "wss://" : "ws://";
-		const fullUrl =
-			url.startsWith("ws://") || url.startsWith("wss://")
-				? `${url}${url.includes("?") ? "&" : "?"}token=${encodeURIComponent(this.token)}`
-				: `${protocol}${url}?token=${encodeURIComponent(this.token)}`;
-		const socket = new WebSocket(fullUrl);
+		// Parse and reconstruct the URL properly
+		let finalUrl;
+
+		if (url.startsWith("ws://") || url.startsWith("wss://")) {
+			// Already a full URL - parse it properly
+			const urlObj = new URL(url);
+			if (this.options.useTokens) {
+				urlObj.searchParams.set("token", this.token);
+			}
+			finalUrl = urlObj.toString();
+		} else {
+			// Construct from components - force no trailing slash
+			const cleanUrl = url.replace(/\/+$/, "");
+			const protocol = isSecure ? "wss://" : "ws://";
+			finalUrl = `${protocol}${cleanUrl}`;
+		}
+
+		// Debug output to see what URL Chromium is actually getting
+		this.app.log.trace("WebSocket connecting to:", finalUrl);
+
+		const socket = new WebSocket(finalUrl);
+
+		// Add connection error handler specifically for Chromium quirks
+		// socket.addEventListener("error", (error) => {
+		// 	console.error("WebSocket connection failed:", error);
+		// 	// Try alternative URL format if first attempt fails
+		// 	if (finalUrl.endsWith("/")) {
+		// 		const altUrl = finalUrl.slice(0, -1);
+		// 		console.log("Trying alternative URL:", altUrl);
+		// 		// You might want to implement retry logic here
+		// 	}
+		// });
 
 		socket.onopen = () => {
-			this.app.log.trace(`WebSocket connection to ${fullUrl} established.`);
+			this.app.log.trace(`WebSocket connection to ${finalUrl} established...`);
 			this.fireEvent("webSocketOpen", [socket]);
 		};
 
 		socket.onerror = (error) => {
+			console.error("WebSocket connection failed:", error);
+			// Try alternative URL format if first attempt fails
+			if (finalUrl.endsWith("/")) {
+				const altUrl = finalUrl.slice(0, -1);
+				this.app.log.trace("Trying alternative URL:", altUrl);
+				// You might want to implement retry logic here
+			}
 			this.app.log.error(`WebSocket error:`, error);
 			this.fireEvent("webSocketError", [error]);
 		};
 
 		socket.onclose = () => {
-			this.app.log.trace(`WebSocket connection to ${fullUrl} closed.`);
+			this.app.log.trace(`WebSocket connection to ${finalUrl} closed.`);
 			this.fireEvent("webSocketClose", []);
 		};
 
@@ -50,7 +83,7 @@ class RemoteManager extends Component {
 			this.fireEvent("webSocketMessage", [data]);
 		};
 
-		this.connections[fullUrl] = socket;
+		this.connections[finalUrl] = socket;
 		return socket;
 	}
 
@@ -85,12 +118,12 @@ class RemoteManager extends Component {
 					}
 				},
 				reject: (error) => {
-					console.log("Error in refreshClientSession:", error);
+					this.app.log.error("Error in refreshClientSession:", error);
 					this.app.events.publish("auth.logout");
 				},
 			});
 		} catch (error) {
-			console.log("Error in refreshClientSession:", error);
+			this.app.log.error("Error in refreshClientSession:", error);
 			this.app.events.publish("auth.logout");
 		}
 	}
@@ -148,15 +181,16 @@ class RemoteManager extends Component {
 				try {
 					const response = await fetch(this.options.loginURL, args);
 
-					// set the token into sessionStorage so it is available if the browser is refreshed
-					var token =
-						this.options.tokenType === "X-Token"
-							? response.headers.get("X-Token")
-							: response.headers.get("Access_token");
-					if (token !== undefined && token !== null) {
-						this.setToken(token);
+					if (this.options.useTokens) {
+						// set the token into sessionStorage so it is available if the browser is refreshed
+						var token =
+							this.options.tokenType === "X-Token"
+								? response.headers.get("X-Token")
+								: response.headers.get("Access_token");
+						if (token !== undefined && token !== null) {
+							this.setToken(token);
+						}
 					}
-
 					const json = await response.json();
 
 					if (json.success) {
@@ -168,7 +202,7 @@ class RemoteManager extends Component {
 						// set the user into the sessionStorage and the model
 						sessionStorage.user = JSON.stringify(user);
 						this.app.model.set("user", user);
-
+						this.app.log.trace("User set into model:", user);
 						// handler/function/route based on success
 						if (params.success !== undefined) {
 							if (typeof params.success === "function") {
@@ -201,11 +235,11 @@ class RemoteManager extends Component {
 				const args = {
 					method: "POST",
 					headers: {
-						Authorization:
-							"Basic " +
-							this.app.util.base64.encode64(
-								params.username + ":" + params.password,
-							),
+						// Authorization:
+						// 	"Basic " +
+						// 	this.app.util.base64.encode64(
+						// 		params.username + ":" + params.password,
+						// 	),
 					},
 				};
 

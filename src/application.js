@@ -4,8 +4,9 @@ export class Application extends Component {
 		this.options = this._initializeOptions(options);
 		this.name = this.options.name;
 		this.util = new Util();
-		this.init();
-		this.log.info("Application initialized...");
+		this.log = new LogManager(this);
+		this.constants = {};
+		this.log.info("Application initializing...");
 	}
 
 	_initializeOptions(options) {
@@ -59,7 +60,11 @@ export class Application extends Component {
 						options: options.security.options ?? {},
 					}
 				: { enabled: true, options: {} },
+			services: options?.services ?? [],
 			ui: {
+				enableMouseTracking: options?.ui?.enableMouseTracking ?? false,
+				mouseTrackingDeBounceTime:
+					options?.ui?.mouseTrackingDeBounceTime ?? 100,
 				renderer:
 					options?.ui?.renderer ??
 					(typeof Mustache === "object"
@@ -74,8 +79,7 @@ export class Application extends Component {
 		};
 	}
 
-	init() {
-		this.log = new LogManager(this);
+	async init() {
 		this.log.trace("application log init");
 
 		this.log.trace("application services init");
@@ -124,14 +128,25 @@ export class Application extends Component {
 			this.error = new ErrorManager(this);
 			// check whether user is authenticated
 
-			var p = new Promise((resolve, reject) => {
-				this.security.isAuthenticated(resolve, reject);
-			});
-			p.then((response) => {
+			if (this.options.services.length > 0) {
+				this.options.services.forEach((service) => {
+					this.services.register(service);
+				});
+				this.log.trace("application services registered");
+			}
+
+			try {
+				const response = await this.security.isAuthenticated();
 				this.log.info(`Authenticated: ${response.authenticated}...`);
-			});
+				this.authenticated = response.authenticated;
+				this.user = response.user;
+			} catch (error) {
+				this.log.error("Authentication check failed:", error);
+				throw error;
+			}
 		}
 
-		return {};
+		this.log.info("Application initialized...");
+		return this;
 	}
 }

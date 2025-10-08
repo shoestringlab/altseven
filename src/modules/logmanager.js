@@ -38,6 +38,10 @@ class LogManager extends Component {
 		this.log(message, "TRACE");
 	}
 
+	debug(message) {
+		this.log(message, "DEBUG");
+	}
+
 	warn(message) {
 		this.log(message, "WARN");
 	}

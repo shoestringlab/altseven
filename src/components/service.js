@@ -64,6 +64,7 @@ export class Service extends Component {
 	}
 
 	convertArrayToMap(dataArray) {
+		this.log.trace(this.id + ": method: convertArrayToMap");
 		let dataMap = new Map();
 		dataArray.forEach((item) => {
 			const key = this.getCompositeKey(item);
@@ -80,8 +81,8 @@ export class Service extends Component {
 
 	// Compare itemIDs against cached items
 	compareIDs(IDs) {
-		this.log.trace("Service: " + this.id);
-		this.log.trace("compareIDs: " + IDs);
+		this.log.trace(this.id + ": method: compareIDs");
+		this.log.debug(this.id + ":compareIDs: " + IDs);
 
 		const dataMap = this.get();
 		const present = [];
@@ -98,8 +99,12 @@ export class Service extends Component {
 				missing.push(id);
 			}
 		});
-		this.log.trace(
-			"results: " + JSON.stringify(present) + " " + JSON.stringify(missing),
+		this.log.debug(
+			this.id +
+				":results: " +
+				JSON.stringify(present) +
+				" " +
+				JSON.stringify(missing),
 		);
 
 		return { present, missing };
@@ -107,6 +112,7 @@ export class Service extends Component {
 
 	// Merge new items into the existing Map
 	async merge(newItems) {
+		this.log.trace(this.id + ": method: merge");
 		let dataMap = this.get();
 
 		if (!(dataMap instanceof Map)) {
@@ -156,6 +162,7 @@ export class Service extends Component {
 
 	async create(obj) {
 		// if obj is a plain object, create a new entity
+		this.log.trace(this.id + ": method: create");
 		let entityInstance =
 			obj instanceof this.entityClass ? obj : await this.format(obj);
 
@@ -170,36 +177,59 @@ export class Service extends Component {
 	}
 
 	async read(obj) {
+		this.log.trace(this.id + ": method: read");
 		let dataMap = this.get();
 		let compositeKey = "-";
 		const requestKey = `${this.remoteMethods.read}-${JSON.stringify(obj)}`;
+
 		if (this.queue.has(requestKey)) {
-			this.log.trace("Duplicate read request detected, cancelling new request");
-			//return this.queue.get(requestKey);
+			this.log.debug(
+				this.id +
+					":Duplicate read request detected, waiting for existing request. " +
+					JSON.stringify(obj),
+			);
+			// Return a promise that resolves when the existing request completes
+			return await this.queue.get(requestKey);
 		} else {
-			// Get the composite key for the object
-			compositeKey = this.getCompositeKey(obj);
-			if (!dataMap.has(compositeKey)) {
-				let entityInstance =
-					obj instanceof this.entityClass ? obj : await this.format(obj);
+			this.log.debug(this.id + ": New read request. " + JSON.stringify(obj));
+			// Create a new promise for this request
+			const requestPromise = new Promise(async (resolve, reject) => {
+				try {
+					// Get the composite key for the object
+					compositeKey = this.getCompositeKey(obj);
+					if (!dataMap.has(compositeKey)) {
+						let entityInstance =
+							obj instanceof this.entityClass ? obj : await this.format(obj);
 
-				const response = await this.remote.invoke(
-					this.remoteMethods.read,
-					entityInstance,
-				);
-				const json = await response.json();
-				// set the entity instance from the json response
-				entityInstance.fromFlatObject(json);
-				this.cacheSet(await this.format(entityInstance));
-				this.queue.delete(requestKey);
-				dataMap = this.get();
-			}
+						const response = await this.remote.invoke(
+							this.remoteMethods.read,
+							entityInstance,
+						);
+						const json = await response.json();
+						// set the entity instance from the json response
+						entityInstance.fromFlatObject(json);
+						this.cacheSet(await this.format(entityInstance));
+					}
+					resolve(dataMap.get(compositeKey));
+				} catch (error) {
+					this.log.debug(this.id + ": Error reading object. " + error);
+					reject(error);
+				} finally {
+					// Always remove from queue when done
+					this.queue.delete(requestKey);
+				}
+			});
+
+			// Add the promise to the queue
+			this.queue.set(requestKey, requestPromise);
+			this.log.debug(this.id + ": read request added to the queue.");
+			// Return the promise so callers can await it
+			return await requestPromise;
 		}
-
-		return dataMap.get(compositeKey);
 	}
 
 	async update(obj) {
+		this.log.trace(this.id + ": method: update");
 		let entityInstance =
 			obj instanceof this.entityClass ? obj : await this.format(obj);
 
@@ -214,6 +244,7 @@ export class Service extends Component {
 	}
 
 	async delete(obj) {
+		this.log.trace(this.id + ": method: delete");
 		let returnVal = {};
 		let entityInstance =
 			obj instanceof this.entityClass ? obj : await this.format(obj);
@@ -231,24 +262,45 @@ export class Service extends Component {
 		return returnVal; // return the response from the remote call
 	}
 
-	async readAll(obj) {
+	async readAll(obj = {}) {
+		this.log.trace(this.id + ": method: readAll");
 		const requestKey = `${this.remoteMethods.readAll}-${JSON.stringify(obj)}`;
 		if (this.queue.has(requestKey)) {
-			this.log.trace("Duplicate read request detected, cancelling new request");
-			//return this.queue.get(requestKey);
+			this.log.debug(
+				this.id +
+					":Duplicate readAll request detected, waiting for existing request.",
+			);
+			// Return a promise that resolves when the existing request completes
+			return await this.queue.get(requestKey);
 		} else {
-			let dataMap = this.get();
-			if (!dataMap.size) {
-				const response = await this.remote.invoke(
-					this.remoteMethods.readAll,
-					obj,
-				);
-				const json = await response.json();
-				await this.merge(json);
-				this.queue.delete(requestKey);
-			}
+			this.log.debug(this.id + ":Creating new readAll request.");
+			// Create a new promise for this request
+			const requestPromise = new Promise(async (resolve, reject) => {
+				try {
+					let dataMap = this.get();
+					if (!dataMap.size) {
+						const response = await this.remote.invoke(
+							this.remoteMethods.readAll,
+							obj,
+						);
+						const json = await response.json();
+						await this.merge(json);
+					}
+					resolve(this.get());
+				} catch (error) {
+					reject(error);
+				} finally {
+					// Always remove from queue when done
+					this.queue.delete(requestKey);
+				}
+			});
+
+			// Add the promise to the queue
+			this.queue.set(requestKey, requestPromise);
+			this.log.debug(this.id + ":readAll completed for " + obj.id);
+			// Return the promise so callers can await it
+			return await requestPromise;
 		}
-		return this.get();
 	}
 
 	// Add a method to call custom remote methods
@@ -270,7 +322,7 @@ export class Service extends Component {
 		// 	throw new Error(`Unsupported returnType: ${returnType}`);
 		// }
 		//}
-
+		this.log.trace(this.id + ": method: invoke");
 		const methodConfig = this.remoteMethods[methodName];
 		if (!methodConfig) {
 			throw new Error(`Method ${methodName} not found in remoteMethods`);
@@ -287,7 +339,7 @@ export class Service extends Component {
 					? dataMap
 					: this.filter(dataMap, options.filter);
 			if (data.length > 0) {
-				this.log.trace("Cache hit for method", methodName);
+				this.log.debug(this.id + ": Cache hit for method", methodName);
 				return await this.formatData(data, options.returnType);
 			}
 		}
@@ -314,10 +366,12 @@ export class Service extends Component {
 	}
 
 	async format(obj) {
+		this.log.trace(this.id + ": method: format");
 		return new this.entityClass(obj);
 	}
 
 	async formatData(data, returnType) {
+		this.log.trace(this.id + ": method: formatData");
 		let map = new Map(),
 			array = [];
 
@@ -352,6 +406,7 @@ export class Service extends Component {
 	}
 
 	cacheDelete(id) {
+		this.log.trace(this.id + ": method: cacheDelete");
 		let dataMap = this.get();
 		dataMap.delete(id);
 		this.set(dataMap);
@@ -362,6 +417,7 @@ export class Service extends Component {
 	}
 
 	cacheSet(item) {
+		this.log.trace(this.id + ": method: cacheSet");
 		if (item instanceof this.entityClass) {
 			const compositeKey = this.getCompositeKey(item);
 			if (!compositeKey) {
@@ -382,10 +438,12 @@ export class Service extends Component {
 	}
 
 	set(dataMap) {
+		this.log.trace(this.id + ": method: set");
 		this.model.set(this.id, dataMap);
 	}
 
 	get(ID) {
+		this.log.trace(this.id + ": method: get");
 		if (typeof ID === "undefined") {
 			return this.model.get(this.id);
 		} else {
@@ -394,44 +452,66 @@ export class Service extends Component {
 	}
 
 	async readMany(IDs) {
+		this.log.trace(this.id + ": method: readMany");
 		if (typeof IDs === "undefined") {
 			return new Map();
 		}
-		this.log.trace("readMany: ");
+
 		// Get cached items
 		//const itemsMap = this.get();
 		const requestKey = `${this.remoteMethods.readMany}-${JSON.stringify(IDs)}`;
 		if (this.queue.has(requestKey)) {
-			this.log.trace("Duplicate read request detected, cancelling new request");
-			//return this.queue.get(requestKey);
+			this.log.debug(
+				this.id +
+					":Duplicate readMany request detected, waiting for existing request." +
+					IDs,
+			);
+			// Return a promise that resolves when the existing request completes
+			return await this.queue.get(requestKey);
 		} else {
-			// Compare requested IDs with cache
-			const { present, missing } = this.compareIDs(IDs);
+			this.log.debug(this.id + ": New readMany: " + IDs);
+			// Create a new promise for this request
+			const requestPromise = new Promise(async (resolve, reject) => {
+				try {
+					// Compare requested IDs with cache
+					const { present, missing } = this.compareIDs(IDs);
 
-			// Fetch missing items if any
+					// Fetch missing items if any
+					this.log.debug(this.id + ": Present? " + present.length);
+					this.log.debug(this.id + ": Missing? " + missing.length);
+					if (missing.length > 0) {
+						let obj = { id: missing };
 
-			this.log.trace("Missing? " + missing.length);
-			if (missing.length > 0) {
-				let obj = { id: missing };
+						const response = await this.remote.invoke(
+							this.remoteMethods.readMany,
+							obj,
+						);
+						const json = await response.json();
 
-				const response = await this.remote.invoke(
-					this.remoteMethods.readMany,
-					obj,
-				);
-				const json = await response.json();
+						if (Array.isArray(json)) {
+							await this.merge(json);
+						}
+					}
 
-				if (Array.isArray(json)) {
-					await this.merge(json);
+					resolve(this.getMappedItems(IDs));
+				} catch (error) {
+					reject(error);
+				} finally {
+					// Always remove from queue when done
 					this.queue.delete(requestKey);
 				}
-			}
+			});
 
-			//const cachedItems = present.map((id) => itemsMap.get(id));
+			// Add the promise to the queue
+			this.queue.set(requestKey, requestPromise);
+			this.log.debug(this.id + ": Completed readMany: " + IDs);
+			// Return the promise so callers can await it
+			return await requestPromise;
 		}
-		return this.getMappedItems(IDs);
 	}
 
 	getMappedItems(IDs) {
+		this.log.trace(this.id + ": method: getMappedItems");
 		// Return all requested items in order, filtering out nulls
 		const result = IDs.map((id) => {
 			const item = this.get(id);
@@ -441,6 +521,7 @@ export class Service extends Component {
 	}
 
 	sort(items, sortFields) {
+		this.log.trace(this.id + ": method: sort");
 		// Convert items to array if it's a Map
 		let itemsArray = items instanceof Map ? Array.from(items.values()) : items;
 
@@ -490,6 +571,7 @@ export class Service extends Component {
 	}
 
 	filter(items, criteria) {
+		this.log.trace(this.id + ": method: filter");
 		// Convert items to array if it's a Map
 		let itemsArray = Array.isArray(items) ? items : Array.from(items.values());
 

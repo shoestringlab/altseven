@@ -16,7 +16,6 @@ export class View extends Component {
 		this.skipRender = false;
 		this.children = {}; // Child views
 		this.components = {}; // Register objects external to the framework so we can address them later
-		this.config();
 		this.fireEvent("mustRegister");
 	}
 
@@ -38,6 +37,9 @@ export class View extends Component {
 	setTimeout(timeout) {
 		this.timeout = timeout;
 	}
+	setDebounce(debounce) {
+		this.debounce = debounce;
+	}
 	setDebounceTime(debounceTime) {
 		this.debounceTime = debounceTime;
 	}
@@ -55,9 +57,8 @@ export class View extends Component {
 						this.skipRender = false;
 					}
 				}.bind(this),
+				this.debounceTime,
 			),
-			this.debounceTime,
-			true,
 		);
 
 		this.on(
@@ -149,7 +150,7 @@ export class View extends Component {
 			this.element = document.querySelector(this.props.selector);
 		}
 		if (!this.element) {
-			this.log.error(
+			this.log.trace(
 				"The DOM element for view " +
 					this.props.id +
 					" was not found. The view will be removed and unregistered.",
@@ -221,42 +222,5 @@ export class View extends Component {
 				);
 			}
 		}
-	}
-
-	/**
-	 * Creates a debounced function that delays invoking `func` until after `wait` milliseconds
-	 * have elapsed since the last time the debounced function was invoked.
-	 *
-	 * @param {Function} func - The function to debounce.
-	 * @param {number} wait - The number of milliseconds to delay.
-	 * @param {boolean} [immediate=false] - Trigger the function on the leading edge, instead of the trailing.
-	 * @return {Function} A new debounced function.
-	 */
-	debounce(func, wait, immediate = false) {
-		let timeout;
-
-		return function executedFunction() {
-			// Save the context and arguments for later invocation
-			const context = this;
-			const args = arguments;
-
-			// Define the function that will actually call `func`
-			const later = function () {
-				timeout = null;
-				if (!immediate) func.apply(context, args);
-			};
-
-			const callNow = immediate && !timeout;
-
-			// Clear the previous timeout
-			clearTimeout(timeout);
-
-			// Set a new timeout
-			timeout = setTimeout(later, wait);
-
-			// If 'immediate' is true and this is the first time the function has been called,
-			// execute it right away
-			if (callNow) func.apply(context, args);
-		};
 	}
 }

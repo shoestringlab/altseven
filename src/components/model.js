@@ -321,7 +321,7 @@ export const Model = (() => {
 			const model = modelStore.get(base);
 
 			if (!model) {
-				_log.error(`Key '${base}' does not exist in the model.`);
+				_log.trace(`Key '${base}' does not exist in the model.`);
 				return undefined;
 			}
 			if (!key) {
@@ -330,7 +330,7 @@ export const Model = (() => {
 			} else {
 				if (model.data instanceof Map) {
 					if (!model.data.has(key)) {
-						_log.error(`Key '${key}' does not exist in the Map .`);
+						_log.trace(`Key '${key}' does not exist in the Map .`);
 					} else {
 						return model.data.get(key);
 					}

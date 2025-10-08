@@ -22,7 +22,7 @@ class DataProviderManager extends Component {
 			service.registerDataProvider(dataprovider);
 		});
 
-		this.app.log.info(`DataProvider "${dataprovider.id}" registered.`);
+		this.app.log.trace(`DataProvider "${dataprovider.id}" registered.`);
 	}
 
 	bind(dp) {
@@ -125,9 +125,9 @@ class DataProviderManager extends Component {
 				sort: binding.sort,
 			});
 			if (binding.func.constructor.name === "AsyncFunction") {
-				updatedData = await binding.func(args);
+				updatedData = await binding.func(args, dp);
 			} else {
-				updatedData = binding.func(args);
+				updatedData = binding.func(args, dp);
 			}
 			//let type = binding.entityClass.type;
 			let type = dp.schema[binding.key].type;

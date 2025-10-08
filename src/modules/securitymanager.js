@@ -12,19 +12,38 @@ class SecurityManager extends Component {
 		this.setUser(user);
 	}
 
-	async isAuthenticated(resolve, reject) {
-		this.app.log.info("Checking authenticated state.. ");
-		let response = await new Promise((resolve, reject) => {
-			this.app.remote.invoke("auth.refresh", {
-				resolve: resolve,
-				reject: reject,
-			});
+	async isAuthenticated() {
+		this.app.log.trace("Checking authenticated state.. ");
+
+		// Check if there's an outstanding auth.refresh call
+		if (this.authRefreshPromise) {
+			this.app.log.trace("Waiting for existing auth.refresh call to complete");
+			return await this.authRefreshPromise;
+		}
+
+		// Create a new promise for the auth.refresh call
+		this.authRefreshPromise = new Promise(async (resolve, reject) => {
+			try {
+				let response = await this.app.remote.invoke("auth.refresh", {
+					resolve: resolve,
+					reject: reject,
+				});
+
+				if (response.authenticated) {
+					this.setUser(response.user);
+				}
+				this.app.log.trace("Resolving the response... ");
+				resolve(response);
+			} catch (error) {
+				reject(error);
+			} finally {
+				// Clear the promise reference when done
+				this.authRefreshPromise = null;
+			}
 		});
 
-		if (response.authenticated) {
-			this.setUser(response.user);
-		}
-		resolve(response);
+		// Return the promise so callers can await it
+		return await this.authRefreshPromise;
 	}
 
 	invalidateSession() {

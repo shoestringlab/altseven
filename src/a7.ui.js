@@ -168,6 +168,13 @@ a7.ui = (function () {
 		_views = [],
 		// selectors are cached for easy reference later
 
+		_enableMouseTracking = function (enable) {
+			if (enable) {
+				document.addEventListener("mousemove", _handleMouseMove);
+			} else {
+				document.removeEventListener("mousemove", _handleMouseMove);
+			}
+		},
 		_setSelector = function (name, selector) {
 			_selectors[name] = selector;
 			_nodes[name] = document.querySelector(selector);
@@ -306,6 +313,7 @@ a7.ui = (function () {
 
 	return {
 		//render: _render,
+		enableMouseTracking: _enableMouseTracking,
 		getEvents: _getEvents,
 		selectors: _selectors,
 		getSelector: _getSelector,
@@ -337,6 +345,10 @@ a7.ui = (function () {
 					_options.eventGroups.forEach(function (group) {
 						_events = _events.concat(group);
 					});
+			}
+
+			if (_options.enableMouseTracking) {
+				_enableMouseTracking(true);
 			}
 
 			resolve();
