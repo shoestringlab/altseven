@@ -1,3 +1,30 @@
+
+
+8.0.0-beta.2
+============
+
+- mouse tracking optionally enabled to provide real-time mouse position
+- this.constants added to application.js as a convention to hold application constants
+- pass services with application options so they are registered automatically
+- this.user set into application as a convention to hold the session user
+    - this conventional replaces putting the user in the model
+- entity.js modified to allow custom getters and setters in subclasses
+- note that this changes #data to _data from private variable to protected variable in Entity class
+- logging additions and changes
+  - added debug log level
+  - changed some logging detail levels
+  - added some new logging in service.js for better debug
+- created request queue so multiple service remote calls are not sent for the same resource.
+  - following requests will be sent the promise of the original request
+- request queue implemented for invoke, read, readMany, readAll
+- removed copied debounce function from view.js, now injects util debounce function
+- dataprovidermanager binding function now passes dataprovider so custom service functions have access to the dataprovider
+- added DEBUG log level
+- clean up remotemanager use of tokens to only when app.options.useTokens is true
+- securitymanager.js isAuthenticated now blocks multiple concurrent network requests so only one check is made
+- uimanager now sets mouse tracking into this.mousePosition if enabled
+- open source license changed to MIT License
+
 8.0.0-beta.1
 ============
 

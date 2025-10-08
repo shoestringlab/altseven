@@ -344,25 +344,51 @@ export class Service extends Component {
 			}
 		}
 
-		// Call the remote method
-		const response = await this.remote.invoke(methodConfig, params);
+		const requestKey = `${this.remoteMethods.invoke}-${methodName}-${JSON.stringify(params)}`;
+		if (this.queue.has(requestKey)) {
+			this.log.debug(
+				this.id +
+					":Duplicate invoke request detected, waiting for existing request.",
+			);
+			// Return a promise that resolves when the existing request completes
+			return await this.queue.get(requestKey);
+		} else {
+			this.log.debug(this.id + ": New invoke: " + methodName);
+			// Create a new promise for this request
+			const requestPromise = new Promise(async (resolve, reject) => {
+				try {
+					// Call the remote method
+					const response = await this.remote.invoke(methodConfig, params);
 
-		// Parse the JSON response
-		const json = await response.json();
+					// Parse the JSON response
+					const json = await response.json();
 
-		// Check if we should merge the results into cache
-		if (options.merge) {
-			// If it's an array of objects, treat them as entities and merge
-			if (Array.isArray(json) && json.length > 0) {
-				await this.merge(json);
-			} else if (typeof json === "object" && json !== null) {
-				await this.merge([json]);
-			}
-			return await this.formatData(json, options.returnType);
+					// Check if we should merge the results into cache
+					if (options.merge) {
+						// If it's an array of objects, treat them as entities and merge
+						if (Array.isArray(json) && json.length > 0) {
+							await this.merge(json);
+						} else if (typeof json === "object" && json !== null) {
+							await this.merge([json]);
+						}
+						resolve(await this.formatData(json, options.returnType));
+					}
+
+					resolve(json);
+				} catch (error) {
+					reject(error);
+				} finally {
+					// Always remove from queue when done
+					this.queue.delete(requestKey);
+				}
+			});
+
+			// Add the promise to the queue
+			this.queue.set(requestKey, requestPromise);
+			this.log.debug(this.id + ": Completed invoke: " + methodName);
+			// Return the promise so callers can await it
+			return await requestPromise;
 		}
-
-		// Otherwise return the raw response
-		return json;
 	}
 
 	async format(obj) {
