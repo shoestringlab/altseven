@@ -137,9 +137,17 @@ class DataProviderManager extends Component {
 
 			dp.view.setState({ [binding.key]: updatedData });
 		} else {
-			let updatedData = this.getBoundData(dp, binding);
+			let state = dp.view.getState();
+			if (
+				(typeof state[binding.key] === "object" &&
+					args.item &&
+					state[binding.key].id === args.item.id) ||
+				typeof state[binding.key] !== "object"
+			) {
+				let updatedData = this.getBoundData(dp, binding);
 
-			dp.view.setState({ [binding.key]: updatedData });
+				dp.view.setState({ [binding.key]: updatedData });
+			}
 		}
 	}
 }

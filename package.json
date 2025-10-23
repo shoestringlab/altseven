@@ -7,6 +7,7 @@
 		"dist"
 	],
 	"dependencies": {
+		"claude": "^0.1.1",
 		"feather-icons": "^4.29.2"
 	},
 	"devDependencies": {

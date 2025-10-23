@@ -347,7 +347,10 @@ class UIManager extends Component {
 		this.app.log.trace("processing the queue");
 		this.setStateTransition(true);
 		try {
-			this.queue.forEach((id) => this.views[id].render());
+			this.queue.forEach((id) => {
+				this.app.log.debug("view ID: " + id);
+				this.views[id].render();
+			});
 		} catch (err) {
 			this.app.log.error(err);
 		}

@@ -1254,6 +1254,7 @@ export class Service extends Component {
 
 			this.fireEvent("cacheChanged", {
 				action: "refresh",
+				item: item,
 			});
 		} else {
 			throw "Item must be of proper entity type.";
@@ -1538,6 +1539,7 @@ export class View extends Component {
 		this.skipRender = false;
 		this.children = {}; // Child views
 		this.components = {}; // Register objects external to the framework so we can address them later
+		this.templateCache = null;
 		this.fireEvent("mustRegister");
 	}
 
@@ -1617,9 +1619,13 @@ export class View extends Component {
 	}
 
 	setState(args) {
+		// blank the template cache so the view re-renders
+		this.templateCache = null;
 		if (this.dataProvider) {
 			this.dataProvider.setState(args);
+			this.log.debug("setState using dataProvider for ", this.props.id);
 		} else {
+			this.log.debug("setState for ", this.props.id);
 			this.state = Object.assign(this.state, args);
 			// if there is no dataProvider, fire stateChanged here, otherwise wait for the dataProvider (see registerDataProvider())
 			this.fireEvent("stateChanged", args);
@@ -1684,9 +1690,17 @@ export class View extends Component {
 			return;
 		}
 
-		this.element.innerHTML =
-			typeof this.template == "function" ? this.template() : this.template;
-
+		let content = "";
+		if (this.templateCache !== null) {
+			content = this.templateCache;
+			this.log.debug("Using cached template for view " + this.props.id);
+		} else {
+			this.log.debug("Rendering template for view " + this.props.id);
+			content =
+				typeof this.template == "function" ? this.template() : this.template;
+			this.templateCache = content;
+		}
+		this.element.innerHTML = content;
 		var eventArr = [];
 		this.ui.getEvents().forEach(function (eve) {
 			eventArr.push("[data-on" + eve + "]");
@@ -1981,9 +1995,17 @@ class DataProviderManager extends Component {
 
 			dp.view.setState({ [binding.key]: updatedData });
 		} else {
-			let updatedData = this.getBoundData(dp, binding);
+			let state = dp.view.getState();
+			if (
+				(typeof state[binding.key] === "object" &&
+					args.item &&
+					state[binding.key].id === args.item.id) ||
+				typeof state[binding.key] !== "object"
+			) {
+				let updatedData = this.getBoundData(dp, binding);
 
-			dp.view.setState({ [binding.key]: updatedData });
+				dp.view.setState({ [binding.key]: updatedData });
+			}
 		}
 	}
 }
@@ -3432,7 +3454,10 @@ class UIManager extends Component {
 		this.app.log.trace("processing the queue");
 		this.setStateTransition(true);
 		try {
-			this.queue.forEach((id) => this.views[id].render());
+			this.queue.forEach((id) => {
+				this.app.log.debug("view ID: " + id);
+				this.views[id].render();
+			});
 		} catch (err) {
 			this.app.log.error(err);
 		}

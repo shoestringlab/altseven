@@ -457,6 +457,7 @@ export class Service extends Component {
 
 			this.fireEvent("cacheChanged", {
 				action: "refresh",
+				item: item,
 			});
 		} else {
 			throw "Item must be of proper entity type.";

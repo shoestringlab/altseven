@@ -9,8 +9,6 @@ module.exports = {
 	components: {
 		options: {
 			sourceMap: true,
-			//			banner: 'a7.components = ( function() {"use strict";',
-			//			footer: "}());",
 		},
 		src: [
 			"src/components/util/constructor.js",
@@ -22,8 +20,6 @@ module.exports = {
 			"src/components/service.js",
 			"src/components/user.js",
 			"src/components/view.js",
-
-			//	"src/components/components.js",
 		],
 		dest: "src/a7.components.js",
 	},
@@ -46,19 +42,6 @@ module.exports = {
 			"src/modules/uimanager.js",
 			"src/modules/util.js",
 			"src/application.js",
-			// "src/a7.js",
-			// "src/a7.console.js",
-			// "src/a7.error.js",
-			// "src/a7.events.js",
-			// "src/a7.log.js",
-			// "src/a7.model.js",
-			// "src/a7.components.js",
-			// "src/a7.remote.js",
-			// "src/a7.router.js",
-			// "src/a7.security.js",
-			// "src/a7.services.js",
-			// "src/a7.ui.js",
-			// "src/a7.util.js",
 		],
 		dest: "dist/a7.js",
 	},
