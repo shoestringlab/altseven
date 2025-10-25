@@ -1,4 +1,12 @@
+8.0.0-beta.3
+============
 
+- Significant Documentation
+    - Significant documentation is now available for building applications using the framework as of version 8.0.
+    - See /docs for more details.
+
+- data-specific relations in DataProvider
+- fine grain render control on create,update,delete of entities
 
 8.0.0-beta.2
 ============

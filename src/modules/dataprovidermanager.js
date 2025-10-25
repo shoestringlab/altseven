@@ -17,6 +17,8 @@ class DataProviderManager extends Component {
 
 	register(dataprovider) {
 		this._dataproviders.set(dataprovider.id, dataprovider);
+		// Inject serviceManager reference for entity map relations
+		dataprovider.setServiceManager(this.app.services);
 		this.bind(dataprovider);
 		this.services.forEach((service) => {
 			service.registerDataProvider(dataprovider);
@@ -38,6 +40,7 @@ class DataProviderManager extends Component {
 					let func = dp.binding[rule].func || null;
 					let sort = dp.binding[rule].sort || null;
 					let id = dp.binding[rule].id || null;
+					let renderOn = dp.binding[rule].renderOn || null;
 					dp.bindings.set(rule, {
 						key: rule,
 						service: matchingService,
@@ -46,6 +49,7 @@ class DataProviderManager extends Component {
 						func: func,
 						dependencies: dependencies,
 						id: id,
+						renderOn: renderOn,
 					});
 
 					matchingService.bind(rule, filter);
@@ -54,12 +58,48 @@ class DataProviderManager extends Component {
 
 					dp.setStateOnly({ [rule]: boundData });
 
-					//Listen for changes in the service cache
-					matchingService.on("cacheChanged", (service, args) => {
-						//pass in the DP state
-						args.state = dp.getState();
-						this.updateBoundState(dp, dp.bindings.get(rule), args);
-					});
+					// If binding to a specific entity ID, listen for entity-specific events
+					if (id !== null) {
+						matchingService.on("entityChanged", (service, args) => {
+							// Only update if this is the entity we're bound to
+							if (args.id === id) {
+								this.app.log.trace(
+									`Entity ${id} changed, updating DataProvider ${dp.id}`,
+								);
+								dp.view.setState({ [rule]: args.entity });
+							}
+						});
+
+						matchingService.on("entityDeleted", (service, args) => {
+							// Only update if this is the entity we're bound to
+							if (args.id === id) {
+								this.app.log.trace(
+									`Entity ${id} deleted, clearing DataProvider ${dp.id}`,
+								);
+								dp.view.setState({ [rule]: null });
+							}
+						});
+					} else {
+						//Listen for changes in the service cache (generic)
+						matchingService.on("cacheChanged", (service, args) => {
+							const binding = dp.bindings.get(rule);
+
+							// Check if we should render based on renderOn filter
+							if (binding.renderOn !== null && Array.isArray(binding.renderOn)) {
+								// Only update if action is in renderOn array
+								if (!binding.renderOn.includes(args.action)) {
+									this.app.log.trace(
+										`Skipping render for action "${args.action}" (renderOn: ${binding.renderOn})`,
+									);
+									return;
+								}
+							}
+
+							//pass in the DP state
+							args.state = dp.getState();
+							this.updateBoundState(dp, binding, args);
+						});
+					}
 				}
 
 				dependencies = dp.binding[rule].dependencies || [];

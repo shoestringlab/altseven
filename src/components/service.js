@@ -119,18 +119,43 @@ export class Service extends Component {
 			dataMap = new Map();
 		}
 
+		const formattedItems = [];
+		let hasCreates = false;
+		let hasUpdates = false;
+
 		await Promise.all(
 			newItems.map(async (item) => {
 				const key = this.getCompositeKey(item);
 				if (key) {
-					dataMap.set(key, await this.format(item));
+					const exists = dataMap.has(key);
+					const action = exists ? "update" : "create";
+
+					if (action === "create") hasCreates = true;
+					if (action === "update") hasUpdates = true;
+
+					const formattedItem = await this.format(item);
+					dataMap.set(key, formattedItem);
+					formattedItems.push({ key, entity: formattedItem, action });
 				}
 			}),
 		);
 
 		this.set(dataMap);
 
-		this.fireEvent("cacheChanged", { action: "refresh" });
+		// Fire generic cache changed event with appropriate action
+		// If mixed, use "update" as it's the most common case
+		const globalAction = hasCreates && hasUpdates ? "update" : hasCreates ? "create" : "update";
+		this.fireEvent("cacheChanged", { action: globalAction });
+
+		// Fire entity-specific events for each merged item with individual actions
+		formattedItems.forEach(({ key, entity, action }) => {
+			this.fireEvent("entityChanged", {
+				id: key,
+				entity: entity,
+				action: action,
+			});
+		});
+
 		return dataMap;
 	}
 
@@ -172,7 +197,7 @@ export class Service extends Component {
 		);
 		const json = await response.json();
 		entityInstance.fromFlatObject(json);
-		this.cacheSet(entityInstance);
+		this.cacheSet(entityInstance, "create");
 		return entityInstance;
 	}
 
@@ -239,7 +264,7 @@ export class Service extends Component {
 		);
 		const json = await response.json();
 		entityInstance.fromFlatObject(json);
-		this.cacheSet(entityInstance);
+		this.cacheSet(entityInstance, "update");
 		return entityInstance;
 	}
 
@@ -437,12 +462,17 @@ export class Service extends Component {
 		dataMap.delete(id);
 		this.set(dataMap);
 
-		// Notify bound DataProviders
-
+		// Notify bound DataProviders - generic event
 		this.fireEvent("cacheChanged", { action: "delete" });
+
+		// Fire entity-specific event for this deletion
+		this.fireEvent("entityDeleted", {
+			id: id,
+			action: "delete",
+		});
 	}
 
-	cacheSet(item) {
+	cacheSet(item, action = "update") {
 		this.log.trace(this.id + ": method: cacheSet");
 		if (item instanceof this.entityClass) {
 			const compositeKey = this.getCompositeKey(item);
@@ -450,14 +480,27 @@ export class Service extends Component {
 				throw new Error("Cannot cache item: no valid ID fields found");
 			}
 			let dataMap = this.get();
+
+			// Check if entity already exists to auto-detect action if not specified
+			const exists = dataMap.has(compositeKey);
+			if (action === "update" && !exists) {
+				action = "create";
+			}
+
 			dataMap.set(compositeKey, item);
 			this.set(dataMap);
 
-			// Notify bound DataProviders
-
+			// Notify bound DataProviders - generic event with specific action
 			this.fireEvent("cacheChanged", {
-				action: "refresh",
+				action: action,
 				item: item,
+			});
+
+			// Fire entity-specific event for this item
+			this.fireEvent("entityChanged", {
+				id: compositeKey,
+				entity: item,
+				action: action,
 			});
 		} else {
 			throw "Item must be of proper entity type.";
