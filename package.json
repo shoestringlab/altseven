@@ -1,6 +1,6 @@
 {
 	"name": "altseven",
-	"version": "8.01",
+	"version": "8.0.1",
 	"description": "JavaScript framework",
 	"main": "./dist/a7.js",
 	"files": [
