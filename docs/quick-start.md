@@ -1,8 +1,8 @@
-# Quick Start Tutorial: Building Your First AltsEven App
+# Quick Start Tutorial: Building Your First Altseven App
 
 ## Overview
 
-This tutorial will guide you through building a complete Todo application using AltsEven. You'll learn all the core concepts by creating a real, functional application.
+This tutorial will guide you through building a complete Todo application using Altseven. You'll learn all the core concepts by creating a real, functional application.
 
 **What you'll build**:
 - Todo list with add/edit/delete functionality
@@ -72,9 +72,9 @@ todo-app/
 └── package.json
 ```
 
-### Download AltsEven
+### Download Altseven
 
-Copy the AltsEven framework file to `client/lib/altseven/dist/a7.js` from the AltsEven repository.
+Copy the Altseven framework file to `client/lib/altseven/dist/a7.js` from the Altseven repository.
 
 ### Create index.html
 
@@ -84,7 +84,7 @@ Copy the AltsEven framework file to `client/lib/altseven/dist/a7.js` from the Al
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Todo App - AltsEven</title>
+  <title>Todo App - Altseven</title>
   <link rel="stylesheet" href="/assets/css/main.css">
 </head>
 <body>
@@ -861,7 +861,7 @@ Navigate to `http://localhost:8000`
    - Todo appears in list
    - Form clears
 
-2. **Add more todos**: Add "Learn AltsEven" and "Build an app"
+2. **Add more todos**: Add "Learn Altseven" and "Build an app"
 
 3. **Mark complete**: Click checkbox on "Buy groceries"
    - Text strikes through
@@ -907,7 +907,7 @@ When you check a todo:
 
 ## Next Steps
 
-Congratulations! You've built a complete AltsEven application. Here are some ideas to extend it:
+Congratulations! You've built a complete Altseven application. Here are some ideas to extend it:
 
 ### Add Features
 
@@ -1003,7 +1003,7 @@ Apply what you learned to build:
 - **Social network**: Posts, likes, comments, followers
 - **Project management**: Projects, tasks, teams, timelines
 
-AltsEven scales from simple apps to complex applications!
+Altseven scales from simple apps to complex applications!
 
 ## Summary
 
@@ -1017,7 +1017,7 @@ You've learned:
 ✅ **Reactive updates**: Automatic view synchronization
 ✅ **Performance**: Selective re-rendering with `renderOn`
 
-You now have the foundation to build real-world AltsEven applications!
+You now have the foundation to build real-world Altseven applications!
 
 ## Troubleshooting
 
@@ -1061,6 +1061,6 @@ You now have the foundation to build real-world AltsEven applications!
 
 - Review the documentation guides
 - Check the example application in `/examples/client/`
-- Post issues on the AltsEven GitHub repository
+- Post issues on the Altseven GitHub repository
 
-Happy coding with AltsEven! 🚀
+Happy coding with Altseven! 🚀

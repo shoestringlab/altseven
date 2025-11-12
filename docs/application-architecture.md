@@ -1,8 +1,8 @@
-# AltsEven Application Architecture
+# Altseven Application Architecture
 
 ## Overview
 
-AltsEven is a full-featured JavaScript framework designed for building scalable, reactive single-page applications. This document describes the recommended architecture for building applications using AltsEven.
+Altseven is a full-featured JavaScript framework designed for building scalable, reactive single-page applications. This document describes the recommended architecture for building applications using Altseven.
 
 ## Table of Contents
 
@@ -17,7 +17,7 @@ AltsEven is a full-featured JavaScript framework designed for building scalable,
 
 ## Architectural Layers
 
-AltsEven applications follow a layered architecture with clear separation between data, logic, and presentation:
+Altseven applications follow a layered architecture with clear separation between data, logic, and presentation:
 
 ```
 ┌─────────────────────────────────────────────────────┐
@@ -219,7 +219,7 @@ Each layer has a single, well-defined responsibility:
 
 ### Lifecycle
 
-Every AltsEven component follows this lifecycle:
+Every Altseven component follows this lifecycle:
 
 ```
 1. Creation
@@ -695,7 +695,7 @@ export const routes = [
 
 ### Event-Driven Architecture
 
-AltsEven uses a pub/sub event system for loose coupling:
+Altseven uses a pub/sub event system for loose coupling:
 
 ```javascript
 // Publisher (View)
@@ -984,7 +984,7 @@ remote: {
 
 ## Conclusion
 
-AltsEven's architecture promotes:
+Altseven's architecture promotes:
 - **Clear separation of concerns** through layered design
 - **Reactive programming** through automatic data binding
 - **Loose coupling** through event-driven communication

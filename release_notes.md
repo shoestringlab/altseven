@@ -1,3 +1,11 @@
+8.0.1
+============
+
+GA Release of 8.0.x
+
+This is the release of the re-factored altsevven framework, which includes significant improvements and a new architecture that conforms to modern JavaScropt conventions and design patterns.
+
+
 8.0.0-beta.3
 ============
 

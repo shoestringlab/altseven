@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide provides recommendations, patterns, and best practices for building high-quality AltsEven applications. Following these guidelines will help you create maintainable, performant, and scalable applications.
+This guide provides recommendations, patterns, and best practices for building high-quality Altseven applications. Following these guidelines will help you create maintainable, performant, and scalable applications.
 
 ## Table of Contents
 
@@ -1116,7 +1116,7 @@ a7.events.publish = function(eventName, data) {
 ### Build for Production
 
 ```javascript
-// 1. Use minified AltsEven
+// 1. Use minified Altseven
 <script type="module" src="/lib/altseven/dist/a7.min.js"></script>
 
 // 2. Minify your code

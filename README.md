@@ -1,6 +1,6 @@
 ## altseven
 
-v 8.0.0-beta.3
+v 8.0.1
 
 A JavaScript framework. Originally built as an exploration into reactive programming with JavaScript. Now a full-fledged Web framework.
 
@@ -12,13 +12,11 @@ To install dev dependencies from NPM:
 
     `$ npm install`
 
-## Current Version - 8.0.0-beta.3
+## Current Version - 8.0.1
 
-New features and functionality. See /docs for more details.
+GA Release of 8.0.x
 
-Significant documentation is now available for building applications using the framework as of version 8.0.
-
-The documentation is not meant to be exhaustive or a definitive "must" way of building applications using the framework. It is meant to provide a starting point for developers to understand the framework and its capabilities.
+This is the release of the re-factored altsevven framework, which includes significant improvements and a new architecture that conforms to modern JavaScropt conventions and design patterns.
 
 ## Installation
 

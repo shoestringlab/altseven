@@ -2342,8 +2342,15 @@ class DataProviderManager extends Component {
 			} else {
 				updatedData = binding.func(args, dp);
 			}
-			//let type = binding.entityClass.type;
+
 			let type = dp.schema[binding.key].type;
+
+			// Apply sort if specified (service.sort handles both arrays and Maps, returns array)
+			if (binding.sort !== null && updatedData) {
+				updatedData = binding.service.sort(updatedData, binding.sort);
+			}
+
+			// Convert array to Map if needed
 			if (type === "map" && Array.isArray(updatedData)) {
 				updatedData = binding.service.convertArrayToMap(updatedData);
 			}
@@ -2351,12 +2358,21 @@ class DataProviderManager extends Component {
 			dp.view.setState({ [binding.key]: updatedData });
 		} else {
 			let state = dp.view.getState();
-			if (
-				(typeof state[binding.key] === "object" &&
-					args.item &&
-					state[binding.key].id === args.item.id) ||
-				typeof state[binding.key] !== "object"
-			) {
+			let type = dp.schema[binding.key].type;
+
+			// For map-type bindings, always update when cache changes
+			// For object-type bindings, only update if it's the specific entity that changed
+			let shouldUpdate = false;
+			if (type === "map") {
+				shouldUpdate = true;
+			} else if (type === "object") {
+				shouldUpdate = args.item && state[binding.key] && state[binding.key].id === args.item.id;
+			} else {
+				// Fallback for other types
+				shouldUpdate = typeof state[binding.key] !== "object";
+			}
+
+			if (shouldUpdate) {
 				let updatedData = this.getBoundData(dp, binding);
 
 				dp.view.setState({ [binding.key]: updatedData });

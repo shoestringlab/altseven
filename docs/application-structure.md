@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide provides recommendations for organizing AltsEven applications. Following these conventions helps maintain consistency, improves code discoverability, and makes applications easier to maintain as they grow.
+This guide provides recommendations for organizing Altseven applications. Following these conventions helps maintain consistency, improves code discoverability, and makes applications easier to maintain as they grow.
 
 ## Table of Contents
 
@@ -661,7 +661,7 @@ export function initializeUI(a7) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>My AltsEven App</title>
+  <title>My Altseven App</title>
 
   <!-- Stylesheets -->
   <link rel="stylesheet" href="/assets/css/main.css">
@@ -694,7 +694,7 @@ export function initializeUI(a7) {
 {
   "name": "my-altseven-app",
   "version": "1.0.0",
-  "description": "My AltsEven application",
+  "description": "My Altseven application",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -797,13 +797,13 @@ assets/images/
 ### Development vs Production
 
 **Development**:
-- Use unminified AltsEven distribution (`/lib/altseven/dist/a7.js`)
+- Use unminified Altseven distribution (`/lib/altseven/dist/a7.js`)
 - Enable detailed logging
 - Use source maps
 - Hot module replacement if using build tool
 
 **Production**:
-- Use minified AltsEven distribution (`/lib/altseven/dist/a7.min.js`)
+- Use minified Altseven distribution (`/lib/altseven/dist/a7.min.js`)
 - Disable debug logging
 - Minimize bundle size
 - Enable compression

@@ -2,7 +2,7 @@
 
 ## Overview
 
-AltsEven applications are built from four primary building blocks: **Entities**, **Services**, **DataProviders**, and **Views**. This document provides comprehensive guidance on using each component.
+Altseven applications are built from four primary building blocks: **Entities**, **Services**, **DataProviders**, and **Views**. This document provides comprehensive guidance on using each component.
 
 ## Table of Contents
 
@@ -1244,4 +1244,4 @@ The four building blocks work together:
 3. **DataProviders** manage state and bindings
 4. **Views** render UI and handle interactions
 
-By understanding these components and how they interact, you can build powerful, maintainable applications with AltsEven.
+By understanding these components and how they interact, you can build powerful, maintainable applications with Altseven.
