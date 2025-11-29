@@ -3,7 +3,7 @@ class RouterManager extends Component {
 		super();
 		this.app = app;
 		this.router = new Router(app.options.router.routes);
-		this.useEvents = this.app.options.router.options.useEvents ?? false;
+		this.useEvents = this.app.options.router.useEvents ?? false;
 
 		window.onpopstate = (event) => {
 			this.match(document.location.pathname + document.location.search);

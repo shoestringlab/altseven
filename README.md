@@ -1,6 +1,6 @@
 ## altseven
 
-v 8.0.1
+v 8.1.0
 
 A JavaScript framework. Originally built as an exploration into reactive programming with JavaScript. Now a full-fledged Web framework.
 
@@ -12,11 +12,10 @@ To install dev dependencies from NPM:
 
     `$ npm install`
 
-## Current Version - 8.0.1
+## Current Version - 8.1.0
 
-GA Release of 8.0.x
+This release includes a new option in the remote module to include credentials for SAML SSO authentication, and a patch to fix the security module option for default parameters for Users. There is also an  internal change to options.router.useEvents as an option. This change does not require modification of existing applications. 
 
-This is the release of the re-factored altsevven framework, which includes significant improvements and a new architecture that conforms to modern JavaScropt conventions and design patterns.
 
 ## Installation
 

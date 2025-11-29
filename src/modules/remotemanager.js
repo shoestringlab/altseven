@@ -178,6 +178,10 @@ class RemoteManager extends Component {
 					}),
 				};
 
+				if (this.options.credentials) {
+					args.credentials = this.options.credentials;
+				}
+
 				try {
 					const response = await fetch(this.options.loginURL, args);
 
@@ -243,6 +247,10 @@ class RemoteManager extends Component {
 					},
 				};
 
+				if (this.options.credentials) {
+					args.credentials = this.options.credentials;
+				}
+
 				try {
 					const response = await fetch(this.options.logoutURL, args);
 					const json = await response.json();
@@ -279,7 +287,15 @@ class RemoteManager extends Component {
 			refresh: async (params) => {
 				// refresh keeps the client session alive
 				try {
-					const response = await this.fetch(this.options.refreshURL, {}, true);
+					let args = {};
+					if (this.options.credentials) {
+						args.credentials = this.options.credentials;
+					}
+					const response = await this.fetch(
+						this.options.refreshURL,
+						args,
+						true,
+					);
 
 					// initial fetch needs to parse response
 					let json;
@@ -349,6 +365,11 @@ class RemoteManager extends Component {
 			}
 
 			this.time = currentTime;
+		}
+
+		// Add credentials option if configured
+		if (this.options.credentials) {
+			params.credentials = this.options.credentials;
 		}
 
 		request = new Request(uri, params);

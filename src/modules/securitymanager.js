@@ -7,7 +7,7 @@ class SecurityManager extends Component {
 		this.useModel = this.options.model.length > 0 ? true : false;
 		this.userArgs = this.options.security.userArgs
 			? this.options.security.userArgs
-			: [];
+			: {};
 		let user = this.getUser();
 		this.setUser(user);
 	}

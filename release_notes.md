@@ -1,3 +1,11 @@
+
+
+8.1.0
+============
+
+This is the release of the re-factored altseven framework. This release includes a new option in the remote module to include credentials for SAML SSO authentication, and a patch to fix the security module option for default parameters for Users. There is also an  internal change to options.router.useEvents as an option. This change does not require modification of existing applications. 
+
+
 8.0.1
 ============
 

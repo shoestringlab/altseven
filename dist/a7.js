@@ -2810,6 +2810,10 @@ class RemoteManager extends Component {
 					}),
 				};
 
+				if (this.options.credentials) {
+					args.credentials = this.options.credentials;
+				}
+
 				try {
 					const response = await fetch(this.options.loginURL, args);
 
@@ -2875,6 +2879,10 @@ class RemoteManager extends Component {
 					},
 				};
 
+				if (this.options.credentials) {
+					args.credentials = this.options.credentials;
+				}
+
 				try {
 					const response = await fetch(this.options.logoutURL, args);
 					const json = await response.json();
@@ -2911,7 +2919,15 @@ class RemoteManager extends Component {
 			refresh: async (params) => {
 				// refresh keeps the client session alive
 				try {
-					const response = await this.fetch(this.options.refreshURL, {}, true);
+					let args = {};
+					if (this.options.credentials) {
+						args.credentials = this.options.credentials;
+					}
+					const response = await this.fetch(
+						this.options.refreshURL,
+						args,
+						true,
+					);
 
 					// initial fetch needs to parse response
 					let json;
@@ -2981,6 +2997,11 @@ class RemoteManager extends Component {
 			}
 
 			this.time = currentTime;
+		}
+
+		// Add credentials option if configured
+		if (this.options.credentials) {
+			params.credentials = this.options.credentials;
 		}
 
 		request = new Request(uri, params);
@@ -3156,7 +3177,7 @@ class RouterManager extends Component {
 		super();
 		this.app = app;
 		this.router = new Router(app.options.router.routes);
-		this.useEvents = this.app.options.router.options.useEvents ?? false;
+		this.useEvents = this.app.options.router.useEvents ?? false;
 
 		window.onpopstate = (event) => {
 			this.match(document.location.pathname + document.location.search);
@@ -3365,7 +3386,7 @@ class SecurityManager extends Component {
 		this.useModel = this.options.model.length > 0 ? true : false;
 		this.userArgs = this.options.security.userArgs
 			? this.options.security.userArgs
-			: [];
+			: {};
 		let user = this.getUser();
 		this.setUser(user);
 	}
@@ -4101,23 +4122,22 @@ export class Application extends Component {
 						refreshURL: options.remote.refreshURL ?? "",
 						useTokens: options?.auth?.useTokens ?? true,
 						tokenType: options.remote.tokenType ?? "X-Token", // Authorization is the other token type
+						credentials: options.remote.credentials ?? "same-origin", // 'include' for SAML/cross-origin cookie auth
 						modules: options.remote.modules ?? {},
 					}
-				: { useTokens: true },
+				: { useTokens: true, credentials: "same-origin" },
 			router: options?.router
 				? {
-						options: {
-							useEvents: options.router.useEvents ?? true,
-						},
+						useEvents: options.router.useEvents ?? true,
 						routes: options.router.routes,
 					}
 				: undefined,
 			security: options?.security
 				? {
 						enabled: options.security.enabled ?? true,
-						options: options.security.options ?? {},
+						userArgs: options.security.userArgs ?? {},
 					}
-				: { enabled: true, options: {} },
+				: { enabled: true, userArgs: {} },
 			services: options?.services ?? [],
 			ui: {
 				enableMouseTracking: options?.ui?.enableMouseTracking ?? false,

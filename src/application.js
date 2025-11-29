@@ -43,23 +43,22 @@ export class Application extends Component {
 						refreshURL: options.remote.refreshURL ?? "",
 						useTokens: options?.auth?.useTokens ?? true,
 						tokenType: options.remote.tokenType ?? "X-Token", // Authorization is the other token type
+						credentials: options.remote.credentials ?? "same-origin", // 'include' for SAML/cross-origin cookie auth
 						modules: options.remote.modules ?? {},
 					}
-				: { useTokens: true },
+				: { useTokens: true, credentials: "same-origin" },
 			router: options?.router
 				? {
-						options: {
-							useEvents: options.router.useEvents ?? true,
-						},
+						useEvents: options.router.useEvents ?? true,
 						routes: options.router.routes,
 					}
 				: undefined,
 			security: options?.security
 				? {
 						enabled: options.security.enabled ?? true,
-						options: options.security.options ?? {},
+						userArgs: options.security.userArgs ?? {},
 					}
-				: { enabled: true, options: {} },
+				: { enabled: true, userArgs: {} },
 			services: options?.services ?? [],
 			ui: {
 				enableMouseTracking: options?.ui?.enableMouseTracking ?? false,
