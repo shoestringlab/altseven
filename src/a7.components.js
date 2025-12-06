@@ -1304,7 +1304,7 @@ export class Service extends Component {
 						entityInstance.fromFlatObject(json);
 						this.cacheSet(await this.format(entityInstance));
 					}
-					resolve(dataMap.get(compositeKey));
+					resolve(this.get(compositeKey));
 				} catch (error) {
 					this.log.debug(this.id + ": Error reading object. " + error);
 					reject(error);

@@ -1,4 +1,7 @@
+8.1.1
+============
 
+This release contains a fix for the service.read method where it can return an undefined value.
 
 8.1.0
 ============
