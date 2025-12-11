@@ -349,7 +349,11 @@ class UIManager extends Component {
 		try {
 			this.queue.forEach((id) => {
 				this.app.log.debug("view ID: " + id);
-				this.views[id].render();
+				if (this.views[id]) {
+					this.views[id].render();
+				} else {
+					this.app.log.warn("View not found: " + id);
+				}
 			});
 		} catch (err) {
 			this.app.log.error(err);

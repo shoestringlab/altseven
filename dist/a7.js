@@ -2006,7 +2006,7 @@ export class View extends Component {
 		}
 
 		let content = "";
-		if (this.templateCache !== null) {
+		if (this.templateCache !== null && this.ui.options.ui.cacheTemplates) {
 			content = this.templateCache;
 			this.log.debug("Using cached template for view " + this.props.id);
 		} else {
@@ -3848,7 +3848,11 @@ class UIManager extends Component {
 		try {
 			this.queue.forEach((id) => {
 				this.app.log.debug("view ID: " + id);
-				this.views[id].render();
+				if (this.views[id]) {
+					this.views[id].render();
+				} else {
+					this.app.log.warn("View not found: " + id);
+				}
 			});
 		} catch (err) {
 			this.app.log.error(err);
@@ -4152,6 +4156,7 @@ export class Application extends Component {
 							: "templateLiterals"),
 				debounceTime: options?.ui?.debounceTime ?? 18,
 				timeout: options?.ui?.timeout ?? 600000, // 10 minutes
+				cacheTemplates: options?.ui?.cacheTemplates ?? true,
 			},
 			ready: false,
 		};

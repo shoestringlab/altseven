@@ -1,3 +1,9 @@
+
+8.2.0
+============
+
+This release adds support for optional caching of templates in the UI manager, allowing the developer to turn off template caching. It also adds better logging of view rendering errors due to missing views.
+
 8.1.1
 ============
 

@@ -1,6 +1,6 @@
 ## altseven
 
-v 8.1.1
+v 8.2.0
 
 A JavaScript framework. Originally built as an exploration into reactive programming with JavaScript. Now a full-fledged Web framework.
 
@@ -12,10 +12,9 @@ To install dev dependencies from NPM:
 
     `$ npm install`
 
-## Current Version - 8.1.1
+## Current Version - 8.2.0
 
-This release contains a fix for the service.read method where it can return an undefined value.
-
+This release adds support for optional caching of templates in the UI manager, allowing the developer to turn off template caching. It also adds better logging of view rendering errors due to missing views.
 ## Installation
 
 `$ npm install altseven`

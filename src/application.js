@@ -73,6 +73,7 @@ export class Application extends Component {
 							: "templateLiterals"),
 				debounceTime: options?.ui?.debounceTime ?? 18,
 				timeout: options?.ui?.timeout ?? 600000, // 10 minutes
+				cacheTemplates: options?.ui?.cacheTemplates ?? true,
 			},
 			ready: false,
 		};

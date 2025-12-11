@@ -168,7 +168,7 @@ export class View extends Component {
 		}
 
 		let content = "";
-		if (this.templateCache !== null) {
+		if (this.templateCache !== null && this.ui.options.ui.cacheTemplates) {
 			content = this.templateCache;
 			this.log.debug("Using cached template for view " + this.props.id);
 		} else {
