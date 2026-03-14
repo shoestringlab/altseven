@@ -1,6 +1,6 @@
 ## altseven
 
-v 8.2.0
+v 8.2.1
 
 A JavaScript framework. Originally built as an exploration into reactive programming with JavaScript. Now a full-fledged Web framework.
 
@@ -12,13 +12,13 @@ To install dev dependencies from NPM:
 
     `$ npm install`
 
-## Current Version - 8.2.0
+## Current Version - 8.2.1
 
-This release adds support for optional caching of templates in the UI manager, allowing the developer to turn off template caching. It also adds better logging of view rendering errors due to missing views.
+Significant bug fix to the rendering pipeline. See the release notes for details.
+
 ## Installation
 
 `$ npm install altseven`
-
 
 You only need to install dependencies from npm to work on the altseven framework, or for optional modules:
 

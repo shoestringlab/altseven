@@ -204,7 +204,14 @@ export class View extends Component {
 			this.model.bind(ele.attributes["data-bind"].value, ele);
 		});
 		this.log.trace("Rendered: " + this.props.id);
-		this.fireEvent("rendered");
+		this.skipRender = true;
+		try {
+			this.fireEvent("rendered");
+		} catch (err) {
+			this.log.error("Error in rendered callback for view " + this.props.id + ": " + err);
+		} finally {
+			this.skipRender = false;
+		}
 	}
 
 	shouldRender() {

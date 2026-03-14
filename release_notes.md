@@ -1,3 +1,26 @@
+8.2.1
+============
+
+	Significant bug fix to the rendering pipeline.
+
+  view.js — render() now owns the skipRender lifecycle
+
+  The framework sets skipRender = true before firing rendered callbacks and resets it in a finally block. This means:
+
+  - User code no longer needs to manually set skipRender — it's automatic. Existing code that does header.skipRender = true / false becomes a harmless no-op.
+  - Errors in rendered callbacks can never leave skipRender stuck — the finally block guarantees the reset.
+  - Errors are caught and logged instead of propagating up and killing the render pipeline.
+  - No impact on child views — onRendered() calls child.render() directly, bypassing shouldRender(), so children render regardless of the parent's skipRender state.
+
+  uimanager.js — processRenderQueue() isolates individual view renders
+
+  The try/catch moved from wrapping the entire forEach to wrapping each individual render() call. Previously, if view A threw during rendering, views B, C, D in the queue were silently
+  skipped. Now each view renders independently — one failure doesn't block the rest.
+
+  Backwards compatibility
+
+  Fully backwards compatible. Apps with explicit skipRender management in rendered callbacks will still work — their assignments are redundant but harmless. The mustRender handler's
+  skipRender = false reset (line 58) remains as a safety net for any edge case where skipRender is set outside of render().
 
 8.2.0
 ============
