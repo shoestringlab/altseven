@@ -1,6 +1,6 @@
 ## altseven
 
-v 8.2.1
+v 8.3.0
 
 A JavaScript framework. Originally built as an exploration into reactive programming with JavaScript. Now a full-fledged Web framework.
 
@@ -12,9 +12,9 @@ To install dev dependencies from NPM:
 
     `$ npm install`
 
-## Current Version - 8.2.1
+## Current Version - 8.3.0
 
-Significant bug fix to the rendering pipeline. See the release notes for details.
+Added base case to routermanager so it can handle nested paths.
 
 ## Installation
 

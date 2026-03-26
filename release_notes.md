@@ -1,3 +1,8 @@
+8.3.0
+============
+
+Added base case to routermanager so it can handle nested paths.
+
 8.2.1
 ============
 

@@ -88,6 +88,11 @@ class Router {
 	}
 
 	parse(remain, handler, parent) {
+		if (remain.length === 0) {
+			parent.handler = handler;
+			return;
+		}
+
 		if (this.REGEX_START_WITH_PARAM.test(remain)) {
 			const match = remain.match(this.REGEX_MATCH_PARAM);
 			let node = parent.children.regex[match[0]];
@@ -152,6 +157,13 @@ class Router {
 	}
 
 	_find(remain, node, params) {
+		if (remain.length === 0) {
+			if (node.handler !== undefined) {
+				return { handler: node.handler, params: params };
+			}
+			return null;
+		}
+
 		const child = node.children.string[remain[0]];
 
 		if (child) {
