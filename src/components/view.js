@@ -17,6 +17,8 @@ export class View extends Component {
 		this.children = {}; // Child views
 		this.components = {}; // Register objects external to the framework so we can address them later
 		this.templateCache = null;
+		// Opt-in per-view caching. Default false: forgetting it costs perf, not correctness.
+		this.cacheTemplate = props.cacheTemplate ?? false;
 		this.fireEvent("mustRegister");
 	}
 
@@ -45,12 +47,37 @@ export class View extends Component {
 		this.debounceTime = debounceTime;
 	}
 
+	setCacheTemplate(enabled) {
+		this.cacheTemplate = !!enabled;
+	}
+
 	config() {
+		// mustRender: template inputs may have changed. Always re-evaluates the template.
 		this.on(
 			"mustRender",
 			this.debounce(
 				function () {
 					this.log.trace("mustRender: " + this.props.id);
+					this.templateCache = null;
+					if (this.shouldRender()) {
+						this.ui.enqueueForRender(this.props.id);
+					} else {
+						this.log.trace("Render cancelled: " + this.props.id);
+						this.skipRender = false;
+					}
+				}.bind(this),
+				this.debounceTime,
+			),
+		);
+
+		// mayRender: repaint, may use cached template if the view opted in.
+		// Use when you know the template output hasn't changed (e.g. re-attach
+		// after a parent re-render).
+		this.on(
+			"mayRender",
+			this.debounce(
+				function () {
+					this.log.trace("mayRender: " + this.props.id);
 					if (this.shouldRender()) {
 						this.ui.enqueueForRender(this.props.id);
 					} else {
@@ -81,7 +108,7 @@ export class View extends Component {
 		this.on(
 			"registered",
 			function () {
-				if (this.props.parentID === undefined || this.mustRender) {
+				if (this.props.parentID === undefined) {
 					this.fireEvent("mustRender");
 				}
 			}.bind(this),
@@ -168,14 +195,17 @@ export class View extends Component {
 		}
 
 		let content = "";
-		if (this.templateCache !== null && this.ui.options.ui.cacheTemplates) {
+		let cacheEnabled = this.cacheTemplate && this.ui.options.ui.cacheTemplates;
+		if (this.templateCache !== null && cacheEnabled) {
 			content = this.templateCache;
 			this.log.debug("Using cached template for view " + this.props.id);
 		} else {
 			this.log.debug("Rendering template for view " + this.props.id);
 			content =
 				typeof this.template == "function" ? this.template() : this.template;
-			this.templateCache = content;
+			// Only retain the cache if this view opted in. Otherwise null it so a
+			// stale cache can never be served if cacheTemplate is toggled later.
+			this.templateCache = cacheEnabled ? content : null;
 		}
 		this.element.innerHTML = content;
 		var eventArr = [];
