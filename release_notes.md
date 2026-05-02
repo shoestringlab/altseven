@@ -1,3 +1,8 @@
+9.0.1
+============
+
+Version bump for release.
+
 9.0.0-beta-1
 ============
 
