@@ -1,3 +1,20 @@
+9.1.0
+============
+
+Significant improvements to the websocket implementation.
+
+src/modules/remotemanager.js:
+
+  - _buildWsUrl(url, isSecure) — new helper; throws clearly on undefined/empty/non-string url, validates
+  the constructed URL has a host. Both webSocket() and webSocketSession() use it.
+  - webSocket() refactored to use the helper. Existing callers now get URL validation for free; if
+  SOCKET_HOST ever ends up undefined again, you get a TypeError at the call site instead of a
+  - webSocketSession(options) — new managed-session API (rich docstring on the class).
+  - WebSocketSession class — handles state, exponential backoff w/ jitter, ping with optional pong-timeout
+   (zombie detection), online and visibilitychange listeners that kick reconnect immediately, and a
+  beforeReconnect callback that distinguishes "permanent" (return false) vs "transient" (throw) failures.
+
+
 9.0.1
 ============
 
