@@ -1,6 +1,6 @@
 ## altseven
 
-v 9.1.0
+v 9.1.1
 
 A JavaScript framework. Originally built as an exploration into reactive programming with JavaScript. Now a full-fledged Web framework.
 
@@ -12,9 +12,9 @@ To install dev dependencies from NPM:
 
     `$ npm install`
 
-## Current Version - 9.1.0
+## Current Version - 9.1.1
 
-Major release to denote a silent breaking change. Template caching has been deemed to aggressive, as it is turned on by default framework wide and can result in silent errors in failure to repaint if setState() has not been called or template cache has not been manually nulled. This change preserves the base system-wide default of permitting templates to be cached, but adds a per-view setting to props - props.cacheTemplate, which defaults to false. All templates will now re-paint unless the developer specifically opts in for the template to cache. An additional event, mayRender, has been added to allow the developer to call for a render unless cache is enabled on the template and the template is not null. An upgrade will preserve all current functionality except automatic caching of templates.
+Bug fix for websocket connections.
 
 ## Installation
 

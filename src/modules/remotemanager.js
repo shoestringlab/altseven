@@ -618,6 +618,7 @@ class WebSocketSession {
 		this._reconnectTimer = null;
 		this._pingTimer = null;
 		this._pongTimer = null;
+		this._stableTimer = null;
 
 		this._onlineHandler = () => this._onNetworkAvailable("online");
 		this._visibilityHandler = () => {
@@ -706,7 +707,6 @@ class WebSocketSession {
 
 		socket.onopen = () => {
 			this._state = "open";
-			this._attempts = 0;
 			this._manager.app.log.trace("webSocketSession: open");
 			this._manager.fireEvent("webSocketOpen", [socket]);
 			if (this._onOpen) {
@@ -720,6 +720,18 @@ class WebSocketSession {
 				}
 			}
 			this._startPing();
+			// Only reset the attempt counter after the connection has
+			// proven *stable* (open for STABLE_MS). Without this, a
+			// server that drops the connection immediately after open
+			// would keep `_attempts` at 1 forever and the reconnect
+			// backoff would never grow past its initial delay (~1Hz
+			// hammering). The cleanup path clears this timer if we
+			// close before it fires, so flapping connections back off
+			// properly.
+			this._stableTimer = setTimeout(() => {
+				this._attempts = 0;
+				this._stableTimer = null;
+			}, WebSocketSession.STABLE_MS);
 		};
 
 		socket.onerror = (error) => {
@@ -879,5 +891,16 @@ class WebSocketSession {
 			clearTimeout(this._reconnectTimer);
 			this._reconnectTimer = null;
 		}
+		if (this._stableTimer) {
+			clearTimeout(this._stableTimer);
+			this._stableTimer = null;
+		}
 	}
 }
+
+// How long a WebSocket must stay open before we count it as a stable
+// connection (and reset the reconnect attempt counter). 30s is enough
+// to disambiguate "real connection" from "server is closing us in the
+// first second"; if you find legitimate brief connections being treated
+// as flapping, tune this down.
+WebSocketSession.STABLE_MS = 30000;
