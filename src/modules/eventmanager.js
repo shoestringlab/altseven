@@ -28,9 +28,19 @@ class EventManager extends Component {
 	}
 
 	subscribe(topic, listener) {
-		// Create the topic's object if not yet created
+		// Create the topic's queue if not yet created. We register the topic even
+		// when the listener isn't callable so that a *declared-but-unhandled*
+		// event — e.g. `{ "settings.foo.show": null }` in options.events, meant to
+		// be handled later by a view subscribe — doesn't make publish() early-return.
 		if (!this.hasProp.call(this.topics, topic)) {
 			this.topics[topic] = [];
+		}
+
+		// Ignore non-function listeners. A null/undefined placeholder must never be
+		// queued: publish() would call it and throw, aborting the whole dispatch and
+		// silently killing every other listener on the topic.
+		if (typeof listener !== "function") {
+			return { remove: () => {} };
 		}
 
 		// Add the listener to queue
@@ -52,9 +62,18 @@ class EventManager extends Component {
 			return;
 		}
 
-		// Cycle through topics queue, fire!
-		this.topics[topic].forEach(function (item) {
-			item(info || {});
+		// Cycle through topics queue, fire! Each listener is isolated: a
+		// non-function slot (a placeholder, or a hole left by remove()) is skipped,
+		// and a listener that throws is logged rather than aborting the ones after it.
+		this.topics[topic].forEach((item) => {
+			if (typeof item !== "function") {
+				return;
+			}
+			try {
+				item(info || {});
+			} catch (e) {
+				this.app.log.error("event listener for '" + topic + "' threw", e);
+			}
 		});
 	}
 }

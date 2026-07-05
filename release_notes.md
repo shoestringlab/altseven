@@ -1,3 +1,65 @@
+# Release Notes
+
+9.1.2
+============
+
+### Fixed — EventManager: a `null` handler (or a throwing listener) no longer kills a topic's dispatch
+
+`src/modules/eventmanager.js`
+
+**The problem.** `EventManager` registers every value in `options.events` as a
+listener for its topic (constructor loop over `options.events`), and `publish()`
+invokes each queued listener directly:
+
+```js
+this.topics[topic].forEach(function (item) {
+    item(info || {});
+});
+```
+
+Two consequences fell out of this:
+
+1. A topic declared in the events config with a non-function value — e.g.
+   `{ "settings.foo.show": null }`, a natural way to say "this event exists but is
+   handled by a view `subscribe()` elsewhere" — queued `null` as a listener. On
+   `publish()`, `item(info)` became `null({})`, which **threw** and, because the
+   throw escaped the `forEach`, **every other listener on that topic after it never
+   ran.** The failure was silent (no handler, no visible error at the call site)
+   and looked like the event simply wasn't firing.
+
+2. More generally, **any** listener that threw aborted every listener queued after
+   it. Dispatch was order-dependent and a single bad subscriber could take out
+   unrelated ones.
+
+**The fix.** Two small, backward-compatible changes:
+
+- **`subscribe(topic, listener)`** now still creates the topic's queue (so a
+  declared-but-unhandled event doesn't make `publish()` early-return), but
+  **ignores non-function listeners** instead of queuing them. `{ "topic": null }`
+  in `options.events` now means exactly "declare this topic, no default handler."
+
+- **`publish(topic, info)`** now **isolates each listener**: non-function slots
+  (including holes left by `remove()`) are skipped, and a listener that throws is
+  caught and logged via `app.log.error` rather than aborting the remaining
+  listeners.
+
+### Compatibility
+
+- **Backward compatible.** Code that previously queued a `null` handler was
+  already broken (it threw on publish); it now no-ops cleanly. Function handlers
+  behave exactly as before.
+- **Behavior change to be aware of:** an exception thrown inside an event listener
+  no longer propagates out of `publish()` — it is logged and the remaining
+  listeners still run. If any code relied on a throwing listener to halt
+  propagation (strongly discouraged), that assumption no longer holds.
+
+### Notes
+
+- No API surface changes; `subscribe()` still returns the `{ remove }` handle.
+- Applications vendoring the built `dist/a7.js` must rebuild and update to pick up
+  the change.
+
+
 9.1.0
 ============
 
@@ -23,7 +85,7 @@ Version bump for release.
 9.0.0-beta-1
 ============
 
-Major release to denote a silent breaking change. Template caching has been deemed to aggressive, as it is turned on by default framework wide and can result in silent errors in failure to repaint if setState() has not been called or template cache has not been manually nulled. This change preserves the base system-wide default of permitting templates to be cached, but adds a per-view setting to props - props.cacheTemplate, which defaults to false. All templates will now re-paint unless the developer specifically opts in for the template to cache. An additional event, mayRender, has been added to allow the developer to call for a render unless cache is enabled on the template and the template is not null. An upgrade will preserve all current functionality except automatic caching of templates.
+Major release to denote a silent breaking change. Template caching has been deemed too aggressive, as it is turned on by default framework wide and can result in silent errors in failure to repaint if setState() has not been called or template cache has not been manually nulled. This change preserves the base system-wide default of permitting templates to be cached, but adds a per-view setting to props - props.cacheTemplate, which defaults to false. All templates will now re-paint unless the developer specifically opts in for the template to cache. An additional event, mayRender, has been added to allow the developer to call for a render unless cache is enabled on the template and the template is not null. An upgrade will preserve all current functionality except automatic caching of templates.
 
 8.3.0
 ============

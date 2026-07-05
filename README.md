@@ -1,6 +1,6 @@
 ## altseven
 
-v 9.1.1
+v 9.1.2
 
 A JavaScript framework. Originally built as an exploration into reactive programming with JavaScript. Now a full-fledged Web framework.
 
@@ -14,7 +14,7 @@ To install dev dependencies from NPM:
 
 ## Current Version - 9.1.1
 
-Bug fix for websocket connections.
+Bug fix for null event creation in the pub/sub model. Fully backwards compatible, see release notes for details.
 
 ## Installation
 
