@@ -1,5 +1,82 @@
 # Release Notes
 
+9.1.4
+============
+
+### Fixed — `View.render()`: a child whose parent has not painted yet is no longer destroyed
+
+`src/components/view.js`
+
+**The problem.** `render()` treated a missing mount point as fatal:
+
+```js
+if (!this.element) {
+    if (this.props.parentID !== undefined) {
+        this.ui.getView(this.props.parentID).removeChild(this);
+    }
+    this.fireEvent("mustUnregister");
+    return;
+}
+```
+
+But "my selector is not in the DOM" means two entirely different things, and
+only one of them is an error.
+
+A **child** view renders into a node that its **parent's template** creates, so
+before the parent has painted even once, that node does not exist *yet*. That is
+ordering, not misconfiguration. Any child that gets rendered on its own before
+its parent's first paint hits this branch — and the usual way that happens is an
+async load driving the child's state:
+
+```js
+const bell = Bell({ id: "bell", parentID: "header", selector: "#bell" });
+// ...elsewhere, at boot:
+const data = await fetch("/api/notifications");   // resolves in ~25ms
+bell.setState({ data });                          // enqueues the CHILD alone
+```
+
+`mustRender` is debounced by `debounceTime` (18ms default), so whether the
+parent has painted by the time that `setState` lands depends on how long the
+fetch took and how much other work the app was doing. Win the race and
+everything is fine; lose it and the child is **silently and permanently
+destroyed** — dropped from `parent.children` *and* from the UI manager, with
+nothing to re-create it. The component simply never appears again for the life
+of the page, with no error anywhere.
+
+The failure is especially unpleasant because it is *load-bearing on timing*: the
+same code works in one route and not another, and speeding an endpoint **up** can
+be what breaks it. It was found when an endpoint that had been failing fast
+(HTTP 500 in 5ms) was fixed to succeed in 25ms — the faster failure had been
+losing the race all along, and only the slower success revealed it.
+
+**The fix.** Distinguish "not yet" from "gone", using whether the parent has
+ever painted:
+
+```js
+const parent = this.props.parentID !== undefined
+    ? this.ui.getView(this.props.parentID)
+    : undefined;
+
+if (parent && !parent.hasRendered) {
+    return;   // stay registered; parent.onRendered() will bind and paint us
+}
+// ...otherwise unregister, as before
+```
+
+`View` now tracks `hasRendered`, set at the end of a successful `render()` —
+deliberately **before** `fireEvent("rendered")`, because that fires
+`onRendered()`, which renders the children that test the flag.
+
+Nothing else changes. A top-level view whose mount point is absent is still
+unregistered, and so is a child whose parent *has* painted and whose selector
+still does not resolve — that one really is a misconfigured template. Keying the
+decision on the parent's paint rather than retrying is also what keeps this
+loop-free.
+
+As a side effect this removes a latent crash: the old code called
+`this.ui.getView(this.props.parentID).removeChild(this)` without checking that
+the parent was still registered.
+
 9.1.3
 ============
 

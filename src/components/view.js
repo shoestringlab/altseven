@@ -19,6 +19,9 @@ export class View extends Component {
 		this.templateCache = null;
 		// Opt-in per-view caching. Default false: forgetting it costs perf, not correctness.
 		this.cacheTemplate = props.cacheTemplate ?? false;
+		// Has this view ever painted? Used by render() to tell "my mount point
+		// does not exist YET" from "my mount point is gone". See render().
+		this.hasRendered = false;
 		this.fireEvent("mustRegister");
 	}
 
@@ -182,13 +185,53 @@ export class View extends Component {
 			this.element = document.querySelector(this.props.selector);
 		}
 		if (!this.element) {
+			// A missing mount point means one of two very different things, and
+			// treating them alike destroys working views.
+			//
+			// A CHILD view renders into a node that its PARENT's template
+			// creates, so before the parent has painted even once that node does
+			// not exist yet. That is not an error — it is just ordering. It
+			// happens whenever something renders the child on its own before the
+			// parent's first paint: a child whose setState is driven by an async
+			// load (a fetch resolving in ~25ms) races the parent's debounced
+			// first render, and which one wins depends on how much other work
+			// the app happens to be doing. Unregistering there is silent and
+			// permanent: the view is dropped from its parent's children and from
+			// the UI manager, and nothing re-creates it, so a component that is
+			// merely early disappears for the life of the page.
+			//
+			// So: if the parent exists and has not painted yet, keep the view
+			// registered and do nothing. The parent's onRendered() re-binds and
+			// renders every child, so this view paints as soon as its mount
+			// point actually exists.
+			//
+			// Once the parent HAS painted, a still-missing selector is a real
+			// misconfiguration (the parent's template does not contain the
+			// node), and the original behaviour applies. Keying on the parent's
+			// paint rather than retrying is what keeps this loop-free.
+			const parent =
+				this.props.parentID !== undefined
+					? this.ui.getView(this.props.parentID)
+					: undefined;
+
+			if (parent && !parent.hasRendered) {
+				this.log.trace(
+					"Deferring render of child view " +
+						this.props.id +
+						": parent " +
+						this.props.parentID +
+						" has not rendered yet, so its mount point does not exist.",
+				);
+				return;
+			}
+
 			this.log.trace(
 				"The DOM element for view " +
 					this.props.id +
 					" was not found. The view will be removed and unregistered.",
 			);
-			if (this.props.parentID !== undefined) {
-				this.ui.getView(this.props.parentID).removeChild(this);
+			if (parent) {
+				parent.removeChild(this);
 			}
 			this.fireEvent("mustUnregister");
 			return;
@@ -234,6 +277,12 @@ export class View extends Component {
 			this.model.bind(ele.attributes["data-bind"].value, ele);
 		});
 		this.log.trace("Rendered: " + this.props.id);
+		// Set BEFORE firing "rendered": that fires onRendered(), which renders
+		// this view's children, and each of them tests this flag to decide
+		// whether a missing mount point is "not yet" or "gone". Setting it
+		// afterwards would make every child defer on its parent's first paint —
+		// exactly the case this flag exists to let through.
+		this.hasRendered = true;
 		this.skipRender = true;
 		try {
 			this.fireEvent("rendered");

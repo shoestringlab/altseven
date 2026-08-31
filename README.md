@@ -1,6 +1,6 @@
 ## altseven
 
-v 9.1.3
+v 9.1.4
 
 A JavaScript framework. Originally built as an exploration into reactive programming with JavaScript. Now a full-fledged Web framework.
 
@@ -12,13 +12,9 @@ To install dev dependencies from NPM:
 
     `$ npm install`
 
-## Current Version - 9.1.3
+## Current Version - 9.1.4
 
-Bug fix for falsy keys in `Model.get()`, which returned the whole model instead of
-missing — and, through that, an object binding with no `id` rendering its view
-empty. Backwards compatible for every correct call, but `get(null)` / `get(0)` /
-`get("")` now return `undefined` rather than the full collection; see release
-notes for details.
+Bug fix for `View.render()` permanently unregistering a child view rendered before its parent's first paint, when the mount point simply did not exist yet; see release notes for details.
 
 ## Installation
 
