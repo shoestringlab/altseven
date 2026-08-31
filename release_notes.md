@@ -1,5 +1,121 @@
 # Release Notes
 
+9.1.3
+============
+
+### Fixed — `Model.get()`: a falsy key is a lookup that misses, not a request for the whole model
+
+`src/components/model.js`
+
+**The problem.** `Model.get(name, key)` decided between "return the whole stored
+value" and "look one entity up" with a truthiness test:
+
+```js
+if (!key) {
+    const value = prop ? model.data[prop] : model.data;
+    return value instanceof Map ? new Map(value) : value;
+} else {
+    // Map lookup by key
+}
+```
+
+Only an **absent** key means "give me everything". A key that is *present but
+falsy* — `null`, `0`, `""` — is still a lookup, and a lookup that misses must
+return `undefined`. Reading it as falsy meant every such call returned the
+entire backing store instead.
+
+That is worse than a wrong answer, because it is an **undetectable** one. The
+model's store is typically a `Map`, and a `Map` is truthy and is an object, so
+the wrong value passes every guard a caller is likely to write:
+
+```js
+const user = service.get(someId);   // someId happens to be null
+if (user) { ... }                   // true — it's a Map
+user.name                           // undefined, and now you are debugging
+                                    // the wrong function entirely
+```
+
+The symptom surfaces arbitrarily far from the cause, as undefined properties on
+something that was never an entity. And `0` and `""` are perfectly ordinary
+entity IDs, so this was reachable without ever passing `null`.
+
+**The fix.** `if (key === undefined)`. The whole-model branch is now taken only
+when the argument is genuinely absent; every other value goes to the Map lookup
+and misses honestly, returning `undefined`.
+
+### Fixed — DataProviderManager: an id-less object binding no longer renders the view empty
+
+`src/modules/dataprovidermanager.js`
+
+**The problem.** This is the bug above, observed in the wild.
+
+`bind()` normalises a missing binding id to `null` (`dp.binding[rule].id || null`),
+and `getBoundData()` resolves an `object`-type binding with
+`binding.service.get(binding.id)`. For a binding with no id that is
+`service.get(null)` → `Model.get(serviceId, null)` → **the entire service cache
+Map**.
+
+That Map was then written straight into view state as the bound object:
+
+```js
+dp.view.setState({ [binding.key]: updatedData });
+```
+
+so the view's bound entity was a `Map` of every entity, and rendered empty.
+
+An id-less object binding is not an edge case — it is the normal shape for a
+view whose entity is not known until runtime, because `id` is fixed when the
+`DataProvider` is constructed. (Bindings that *do* carry an id never reach this
+path: `bind()` routes them through the `entityChanged` listener, which sets
+state from `args.entity` directly.)
+
+**The fix.** When an object binding has no id, use the entity the event already
+carries rather than asking the cache for a key that cannot match:
+
+```js
+let updatedData =
+    type === "object" && binding.id === null
+        ? args.item
+        : this.getBoundData(dp, binding);
+```
+
+This is sound because the `shouldUpdate` check immediately above has already
+established that `args.item` is the entity currently held in state
+(`state[binding.key].id === args.item.id`).
+
+### Changed — `Service.get()` uses an explicit `undefined` comparison
+
+`src/components/service.js`
+
+`typeof ID === "undefined"` → `ID === undefined`. **No behaviour change** — `ID`
+is a declared parameter, so the two are equivalent — but the intent now reads
+the same way it does in `Model.get()`, which is where the distinction is
+load-bearing. Comments were added to both recording *why* a falsy ID must not be
+treated as "no ID given".
+
+### Compatibility
+
+- **Backward compatible for every correct call.** `get()` with no argument, and
+  `get(id)` with an id that exists, behave exactly as before.
+- **Behaviour change to be aware of, and it is the point of the release:**
+  `Model.get(name, key)` and `Service.get(ID)` with a falsy-but-present key now
+  return `undefined` instead of the whole backing `Map`. Any code that was
+  relying on `get(null)` — or `get(0)`, or `get("")` — to hand back the full
+  collection must call `get()` with no argument instead.
+- **Related:** an `object`-type binding declared with no `id` previously received
+  the whole cache Map as its *initial* state (via `getBoundData()` at bind time)
+  and now receives `undefined` until the first matching `entityChanged`. A view
+  that read properties off that initial value was already reading properties off
+  a `Map`; it now reads them off `undefined`, which fails at the point of the
+  mistake rather than three frames away. Guard the initial render if you do not
+  already.
+
+### Notes
+
+- No API surface changes.
+- Applications vendoring the built `dist/a7.js` must rebuild and update to pick
+  up the change.
+
 9.1.2
 ============
 

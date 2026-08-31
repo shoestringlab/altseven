@@ -986,7 +986,19 @@ export const Model = (() => {
 				_log.trace(`Key '${base}' does not exist in the model.`);
 				return undefined;
 			}
-			if (!key) {
+			// `key === undefined` — NOT `!key`. Only an ABSENT key means "give me
+			// the whole thing"; a key that is present but falsy (null, 0, "")
+			// is still a lookup, and a lookup that misses must return undefined.
+			//
+			// Reading it as falsy made every such lookup return the entire
+			// stored value instead, which is worse than a wrong answer because
+			// it is an undetectable one: a Map is truthy and is an object, so
+			// it passes the caller's existence check and travels on as if it
+			// were the entity that was asked for. The symptom then surfaces
+			// arbitrarily far away, as undefined properties on something that
+			// was never an entity at all. `0` and `""` are perfectly ordinary
+			// entity IDs, so this was not only reachable through null.
+			if (key === undefined) {
 				const value = prop ? model.data[prop] : model.data;
 				return value instanceof Map ? new Map(value) : value;
 			} else {
@@ -1581,9 +1593,23 @@ export class Service extends Component {
 		this.model.set(this.id, dataMap);
 	}
 
+	// Omitting the ID asks for the whole cache Map. Passing one asks for a
+	// single entity, and that stays true when the ID is null, 0 or "" — those
+	// are lookups that MISS, never a request for everything.
+	//
+	// The distinction is load-bearing because the failure is silent: handing a
+	// Map back to a caller that asked for one entity looks like a hit (it is
+	// truthy, it is an object, it survives every `if (item)` guard) and only
+	// falls apart much later, wherever someone finally reads a property off it
+	// and gets undefined. A caller cannot tell that apart from a genuine
+	// entity, so the miss has to be an actual miss here.
+	//
+	// Model.get() is what used to blur the two — it read any falsy key as "no
+	// key given". That is fixed at the source in model.js, so this method just
+	// forwards; the explicit undefined check remains for clarity.
 	get(ID) {
 		this.log.trace(this.id + ": method: get");
-		if (typeof ID === "undefined") {
+		if (ID === undefined) {
 			return this.model.get(this.id);
 		} else {
 			return this.model.get(this.id, ID);
@@ -2410,7 +2436,25 @@ class DataProviderManager extends Component {
 			}
 
 			if (shouldUpdate) {
-				let updatedData = this.getBoundData(dp, binding);
+				// An object binding follows exactly ONE entity, and the cache
+				// can only be asked for it by key. A binding that carries no
+				// `id` has no key to ask with — which is the normal case for a
+				// view whose entity isn't known until runtime, since `id` is
+				// fixed when the DataProvider is constructed. (Bindings that DO
+				// carry an id never arrive here at all: bind() routes them
+				// through the entityChanged listener instead. So this branch is
+				// always the id-less one.)
+				//
+				// The event already carries the entity that changed, and
+				// shouldUpdate above has just proven it is the one in state, so
+				// use it. Asking the service for key `null` is not a lookup for
+				// anything, and before the Model.get() fix it came back as the
+				// whole cache Map — which then landed in view state AS the
+				// bound object and rendered the view empty.
+				let updatedData =
+					type === "object" && binding.id === null
+						? args.item
+						: this.getBoundData(dp, binding);
 
 				dp.view.setState({ [binding.key]: updatedData });
 			}

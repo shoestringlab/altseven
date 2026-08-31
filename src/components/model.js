@@ -324,7 +324,19 @@ export const Model = (() => {
 				_log.trace(`Key '${base}' does not exist in the model.`);
 				return undefined;
 			}
-			if (!key) {
+			// `key === undefined` — NOT `!key`. Only an ABSENT key means "give me
+			// the whole thing"; a key that is present but falsy (null, 0, "")
+			// is still a lookup, and a lookup that misses must return undefined.
+			//
+			// Reading it as falsy made every such lookup return the entire
+			// stored value instead, which is worse than a wrong answer because
+			// it is an undetectable one: a Map is truthy and is an object, so
+			// it passes the caller's existence check and travels on as if it
+			// were the entity that was asked for. The symptom then surfaces
+			// arbitrarily far away, as undefined properties on something that
+			// was never an entity at all. `0` and `""` are perfectly ordinary
+			// entity IDs, so this was not only reachable through null.
+			if (key === undefined) {
 				const value = prop ? model.data[prop] : model.data;
 				return value instanceof Map ? new Map(value) : value;
 			} else {

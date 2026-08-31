@@ -200,7 +200,25 @@ class DataProviderManager extends Component {
 			}
 
 			if (shouldUpdate) {
-				let updatedData = this.getBoundData(dp, binding);
+				// An object binding follows exactly ONE entity, and the cache
+				// can only be asked for it by key. A binding that carries no
+				// `id` has no key to ask with — which is the normal case for a
+				// view whose entity isn't known until runtime, since `id` is
+				// fixed when the DataProvider is constructed. (Bindings that DO
+				// carry an id never arrive here at all: bind() routes them
+				// through the entityChanged listener instead. So this branch is
+				// always the id-less one.)
+				//
+				// The event already carries the entity that changed, and
+				// shouldUpdate above has just proven it is the one in state, so
+				// use it. Asking the service for key `null` is not a lookup for
+				// anything, and before the Model.get() fix it came back as the
+				// whole cache Map — which then landed in view state AS the
+				// bound object and rendered the view empty.
+				let updatedData =
+					type === "object" && binding.id === null
+						? args.item
+						: this.getBoundData(dp, binding);
 
 				dp.view.setState({ [binding.key]: updatedData });
 			}
